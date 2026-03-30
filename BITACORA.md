@@ -1,6 +1,18 @@
 # Bitácora — maru_guide
 
 
+## 2026-03-30 | 17:52
+
+**Resumen:** Se corrigió la orientación del diapasón en los diagramas SVG para que la cuerda 6 (grave) quede abajo y la cuerda 1 (aguda) quede arriba, alineándose con la tablatura estándar.
+
+**Cambios:**
+- Invertida la fórmula `stringY(si)` de `STRING_TOP + si * STRING_GAP` a `STRING_BOT - si * STRING_GAP`
+- Corrección aplicada en dos diagramas independientes dentro del ecosistema de apps
+
+**Archivos clave:** `guia_guitarra.md`
+
+---
+
 ## 2026-03-30 | 16:46
 
 **Resumen:** Se corrigió la posición de la escala Sol Mayor Jónica en el visualizador y se agregó un modo Editor de escalas con persistencia en localStorage.
