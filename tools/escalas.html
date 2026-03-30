@@ -273,7 +273,7 @@ const STRING_TOP=28,STRING_BOT=SVG_H-28;
 const STRING_GAP=(STRING_BOT-STRING_TOP)/5;
 
 function fretX(fret){ return fret===0?NUT_X-4:NUT_X+(fret-0.5)*FRET_W; }
-function stringY(si){ return STRING_TOP+si*STRING_GAP; }
+function stringY(si){ return STRING_BOT-si*STRING_GAP; }
 
 function initFretboard(){
   const svg=document.getElementById('fretboard'); svg.innerHTML='';
@@ -315,9 +315,9 @@ function initFretboard(){
   // Position markers
   FRET_MARKERS.forEach(f=>{
     if(f===12){
-      [1,3].forEach(si=>{const c=makeDot(NUT_X+(f-0.5)*FRET_W,stringY(si)+STRING_GAP*.5,4,'#1e1e1e');g.appendChild(c);});
+      [1,3].forEach(si=>{const c=makeDot(NUT_X+(f-0.5)*FRET_W,stringY(si)-STRING_GAP*.5,4,'#1e1e1e');g.appendChild(c);});
     }else{
-      g.appendChild(makeDot(NUT_X+(f-0.5)*FRET_W,stringY(2)+STRING_GAP*.5,4,'#1e1e1e'));
+      g.appendChild(makeDot(NUT_X+(f-0.5)*FRET_W,stringY(2)-STRING_GAP*.5,4,'#1e1e1e'));
     }
   });
   svg.appendChild(g);
