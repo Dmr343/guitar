@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escalas — Entrenador</title>
+  <style>
+    :root {
+      --bg:#0e0e0e;--surface:#141414;--surface2:#1a1a1a;--border:#222;
+      --text:#e8d5b0;--text-dim:#555;--text-mid:#888;
+      --accent:#2ecc71;--accent-dim:#0a2a10;
+      --gold:#d4a847;--radius:10px;--font:'Trebuchet MS','Segoe UI',sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);padding:16px 12px 40px;min-height:100vh;}
+    .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--text-dim);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;transition:color .15s;}
+    .back:hover{color:var(--accent);}
+    .header{text-align:center;margin-bottom:20px;}
+    .header-label{font-size:10px;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+    .header h1{font-size:clamp(16px,4vw,24px);font-weight:300;color:var(--accent);letter-spacing:.08em;}
+
+    /* Mode tabs */
+    .tabs{display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;}
+    .tab{padding:8px 18px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.05em;}
+    .tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px rgba(46,204,113,.15);}
+
+    /* Scale selector */
+    .scale-section{max-width:720px;margin:0 auto 16px;}
+    .section-label{font-size:10px;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+    .scale-grid{display:flex;flex-wrap:wrap;gap:6px;}
+    .scale-btn{
+      padding:8px 14px;border-radius:8px;border:2px solid #2a2a2a;background:#1a1a1a;
+      color:#666;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;text-align:left;
+    }
+    .scale-btn:hover{border-color:#444;color:#aaa;}
+    .scale-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+    .scale-btn .scale-sub{font-size:10px;font-weight:400;opacity:.7;display:block;margin-top:2px;}
+
+    /* Position nav */
+    .pos-nav{display:flex;gap:6px;align-items:center;justify-content:center;margin:0 auto 14px;flex-wrap:wrap;}
+    .pos-btn{padding:6px 12px;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:#555;font-size:11px;cursor:pointer;transition:all .15s;}
+    .pos-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+    .pos-label{font-size:11px;color:var(--text-dim);}
+
+    /* Legend */
+    .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-mid);}
+    .legend-dot{width:12px;height:12px;border-radius:50%;}
+
+    /* Fretboard */
+    .fretboard-wrap{overflow-x:auto;padding-bottom:8px;}
+    .fretboard-inner{min-width:640px;max-width:900px;margin:0 auto;}
+    svg#fretboard{width:100%;display:block;}
+
+    /* Quiz panel */
+    .quiz-panel{max-width:480px;margin:16px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+    .quiz-question{text-align:center;font-size:14px;color:var(--text);margin-bottom:16px;line-height:1.5;}
+    .quiz-question strong{color:var(--accent);}
+    .quiz-options{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+    .quiz-opt{padding:10px 20px;border-radius:8px;border:2px solid #333;background:#1a1a1a;color:#888;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+    .quiz-opt:hover{border-color:#666;color:#ccc;}
+    .quiz-opt.correct{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+    .quiz-opt.wrong{border-color:#e74c3c;background:#1a0a0a;color:#e74c3c;}
+    .quiz-feedback{text-align:center;margin-top:14px;font-size:13px;min-height:20px;}
+    .quiz-next{margin-top:12px;display:block;width:100%;padding:10px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+    .quiz-next:hover{background:var(--accent);color:#000;}
+    .quiz-score{text-align:center;font-size:11px;color:var(--text-dim);margin-top:10px;letter-spacing:.1em;}
+
+    /* Scale description */
+    .scale-info{max-width:480px;margin:12px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;}
+    .scale-info-name{font-size:15px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+    .scale-info-desc{font-size:12px;color:var(--text-mid);line-height:1.6;}
+    .scale-info-notes{margin-top:8px;font-size:11px;color:var(--text-dim);letter-spacing:.08em;}
+
+    footer{text-align:center;margin-top:28px;font-size:10px;color:#333;letter-spacing:.08em;}
+    footer a{color:var(--accent);text-decoration:none;opacity:.5;}
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="back">← Hub</a>
+
+<div class="header">
+  <div class="header-label">Guitarra con Maru · Fases 1 y 4</div>
+  <h1>Escalas</h1>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-mode="visual">👁 Visualización</button>
+  <button class="tab" data-mode="connect">🔗 Conectar Posiciones</button>
+  <button class="tab" data-mode="quiz">🎯 Quiz</button>
+</div>
+
+<div class="scale-section">
+  <div class="section-label">Seleccioná una escala</div>
+  <div class="scale-grid" id="scale-grid"></div>
+</div>
+
+<div class="pos-nav" id="pos-nav" style="display:none;"></div>
+<div class="legend" id="legend" style="display:none;"></div>
+
+<div class="fretboard-wrap">
+  <div class="fretboard-inner">
+    <svg id="fretboard" viewBox="0 0 920 220" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</div>
+
+<div class="scale-info" id="scale-info" style="display:none;"></div>
+<div class="quiz-panel" id="quiz-panel" style="display:none;"></div>
+
+<footer>Afinación estándar · E A D G B e · Trastes 0–12 · <a href="index.html">← Hub</a></footer>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────
+const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const OPEN_NOTES = ['E','A','D','G','B','E'];
+const STRING_LABELS = ['E','A','D','G','B','e'];
+const FRET_MARKERS = [3,5,7,9,12];
+const STRING_THICK = [3.2,2.6,2.0,1.5,1.0,0.6];
+
+function noteAt(open,fret){ return CHROMATIC[(CHROMATIC.indexOf(open)+fret)%12]; }
+
+// Scale patterns: each position is array of {si, fret, degree}
+// degree: 1=root, 2=2nd, 3=3rd, 4=4th, 5=5th, 6=6th, 7=7th
+const SCALES = {
+  'ionian_G': {
+    name: 'Sol Mayor — Jónica',
+    sub: 'La que ya conocés · Pos. 1',
+    desc: 'La escala mayor. El punto de partida de todo. 7 notas, patrón W-W-H-W-W-W-H. Usala para improvisar sobre backing tracks en Sol Mayor.',
+    root: 'G', color: '#3498db',
+    notes: ['G','A','B','C','D','E','F#'],
+    fase: 'Fase 0',
+    positions: [[
+      {si:5,fret:2,d:1},{si:5,fret:4,d:2},
+      {si:4,fret:2,d:3},{si:4,fret:4,d:4},
+      {si:3,fret:1,d:5},{si:3,fret:2,d:6},{si:3,fret:4,d:7},
+      {si:2,fret:1,d:1},{si:2,fret:3,d:2},
+      {si:1,fret:1,d:3},{si:1,fret:3,d:4},
+      {si:0,fret:2,d:5},{si:0,fret:4,d:6}
+    ]]
+  },
+  'penta_minor_A': {
+    name: 'La Menor Pentatónica',
+    sub: 'Posición 1 · Traste 5',
+    desc: 'La escala del rock, blues y todo lo que suena "intuitivo". Solo 5 notas, 2 por cuerda. Casi cualquier combinación sobre un backing track en Am suena bien.',
+    root: 'A', color: '#e74c3c',
+    notes: ['A','C','D','E','G'],
+    fase: 'Fase 1',
+    positions: [
+      [ // Pos 1
+        {si:5,fret:5,d:1},{si:5,fret:8,d:4},
+        {si:4,fret:5,d:5},{si:4,fret:7,d:7},
+        {si:3,fret:5,d:1},{si:3,fret:7,d:2},
+        {si:2,fret:5,d:3},{si:2,fret:7,d:4},
+        {si:1,fret:5,d:5},{si:1,fret:8,d:7},
+        {si:0,fret:5,d:1},{si:0,fret:8,d:4}
+      ],
+      [ // Pos 2
+        {si:5,fret:7,d:4},{si:5,fret:10,d:5},
+        {si:4,fret:7,d:7},{si:4,fret:10,d:1},
+        {si:3,fret:7,d:2},{si:3,fret:9,d:3},
+        {si:2,fret:7,d:4},{si:2,fret:10,d:5},
+        {si:1,fret:8,d:7},{si:1,fret:10,d:1},
+        {si:0,fret:7,d:4},{si:0,fret:10,d:5}
+      ]
+    ]
+  },
+  'penta_major_G_ladder': {
+    name: 'Sol Mayor Pentatónica',
+    sub: 'Escalera diagonal · Maru',
+    desc: 'La escalera pentatónica de Maru. Tocás las mismas notas que la posición vertical pero en diagonal, usando slides. Conecta todo el mástil. Usá dedos 1 y 3.',
+    root: 'G', color: '#2ecc71',
+    notes: ['G','A','B','D','E'],
+    fase: 'Fase 1',
+    positions: [[
+      {si:5,fret:3,d:1,slide:true},{si:5,fret:5,d:2},
+      {si:4,fret:5,d:3,slide:true},{si:4,fret:7,d:5},
+      {si:3,fret:7,d:6,slide:true},{si:3,fret:9,d:1},
+      {si:2,fret:8,d:2,slide:true},{si:2,fret:10,d:3},
+      {si:1,fret:10,d:5,slide:true},{si:1,fret:12,d:6},
+      {si:0,fret:10,d:1},{si:0,fret:12,d:2}
+    ]]
+  },
+  'penta_minor_G': {
+    name: 'Sol Menor Pentatónica',
+    sub: 'Posición 1 · Traste 3',
+    desc: 'La pentatónica menor en Sol. Usala para improvisar sobre backing tracks en Gm. Mismo patrón que Am, desplazado 2 trastes.',
+    root: 'G', color: '#e67e22',
+    notes: ['G','Bb','C','D','F'],
+    fase: 'Fase 1',
+    positions: [[
+      {si:5,fret:3,d:1},{si:5,fret:6,d:4},
+      {si:4,fret:3,d:5},{si:4,fret:5,d:7},
+      {si:3,fret:3,d:1},{si:3,fret:5,d:2},
+      {si:2,fret:3,d:3},{si:2,fret:5,d:4},
+      {si:1,fret:3,d:5},{si:1,fret:6,d:7},
+      {si:0,fret:3,d:1},{si:0,fret:6,d:4}
+    ]]
+  }
+};
+
+// ─── State ────────────────────────────────────────────────────────────
+const state = {
+  mode: 'visual',        // visual | connect | quiz
+  selectedScale: null,
+  positionIdx: 0,
+  quizScore: 0,
+  quizTotal: 0,
+  quizAnswer: null,
+  quizCorrectNote: null,
+};
+
+// ─── SVG Fretboard ────────────────────────────────────────────────────
+const SVG_W=920,SVG_H=220,NUT_X=48,RIGHT_X=SVG_W-16;
+const FRET_W=(RIGHT_X-NUT_X)/12;
+const STRING_TOP=28,STRING_BOT=SVG_H-28;
+const STRING_GAP=(STRING_BOT-STRING_TOP)/5;
+
+function fretX(fret){ return fret===0?NUT_X-4:NUT_X+(fret-0.5)*FRET_W; }
+function stringY(si){ return STRING_TOP+si*STRING_GAP; }
+
+function initFretboard(){
+  const svg=document.getElementById('fretboard'); svg.innerHTML='';
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML='<filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  svg.appendChild(defs);
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  // Nut
+  const nut=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  nut.setAttribute('x',NUT_X-5);nut.setAttribute('y',STRING_TOP-8);
+  nut.setAttribute('width',5);nut.setAttribute('height',STRING_GAP*5+16);
+  nut.setAttribute('fill','#5a4820');g.appendChild(nut);
+  // Frets
+  for(let f=1;f<=12;f++){
+    const x=NUT_X+f*FRET_W;
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x);l.setAttribute('y1',STRING_TOP-6);l.setAttribute('x2',x);l.setAttribute('y2',STRING_BOT+6);
+    l.setAttribute('stroke','#1a1a1a');l.setAttribute('stroke-width','2');g.appendChild(l);
+  }
+  // Fret numbers
+  for(let f=0;f<=12;f++){
+    const x=f===0?NUT_X-18:NUT_X+(f-0.5)*FRET_W;
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x);t.setAttribute('y',14);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','10');
+    t.setAttribute('fill',FRET_MARKERS.includes(f)?'#d4a847':'#2a2a2a');t.setAttribute('font-family','Trebuchet MS,sans-serif');
+    t.textContent=f===0?'○':f;g.appendChild(t);
+  }
+  // Strings
+  OPEN_NOTES.forEach((_,si)=>{
+    const y=stringY(si);
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',NUT_X-4);l.setAttribute('y1',y);l.setAttribute('x2',RIGHT_X);l.setAttribute('y2',y);
+    l.setAttribute('stroke','#3a2a10');l.setAttribute('stroke-width',STRING_THICK[si]);g.appendChild(l);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',22);t.setAttribute('y',y+4);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','11');
+    t.setAttribute('font-style','italic');t.setAttribute('font-weight','700');t.setAttribute('fill','#444');t.setAttribute('font-family','Trebuchet MS,sans-serif');
+    t.textContent=STRING_LABELS[si];g.appendChild(t);
+  });
+  // Position markers
+  FRET_MARKERS.forEach(f=>{
+    if(f===12){
+      [1,3].forEach(si=>{const c=makeDot(NUT_X+(f-0.5)*FRET_W,stringY(si)+STRING_GAP*.5,4,'#1e1e1e');g.appendChild(c);});
+    }else{
+      g.appendChild(makeDot(NUT_X+(f-0.5)*FRET_W,stringY(2)+STRING_GAP*.5,4,'#1e1e1e'));
+    }
+  });
+  svg.appendChild(g);
+  const dotsG=document.createElementNS('http://www.w3.org/2000/svg','g');
+  dotsG.id='fb-dots';svg.appendChild(dotsG);
+}
+
+function makeDot(cx,cy,r,fill){
+  const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',r);c.setAttribute('fill',fill);return c;
+}
+
+function DEGREE_COLORS(scale){
+  return {
+    1: scale.color,        // root — full color
+    2: scale.color+'99',
+    3: scale.color+'99',
+    4: scale.color+'99',
+    5: scale.color+'99',
+    6: scale.color+'99',
+    7: scale.color+'99',
+  };
+}
+
+function renderDots(){
+  const dotsG=document.getElementById('fb-dots'); dotsG.innerHTML='';
+  if(!state.selectedScale) return;
+  const scale=SCALES[state.selectedScale];
+  const positions=scale.positions;
+  const pos=positions[state.positionIdx]||positions[0];
+  const dc=DEGREE_COLORS(scale);
+
+  // For connect mode — show both positions with different opacity
+  if(state.mode==='connect' && positions.length>1){
+    const otherIdx=(state.positionIdx+1)%positions.length;
+    const other=positions[otherIdx];
+    other.forEach(p=>{
+      const cx=fretX(p.fret),cy=stringY(p.si);
+      const c=makeDot(cx,cy,11,scale.color+'33');
+      dotsG.appendChild(c);
+      // Dashed circle
+      const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      ring.setAttribute('cx',cx);ring.setAttribute('cy',cy);ring.setAttribute('r',13);
+      ring.setAttribute('fill','none');ring.setAttribute('stroke',scale.color+'55');ring.setAttribute('stroke-width','1.5');
+      ring.setAttribute('stroke-dasharray','3,3');dotsG.appendChild(ring);
+    });
+  }
+
+  pos.forEach(p=>{
+    const cx=fretX(p.fret),cy=stringY(p.si);
+    const isRoot=p.d===1;
+    const col=dc[p.d];
+    const r=isRoot?14:11;
+    const c=makeDot(cx,cy,r,col);
+    if(isRoot) c.setAttribute('filter','url(#glow)');
+    dotsG.appendChild(c);
+    // Label
+    const noteName=noteAt(OPEN_NOTES[p.si],p.fret);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx);t.setAttribute('y',cy+4);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','9');
+    t.setAttribute('font-weight','800');t.setAttribute('fill',isRoot?'#fff':'#000');t.setAttribute('font-family','Trebuchet MS,sans-serif');
+    t.textContent=noteName;dotsG.appendChild(t);
+
+    // Slide indicator
+    if(p.slide){
+      const sl=document.createElementNS('http://www.w3.org/2000/svg','text');
+      sl.setAttribute('x',cx+16);sl.setAttribute('y',cy-10);sl.setAttribute('font-size','9');
+      sl.setAttribute('fill',scale.color+'99');sl.setAttribute('font-family','Trebuchet MS,sans-serif');
+      sl.textContent='slide↗';dotsG.appendChild(sl);
+    }
+  });
+}
+
+function renderLegend(){
+  const leg=document.getElementById('legend');
+  if(!state.selectedScale){leg.style.display='none';return;}
+  const scale=SCALES[state.selectedScale];
+  leg.style.display='flex';
+  leg.innerHTML=`
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${scale.color};box-shadow:0 0 6px ${scale.color}55;"></div>
+      Raíz (${scale.root})
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${scale.color}88;"></div>
+      Otras notas
+    </div>
+    ${state.mode==='connect'&&scale.positions.length>1?`<div class="legend-item"><div class="legend-dot" style="background:${scale.color}22;border:1px dashed ${scale.color}55;"></div>Posición adyacente</div>`:''}
+  `;
+}
+
+function renderPosNav(){
+  const nav=document.getElementById('pos-nav');
+  if(!state.selectedScale){nav.style.display='none';return;}
+  const scale=SCALES[state.selectedScale];
+  if(scale.positions.length<=1&&state.mode==='visual'){nav.style.display='none';return;}
+  nav.style.display='flex';
+  nav.innerHTML='<span class="pos-label">Posición:</span>'+
+    scale.positions.map((_,i)=>
+      `<button class="pos-btn ${state.positionIdx===i?'active':''}" data-pos="${i}">Pos ${i+1}</button>`
+    ).join('')+
+    (state.mode==='connect'?'<span class="pos-label">· gris = posición conectada</span>':'');
+  nav.querySelectorAll('[data-pos]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      state.positionIdx=parseInt(btn.dataset.pos);
+      renderPosNav();renderDots();
+    });
+  });
+}
+
+function renderScaleInfo(){
+  const info=document.getElementById('scale-info');
+  if(!state.selectedScale||state.mode==='quiz'){info.style.display='none';return;}
+  const scale=SCALES[state.selectedScale];
+  info.style.display='block';
+  info.innerHTML=`
+    <div class="scale-info-name" style="color:${scale.color}">${scale.name}</div>
+    <div class="scale-info-desc">${scale.desc}</div>
+    <div class="scale-info-notes">Notas: ${scale.notes.join(' — ')}</div>
+  `;
+}
+
+// ─── Quiz ─────────────────────────────────────────────────────────────
+function generateQuiz(){
+  if(!state.selectedScale){
+    document.getElementById('quiz-panel').innerHTML='<p style="text-align:center;color:var(--text-dim);font-size:12px;">Seleccioná una escala para el quiz</p>';
+    document.getElementById('quiz-panel').style.display='block';
+    return;
+  }
+  const scale=SCALES[state.selectedScale];
+  const pos=scale.positions[0];
+  // Pick a random note from the scale
+  const item=pos[Math.floor(Math.random()*pos.length)];
+  const correctNote=noteAt(OPEN_NOTES[item.si],item.fret);
+  const strLabel=STRING_LABELS[item.si];
+  state.quizAnswer=null;
+  state.quizCorrectNote=correctNote;
+
+  // Wrong answers from chromatic
+  const options=new Set([correctNote]);
+  while(options.size<4){
+    options.add(CHROMATIC[Math.floor(Math.random()*12)]);
+  }
+  const shuffled=[...options].sort(()=>Math.random()-.5);
+
+  const panel=document.getElementById('quiz-panel');
+  panel.style.display='block';
+  panel.innerHTML=`
+    <div class="quiz-question">
+      ¿Qué nota es el traste <strong>${item.fret===0?'0 (al aire)':item.fret}</strong> de la cuerda <strong>${strLabel}</strong>?
+    </div>
+    <div class="quiz-options">
+      ${shuffled.map(n=>`<button class="quiz-opt" data-note="${n}">${n}</button>`).join('')}
+    </div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+    <div class="quiz-score">Puntaje: ${state.quizScore} / ${state.quizTotal}</div>
+  `;
+  panel.querySelectorAll('.quiz-opt').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      if(state.quizAnswer!==null)return;
+      state.quizAnswer=btn.dataset.note;
+      state.quizTotal++;
+      const correct=btn.dataset.note===correctNote;
+      if(correct)state.quizScore++;
+      btn.classList.add(correct?'correct':'wrong');
+      if(!correct){
+        panel.querySelector(`[data-note="${correctNote}"]`)?.classList.add('correct');
+      }
+      document.getElementById('quiz-feedback').innerHTML=
+        correct?'<span style="color:var(--accent)">✓ Correcto!</span>':'<span style="color:#e74c3c">✗ Era '+correctNote+'</span>';
+      document.getElementById('quiz-feedback').insertAdjacentHTML('afterend',
+        `<button class="quiz-next" id="quiz-next-btn">Siguiente pregunta →</button>`);
+      document.getElementById('quiz-next-btn')?.addEventListener('click',generateQuiz);
+    });
+  });
+}
+
+// ─── Render ─────────────────────────────────────────────────────────
+function render(){
+  renderDots();
+  renderLegend();
+  renderPosNav();
+  renderScaleInfo();
+  if(state.mode==='quiz') generateQuiz();
+  else document.getElementById('quiz-panel').style.display='none';
+}
+
+// ─── Scale Buttons ───────────────────────────────────────────────────
+function buildScaleButtons(){
+  const grid=document.getElementById('scale-grid');
+  grid.innerHTML='';
+  Object.entries(SCALES).forEach(([id,scale])=>{
+    const btn=document.createElement('button');
+    btn.className='scale-btn'+(state.selectedScale===id?' active':'');
+    btn.innerHTML=`${scale.name}<span class="scale-sub">${scale.sub}</span>`;
+    btn.style.setProperty('--accent',scale.color);
+    btn.addEventListener('click',()=>{
+      state.selectedScale=state.selectedScale===id?null:id;
+      state.positionIdx=0;
+      state.quizScore=0;state.quizTotal=0;
+      buildScaleButtons();
+      render();
+    });
+    grid.appendChild(btn);
+  });
+  // Active button styles
+  grid.querySelectorAll('.scale-btn').forEach(btn=>{
+    const id=Object.keys(SCALES).find(k=>SCALES[k].name===btn.querySelector('.scale-sub')?.previousSibling?.textContent);
+  });
+  // Re-apply active styles
+  Object.entries(SCALES).forEach(([id,scale])=>{
+    const btns=[...grid.querySelectorAll('.scale-btn')];
+    const btn=btns.find(b=>b.innerHTML.includes(scale.name));
+    if(!btn)return;
+    const active=state.selectedScale===id;
+    btn.classList.toggle('active',active);
+    btn.style.borderColor=active?scale.color:'#2a2a2a';
+    btn.style.background=active?scale.color+'22':'#1a1a1a';
+    btn.style.color=active?scale.color:'#666';
+  });
+}
+
+// ─── Mode tabs ───────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    state.mode=tab.dataset.mode;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    state.positionIdx=0;
+    render();
+  });
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────
+initFretboard();
+buildScaleButtons();
+render();
+
+// Progress
+const p=JSON.parse(localStorage.getItem('maru_progress_escalas')||'{}');
+p.visited=true;p.pct=p.pct||5;
+localStorage.setItem('maru_progress_escalas',JSON.stringify(p));
+</script>
+</body>
+</html>

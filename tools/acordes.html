@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acordes + Backing Track</title>
+  <style>
+    :root{
+      --bg:#0e0e0e;--surface:#141414;--surface2:#1a1a1a;--border:#222;
+      --text:#e8d5b0;--text-dim:#555;--text-mid:#888;
+      --accent:#3498db;--accent-dim:#0a1a2a;
+      --gold:#d4a847;--radius:10px;--font:'Trebuchet MS','Segoe UI',sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);padding:16px 12px 40px;min-height:100vh;}
+    .back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--text-dim);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;transition:color .15s;}
+    .back:hover{color:var(--accent);}
+    .header{text-align:center;margin-bottom:20px;}
+    .header-label{font-size:10px;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;}
+    .header h1{font-size:clamp(16px,4vw,24px);font-weight:300;color:var(--accent);letter-spacing:.08em;}
+
+    /* Mode tabs */
+    .tabs{display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;}
+    .tab{padding:8px 18px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-dim);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+    .tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+
+    /* Chord grid */
+    .chord-section{max-width:720px;margin:0 auto 16px;}
+    .section-label{font-size:10px;letter-spacing:.2em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;}
+    .category-label{font-size:11px;color:var(--text-mid);margin:12px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px;}
+    .chord-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+    .chord-btn{
+      padding:10px 14px;border-radius:8px;border:2px solid #2a2a2a;background:#1a1a1a;
+      color:#666;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;min-width:56px;text-align:center;
+    }
+    .chord-btn:hover{border-color:#444;color:#aaa;}
+    .chord-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+    .chord-btn .chord-sub{font-size:9px;display:block;font-weight:400;opacity:.7;margin-top:1px;}
+
+    /* Chord diagram */
+    .chord-display{max-width:480px;margin:0 auto 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+    .chord-name{text-align:center;font-size:20px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+    .chord-type{text-align:center;font-size:11px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;}
+    .chord-diagram-wrap{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+    svg.chord-svg{display:block;}
+    .chord-tips{flex:1;min-width:160px;}
+    .chord-tip{font-size:12px;color:var(--text-mid);margin-bottom:8px;line-height:1.5;}
+    .chord-tip strong{color:var(--text);}
+
+    /* Progression builder */
+    .prog-section{max-width:720px;margin:0 auto;}
+    .key-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+    .key-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
+    .key-btn{padding:6px 12px;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:#555;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+    .key-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+
+    .diatonic-chords{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+    .diatonic-chord{
+      padding:10px 14px;border-radius:8px;border:2px solid #2a2a2a;background:#1a1a1a;
+      color:#666;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;min-width:54px;
+    }
+    .diatonic-chord:hover{border-color:#444;color:#aaa;}
+    .diatonic-chord .degree{font-size:9px;display:block;opacity:.6;margin-bottom:2px;}
+    .diatonic-chord.in-prog{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+
+    .progression-slots{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:16px;min-height:52px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+    .prog-slot{
+      padding:10px 16px;border-radius:8px;border:2px solid var(--accent);background:var(--accent-dim);
+      color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;position:relative;
+      display:flex;align-items:center;gap:4px;
+    }
+    .prog-slot .remove{font-size:10px;opacity:.6;}
+    .prog-slot:hover .remove{opacity:1;}
+    .prog-empty{font-size:12px;color:var(--text-dim);font-style:italic;}
+    .prog-clear{padding:6px 12px;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:#555;font-size:11px;cursor:pointer;transition:all .15s;}
+    .prog-clear:hover{color:#888;border-color:#555;}
+
+    /* Player */
+    .player{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-top:0;}
+    .player-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;}
+    .tempo-control{display:flex;align-items:center;gap:8px;}
+    .tempo-btn{padding:7px 11px;border-radius:6px;border:1px solid #333;background:#1a1a1a;color:#777;font-size:13px;cursor:pointer;transition:all .15s;}
+    .tempo-btn:hover{color:#bbb;border-color:#555;}
+    .tempo-display{text-align:center;min-width:56px;}
+    .tempo-val{font-size:22px;font-weight:700;color:var(--gold);line-height:1;}
+    .tempo-unit{font-size:10px;color:var(--text-dim);letter-spacing:.1em;}
+    .play-btn{padding:10px 24px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+    .play-btn.stopped{background:#1e8449;color:#fff;box-shadow:0 0 12px #27ae6033;}
+    .play-btn.playing{background:#922b21;color:#fff;box-shadow:0 0 12px #c0392b33;}
+    .beat-dot{width:12px;height:12px;border-radius:50%;background:#222;transition:background .05s,box-shadow .05s;}
+    .beat-dot.on{background:var(--gold);box-shadow:0 0 8px var(--gold);}
+    .current-chord{text-align:center;margin-top:12px;font-size:24px;font-weight:700;color:var(--accent);min-height:36px;transition:color .1s;}
+    .beats-row{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+    .beat-cell{width:28px;height:28px;border-radius:6px;border:1px solid #2a2a2a;background:#141414;transition:all .1s;display:flex;align-items:center;justify-content:center;font-size:9px;color:#333;}
+    .beat-cell.active{background:var(--accent);border-color:var(--accent);color:#000;transform:scale(1.15);}
+    .player-hint{text-align:center;font-size:11px;color:var(--text-dim);margin-top:10px;}
+
+    footer{text-align:center;margin-top:28px;font-size:10px;color:#333;letter-spacing:.08em;}
+    footer a{color:var(--accent);text-decoration:none;opacity:.5;}
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="back">← Hub</a>
+<div class="header">
+  <div class="header-label">Guitarra con Maru · Fase 3</div>
+  <h1>Acordes + Backing Track</h1>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-mode="shapes">📋 Formas</button>
+  <button class="tab" data-mode="prog">🎵 Progresiones</button>
+</div>
+
+<!-- SHAPES MODE -->
+<div id="mode-shapes">
+  <div class="chord-section">
+    <div class="category-label">Acordes abiertos esenciales</div>
+    <div class="chord-grid" id="open-grid"></div>
+    <div class="category-label">Acordes suspendidos (sus)</div>
+    <div class="chord-grid" id="sus-grid"></div>
+    <div class="category-label">Barres — Raíz en 5ª cuerda (C como ejemplo)</div>
+    <div class="chord-grid" id="barre5-grid"></div>
+    <div class="category-label">Acordes de 7ª — Raíz en 5ª cuerda</div>
+    <div class="chord-grid" id="seventh-grid"></div>
+  </div>
+  <div class="chord-display" id="chord-display" style="display:none;"></div>
+</div>
+
+<!-- PROG MODE -->
+<div id="mode-prog" style="display:none;">
+  <div class="prog-section">
+    <div class="key-row">
+      <span class="key-label">Tonalidad:</span>
+      <div id="key-buttons"></div>
+    </div>
+    <div class="section-label">Acordes diatónicos — hacé click para agregar a la progresión</div>
+    <div class="diatonic-chords" id="diatonic-chords"></div>
+    <div class="section-label">Tu progresión (hacé click en un acorde para quitarlo)</div>
+    <div class="progression-slots" id="prog-slots">
+      <span class="prog-empty">Agregá acordes arriba →</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="prog-clear" id="prog-clear">Limpiar</button>
+    </div>
+    <div class="player" id="player">
+      <div class="player-controls">
+        <div class="tempo-control">
+          <button class="tempo-btn" id="tempo-down">−5</button>
+          <div class="tempo-display">
+            <div class="tempo-val" id="tempo-val">80</div>
+            <div class="tempo-unit">BPM</div>
+          </div>
+          <button class="tempo-btn" id="tempo-up">+5</button>
+        </div>
+        <button class="play-btn stopped" id="play-btn">▶ Tocar</button>
+        <div class="beat-dot" id="beat-dot"></div>
+      </div>
+      <div class="current-chord" id="current-chord"></div>
+      <div class="beats-row" id="beats-row"></div>
+      <div class="player-hint">Reproducí la progresión como backing track e improvisá encima con la pentatónica</div>
+    </div>
+  </div>
+</div>
+
+<footer>Afinación estándar · E A D G B e · <a href="index.html">← Hub</a></footer>
+
+<script>
+// ─── Chord Data ───────────────────────────────────────────────────────
+// strings: [e,B,G,D,A,E] from high to low  (x=muted, 0=open, number=fret)
+const CHORDS = {
+  // Open
+  'Em':  {name:'Em',  type:'Menor abierto',   strings:[0,0,0,2,2,0], fingers:'234', tips:['El más fácil. Base de muchas canciones de rock.','Usá el barre en el traste 7 para Bm.']},
+  'Am':  {name:'Am',  type:'Menor abierto',   strings:[0,1,2,2,0,'x'], fingers:'231', tips:['Muy usado en blues y folk.','Con barre en traste 5 es Dm.']},
+  'G':   {name:'G',   type:'Mayor abierto',   strings:[3,0,0,0,2,3], fingers:'2004', tips:['Dos versiones: 4 dedos (más sonora) o 2 dedos (más rápido de cambiar).','Barre en traste 3 es Cm.']},
+  'C':   {name:'C',   type:'Mayor abierto',   strings:[0,1,0,2,3,'x'], fingers:'032', tips:['El cambio C→G es uno de los más comunes en pop.','No toques la 6ª cuerda.']},
+  'D':   {name:'D',   type:'Mayor abierto',   strings:[2,3,2,0,'x','x'], fingers:'132', tips:['Solo cuerdas 1-4.','Barre en traste 2 con forma C = Dm.']},
+  // Sus
+  'Dsus2':{name:'Dsus2',type:'Suspendido',strings:[0,3,2,0,'x','x'],fingers:'013',tips:['Quitás el 3er dedo del D mayor. Sonido abierto, flotante.','Usalo para crear movimiento: D → Dsus2 → D']},
+  'Dsus4':{name:'Dsus4',type:'Suspendido',strings:[3,3,2,0,'x','x'],fingers:'134',tips:['Tensión que resuelve en D mayor.','Muy usado en rock: The Who, The Police.']},
+  'Asus2':{name:'Asus2',type:'Suspendido',strings:[0,0,2,2,0,'x'],fingers:'023',tips:['Parecido a Am pero sin la nota menor. Neutral, abierto.']},
+  'Asus4':{name:'Asus4',type:'Suspendido',strings:[0,3,2,2,0,'x'],fingers:'034',tips:['Resuelve en A mayor o Am.']},
+  'Gsus2':{name:'Gsus2',type:'Suspendido',strings:[3,3,0,0,2,3],fingers:'4400',tips:['Très abierto en guitarra acústica. Gran sonido ambient.']},
+  // Barre 5th string
+  'C_b5': {name:'C (cejilla)',type:'Barre 5ª cuerda',barre:3,strings:['x',3,5,5,5,3],fingers:'134411',tips:['Traste 3 en cuerda 5 = nota C.','Movelo al traste 5 para Dm, traste 7 para Em, etc.','Tip Maru: índice de lado, no plano.']},
+  'Cm_b5':{name:'Cm (cejilla)',type:'Barre menor 5ª',barre:3,strings:['x',3,5,5,4,3],fingers:'134211',tips:['Misma forma pero el 3er dedo toca un traste antes.','Movelo = cualquier acorde menor.']},
+  'C7_b5':{name:'C7 (cejilla)',type:'Dominante 7ª',barre:3,strings:['x',3,5,3,5,3],fingers:'131211',tips:['El acorde de blues por excelencia.','Suena a blues en cualquier traste.']},
+  // 7th chords
+  'Cmaj7':{name:'Cmaj7',type:'Mayor 7ª',strings:['x',3,5,4,5,3],fingers:'131211',tips:['Sonido jazz elegante.','Mará: más sofisticado que el acorde mayor.']},
+  'Cm7':  {name:'Cm7', type:'Menor 7ª',strings:['x',3,5,3,4,3],fingers:'131111',tips:['Sonido soul y R&B.','Barre completo en traste 3, levantás el índice una cuerda.']},
+  'Cm7b5':{name:'Cm7♭5',type:'Semidisminuido',strings:['x',3,4,3,4,3],fingers:'121111',tips:['Tenso, cinematográfico.','Muy usado en jazz y bandas sonoras.']},
+};
+
+// Diatonic chords per key (major)
+const MAJOR_SCALE = [0,2,4,5,7,9,11];
+const DEGREES_QUALITY = ['mayor','menor','menor','mayor','mayor','menor','disminuido'];
+const DEGREES_SYMBOL  = ['I','ii','iii','IV','V','vi','vii°'];
+const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const KEYS = ['C','D','E','F','G','A','B'];
+
+function getDiatonicChords(key) {
+  const root = CHROMATIC.indexOf(key);
+  return MAJOR_SCALE.map((interval, i) => {
+    const note = CHROMATIC[(root + interval) % 12];
+    const quality = DEGREES_QUALITY[i];
+    const name = quality === 'menor' ? note + 'm' : quality === 'disminuido' ? note + '°' : note;
+    return { note, quality, name, degree: DEGREES_SYMBOL[i] };
+  });
+}
+
+// ─── State ─────────────────────────────────────────────────────────────
+const state = {
+  mode: 'shapes',
+  selectedChord: null,
+  key: 'G',
+  progression: [],     // array of chord names
+  playing: false,
+  bpm: 80,
+  currentSlot: 0,
+  currentBeat: 0,
+  beatsPerChord: 4,
+};
+let audioCtx = null;
+let playInterval = null;
+let tickCount = 0;
+let startTime = 0;
+
+// ─── Audio ─────────────────────────────────────────────────────────────
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Chord frequencies: map note name to base frequency
+const NOTE_FREQ = {};
+CHROMATIC.forEach((n,i)=>{ NOTE_FREQ[n] = 65.41 * Math.pow(2, i/12); }); // C2 = 65.41
+
+function playChordAudio(chordName) {
+  const ctx = getAudioCtx();
+  // Determine notes: root + 5th (simplified strum simulation)
+  const root = chordName.replace(/m.*|°|sus.*|maj.*|\d/g,'').replace(/#/g,'#');
+  const isMinor = chordName.includes('m') && !chordName.includes('maj');
+  const rootFreq = NOTE_FREQ[root] || NOTE_FREQ['A'];
+  const fifth = rootFreq * 1.5;
+  const third = isMinor ? rootFreq * 1.189 : rootFreq * 1.26;
+
+  [rootFreq, rootFreq*2, third, fifth].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'triangle';
+    const t = ctx.currentTime + i * 0.04;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+    osc.start(t); osc.stop(t + 1.3);
+  });
+}
+
+function playClick() {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.frequency.value = 660;
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+  osc.start(); osc.stop(ctx.currentTime + 0.05);
+}
+
+// ─── Player ─────────────────────────────────────────────────────────────
+function tick() {
+  if (!state.playing || state.progression.length === 0) return;
+  const interval = 60000 / state.bpm;
+  tickCount++;
+
+  // Which chord and beat
+  const totalBeats = state.progression.length * state.beatsPerChord;
+  const globalBeat = tickCount % totalBeats;
+  state.currentSlot = Math.floor(globalBeat / state.beatsPerChord);
+  state.currentBeat = globalBeat % state.beatsPerChord;
+
+  // Play chord on beat 1 of each chord
+  if (state.currentBeat === 0) {
+    playChordAudio(state.progression[state.currentSlot]);
+  }
+  playClick();
+
+  // Visual
+  document.getElementById('beat-dot').classList.toggle('on', tickCount % 2 === 0);
+  renderBeats();
+
+  const elapsed = performance.now() - startTime;
+  const nextDelay = interval * (tickCount + 1) - elapsed;
+  playInterval = setTimeout(tick, Math.max(0, nextDelay));
+}
+
+function startPlaying() {
+  if (state.progression.length === 0) return;
+  state.playing = true;
+  tickCount = 0;
+  startTime = performance.now();
+  state.currentSlot = 0;
+  state.currentBeat = 0;
+  document.getElementById('play-btn').className = 'play-btn playing';
+  document.getElementById('play-btn').textContent = '⏹ Parar';
+  tick();
+}
+
+function stopPlaying() {
+  state.playing = false;
+  clearTimeout(playInterval);
+  document.getElementById('play-btn').className = 'play-btn stopped';
+  document.getElementById('play-btn').textContent = '▶ Tocar';
+  document.getElementById('beat-dot').classList.remove('on');
+  document.getElementById('current-chord').textContent = '';
+  renderBeats();
+}
+
+function renderBeats() {
+  const row = document.getElementById('beats-row');
+  const currentChordName = state.playing && state.progression.length ? state.progression[state.currentSlot] : '';
+  document.getElementById('current-chord').textContent = currentChordName;
+  row.innerHTML = state.progression.map((chord, i) => {
+    const isActive = state.playing && i === state.currentSlot;
+    return `<div class="beat-cell ${isActive?'active':''}">${chord}</div>`;
+  }).join('');
+}
+
+// ─── Chord Diagram SVG ──────────────────────────────────────────────────
+function buildChordSVG(chord) {
+  const strings = chord.strings; // [e,B,G,D,A,E] high→low
+  const W=160, H=180, LEFT=20, TOP=40, CELL_W=24, CELL_H=22;
+  const hasBarre = chord.barre != null;
+  const minFret = Math.min(...strings.filter(s=>typeof s==='number'&&s>0));
+  const maxFret = Math.max(...strings.filter(s=>typeof s==='number'));
+  const offset = minFret > 3 ? minFret - 1 : 0;
+
+  let svg = `<svg class="chord-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // Nut or position number
+  if (offset === 0) {
+    svg += `<rect x="${LEFT}" y="${TOP-2}" width="${CELL_W*5}" height="4" fill="#5a4820"/>`;
+  } else {
+    svg += `<text x="${LEFT-14}" y="${TOP+CELL_H}" font-size="10" fill="#888" font-family="Trebuchet MS">${offset+1}fr</text>`;
+  }
+  // Fret lines
+  for (let f = 0; f <= 4; f++) {
+    svg += `<line x1="${LEFT}" y1="${TOP+f*CELL_H}" x2="${LEFT+CELL_W*5}" y2="${TOP+f*CELL_H}" stroke="#2a2a2a" stroke-width="1.5"/>`;
+  }
+  // String lines
+  for (let s = 0; s < 6; s++) {
+    svg += `<line x1="${LEFT+s*CELL_W}" y1="${TOP}" x2="${LEFT+s*CELL_W}" y2="${TOP+4*CELL_H}" stroke="#3a2a10" stroke-width="${[0.6,1.0,1.5,2.0,2.6,3.2][5-s]}"/>`;
+  }
+  // String labels
+  const labels=['e','B','G','D','A','E'];
+  for(let s=0;s<6;s++){
+    svg+=`<text x="${LEFT+s*CELL_W}" y="${TOP-10}" text-anchor="middle" font-size="9" fill="#666" font-family="Trebuchet MS">${labels[s]}</text>`;
+  }
+  // Barre
+  if(hasBarre){
+    const by=TOP+(chord.barre-offset-1)*CELL_H+CELL_H/2;
+    svg+=`<rect x="${LEFT-2}" y="${by-7}" width="${CELL_W*5+4}" height="14" rx="7" fill="#3498db" opacity="0.85"/>`;
+  }
+  // Dots
+  strings.forEach((fret,si)=>{
+    const sx=LEFT+si*CELL_W;
+    if(fret==='x'){
+      svg+=`<text x="${sx}" y="${TOP-22}" text-anchor="middle" font-size="12" fill="#666" font-family="Trebuchet MS">✕</text>`;
+    } else if(fret===0){
+      svg+=`<circle cx="${sx}" cy="${TOP-22}" r="5" fill="none" stroke="#666" stroke-width="1.5"/>`;
+    } else {
+      const fy=TOP+(fret-offset-1)*CELL_H+CELL_H/2;
+      svg+=`<circle cx="${sx}" cy="${fy}" r="8" fill="#3498db"/><text x="${sx}" y="${fy+4}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700" font-family="Trebuchet MS">${fret-offset>0&&!hasBarre?fret-offset:''}</text>`;
+    }
+  });
+  svg+='</svg>';
+  return svg;
+}
+
+// ─── Render chord display ─────────────────────────────────────────────
+function renderChordDisplay() {
+  const display = document.getElementById('chord-display');
+  if(!state.selectedChord){display.style.display='none';return;}
+  const chord = CHORDS[state.selectedChord];
+  if(!chord){display.style.display='none';return;}
+  display.style.display='block';
+  display.innerHTML=`
+    <div class="chord-name">${chord.name}</div>
+    <div class="chord-type">${chord.type}</div>
+    <div class="chord-diagram-wrap">
+      ${buildChordSVG(chord)}
+      <div class="chord-tips">
+        ${(chord.tips||[]).map(t=>`<div class="chord-tip">💡 ${t}</div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ─── Build chord buttons ──────────────────────────────────────────────
+function buildChordButtons() {
+  const groups = {
+    'open-grid': ['Em','Am','G','C','D'],
+    'sus-grid':  ['Dsus2','Dsus4','Asus2','Asus4','Gsus2'],
+    'barre5-grid':['C_b5','Cm_b5','C7_b5'],
+    'seventh-grid':['Cmaj7','Cm7','Cm7b5'],
+  };
+  Object.entries(groups).forEach(([gridId, chordIds]) => {
+    const grid = document.getElementById(gridId);
+    if(!grid)return;
+    grid.innerHTML = chordIds.map(id => {
+      const c = CHORDS[id];
+      const active = state.selectedChord === id;
+      return `<button class="chord-btn ${active?'active':''}" data-chord="${id}">${c.name}</button>`;
+    }).join('');
+    grid.querySelectorAll('.chord-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.selectedChord = state.selectedChord === btn.dataset.chord ? null : btn.dataset.chord;
+        buildChordButtons();
+        renderChordDisplay();
+      });
+    });
+  });
+}
+
+// ─── Diatonic chords + key ────────────────────────────────────────────
+function buildKeyButtons() {
+  const container = document.getElementById('key-buttons');
+  container.innerHTML = KEYS.map(k =>
+    `<button class="key-btn ${state.key===k?'active':''}" data-key="${k}">${k}</button>`
+  ).join('');
+  container.querySelectorAll('.key-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.key = btn.dataset.key;
+      buildKeyButtons();
+      buildDiatonicChords();
+    });
+  });
+}
+
+function buildDiatonicChords() {
+  const container = document.getElementById('diatonic-chords');
+  const chords = getDiatonicChords(state.key);
+  container.innerHTML = chords.map(c => {
+    const inProg = state.progression.includes(c.name);
+    return `<button class="diatonic-chord ${inProg?'in-prog':''}" data-chord="${c.name}">
+      <span class="degree">${c.degree}</span>${c.name}
+    </button>`;
+  }).join('');
+  container.querySelectorAll('.diatonic-chord').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (state.progression.length < 8) state.progression.push(btn.dataset.chord);
+      buildDiatonicChords();
+      renderProgSlots();
+    });
+  });
+}
+
+function renderProgSlots() {
+  const slots = document.getElementById('prog-slots');
+  if(state.progression.length === 0){
+    slots.innerHTML = '<span class="prog-empty">Agregá acordes arriba →</span>';
+  } else {
+    slots.innerHTML = state.progression.map((chord, i) =>
+      `<div class="prog-slot" data-idx="${i}">${chord}<span class="remove">✕</span></div>`
+    ).join('');
+    slots.querySelectorAll('.prog-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const idx = parseInt(slot.dataset.idx);
+        state.progression.splice(idx, 1);
+        buildDiatonicChords();
+        renderProgSlots();
+        renderBeats();
+      });
+    });
+  }
+  buildDiatonicChords();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────
+buildChordButtons();
+renderChordDisplay();
+buildKeyButtons();
+buildDiatonicChords();
+renderProgSlots();
+renderBeats();
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    state.mode = tab.dataset.mode;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('mode-shapes').style.display = state.mode==='shapes'?'':'none';
+    document.getElementById('mode-prog').style.display   = state.mode==='prog'?'':'none';
+    if(state.playing && state.mode==='shapes') stopPlaying();
+  });
+});
+
+// BPM
+document.getElementById('tempo-down').addEventListener('click',()=>{ state.bpm=Math.max(40,state.bpm-5); document.getElementById('tempo-val').textContent=state.bpm; });
+document.getElementById('tempo-up').addEventListener('click',()=>{ state.bpm=Math.min(160,state.bpm+5); document.getElementById('tempo-val').textContent=state.bpm; });
+
+// Play
+document.getElementById('play-btn').addEventListener('click',()=>{ if(state.playing)stopPlaying();else startPlaying(); });
+
+// Clear
+document.getElementById('prog-clear').addEventListener('click',()=>{ stopPlaying(); state.progression=[]; renderProgSlots(); renderBeats(); });
+
+// Progress
+const p=JSON.parse(localStorage.getItem('maru_progress_acordes')||'{}');
+p.visited=true;p.pct=p.pct||5;
+localStorage.setItem('maru_progress_acordes',JSON.stringify(p));
+</script>
+</body>
+</html>
