@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-03-31 | 12:47
+
+**Resumen:** Se implementó lógica de zonas de fret por cuerda para garantizar orden ascendente de pitch en la visualización de escalas en el mástil.
+
+**Cambios:**
+- Rediseño del algoritmo de mapeo escala→mástil usando rangos de fret por cuerda (E:[1-4], A:[2-6], D:[4-8], G:[6-10], B:[7-11], e:[10-12])
+- Las zonas se solapan intencionalmente para que el pitch siempre sea ascendente entre cuerdas sin necesidad de ordenar explícitamente
+- Refactorización de `tools/escalas.html` con 159 inserciones y 48 eliminaciones
+
+**Archivos clave:** `tools/escalas.html`, `tools/diapason.html`, `tools/acordes.html`
+
+---
+
 ## 2026-03-31 | 12:05
 
 **Resumen:** Se corrigió el algoritmo de visualización diagonal de escalas en el mástil para eliminar cuerdas al aire y distribuir las notas proporcionalmente desde la raíz.
