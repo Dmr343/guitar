@@ -1,6 +1,20 @@
 # Bitácora — maru_guide
 
 
+## 2026-03-31 | 10:50
+
+**Resumen:** Se refinó la interfaz de la herramienta de escalas para simplificar la navegación y mejorar la visualización de fórmulas de escalas.
+
+**Cambios:**
+- Reducida la barra de tabs a solo 3 vistas: Calcular, Quiz y Editor (eliminadas Visualización y Conectar)
+- Calcular establecida como tab activa por defecto al cargar la página
+- Agregados 4 tipos de escala: Mayor, Penta Mayor, Menor, Penta Menor
+- La fórmula muestra intervalos con notación T/S/m3 entre cada nota de la escala
+
+**Archivos clave:** `tools/escalas.html`
+
+---
+
 ## 2026-03-31 | 10:45
 
 **Resumen:** Consulta técnica sobre la estructura de escalas pentatónicas (mayor y menor) y su visualización en el diapasón SVG del modo Calcular.
