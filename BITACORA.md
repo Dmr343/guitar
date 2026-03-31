@@ -1,6 +1,21 @@
 # Bitácora — maru_guide
 
 
+## 2026-03-30 | 18:21
+
+**Resumen:** Se implementó el modo "Calcular" en la app de escalas, permitiendo derivar cualquier escala Mayor o Menor desde una raíz elegida directamente en el diapasón.
+
+**Cambios:**
+- Nuevo tab "Calcular" en `escalas.html` con toggle Mayor/Menor
+- Fórmula de intervalos mostrada abstractamente antes de seleccionar raíz (`T — T — S — T — T — T — S`)
+- Click en cualquier nota del mástil la establece como raíz y completa la fórmula con notas reales
+- Todas las posiciones de las 7 notas de la escala se iluminan en el mástil completo
+- La raíz se destaca visualmente con tamaño mayor y glow; cada nota muestra nombre y grado (1-7)
+
+**Archivos clave:** `escalas.html`
+
+---
+
 ## 2026-03-30 | 17:52
 
 **Resumen:** Se corrigió la orientación del diapasón en los diagramas SVG para que la cuerda 6 (grave) quede abajo y la cuerda 1 (aguda) quede arriba, alineándose con la tablatura estándar.
