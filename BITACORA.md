@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-03-31 | 10:45
+
+**Resumen:** Consulta técnica sobre la estructura de escalas pentatónicas (mayor y menor) y su visualización en el diapasón SVG del modo Calcular.
+
+**Archivos clave:** `guia_guitarra.md`
+
+---
+
 ## 2026-03-31 | 10:40
 
 **Resumen:** Sesión de consulta teórica sobre la construcción de la escala pentatónica menor y su relación con la escala menor natural.
