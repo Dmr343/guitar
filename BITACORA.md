@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 15:35
+
+**Resumen:** Se implementó en la app de escalas un toggle para alternar entre dos interpretaciones de los modos griegos: "dentro de la clave" (mismas notas que la escala madre) y "modo desde la tónica seleccionada" (fórmula propia del modo).
+
+**Cambios:**
+- Agregado toggle contextual que aparece al seleccionar un modo no-Jónico en el diapasón
+- El diapasón y la fórmula de intervalos se actualizan dinámicamente según la vista activa
+- Correcciones menores de consistencia en los demás archivos HTML del ecosistema
+
+**Archivos clave:** `tools/escalas.html`, `tools/diapason.html`
+
+---
+
 ## 2026-04-01 | 15:19
 
 **Resumen:** Se implementó exploración interactiva de modos musicales (jónico, dórico, frigio, etc.) en el diapasón, partiendo de cualquier nota raíz seleccionada.
