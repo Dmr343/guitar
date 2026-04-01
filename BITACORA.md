@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-03-31 | 18:20
+
+**Resumen:** Se mejoró la UI de la herramienta de escalas: etiquetas de pentatónicas más descriptivas y control de modo diagonal reubicado y condicionado.
+
+**Cambios:**
+- Renombrados botones "Penta Mayor/Menor" → "Pentatónica Mayor/Menor" en `escalas.html`
+- Toggle de modo diagonal movido al mismo row que los controles, alineado a la derecha
+- Toggle diagonal ahora solo se muestra cuando la escala activa es pentatónica (`isPenta`)
+
+**Archivos clave:** `tools/escalas.html`
+
+---
+
 ## 2026-03-31 | 15:04
 
 **Resumen:** Se implementó la lógica de navegación por cuerdas en el visualizador de escalas, priorizando subir de cuerda solo cuando la distancia al traste siguiente es estrictamente menor.
