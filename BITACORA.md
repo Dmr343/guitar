@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 15:38
+
+**Resumen:** Se corrigió un bug silencioso en `escalas.html` donde el toggle de modos no respondía al click por pasar el array incorrecto a `buildScaleNotes`.
+
+**Cambios:**
+- Corregido: `buildScaleNotes` recibía `mode.steps` (array) en lugar del objeto `mode` completo, causando que `formula.steps` fuera `undefined`
+- Refactorizado el flujo de construcción de notas de escala para pasar el objeto `mode` íntegro
+- Añadida línea de versión/timestamp a todos los archivos HTML del ecosistema
+
+**Archivos clave:** `tools/escalas.html`, `tools/acordes.html`, `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-01 | 15:35
 
 **Resumen:** Se implementó en la app de escalas un toggle para alternar entre dos interpretaciones de los modos griegos: "dentro de la clave" (mismas notas que la escala madre) y "modo desde la tónica seleccionada" (fórmula propia del modo).
