@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 14:00
+
+**Resumen:** Creado ranking de escalas prácticas para improvisar y actualizado herramientas HTML integradas.
+
+**Cambios:**
+- Creado TOP-ESCALAS.md con 23 escalas (mayores, menores, pentatónicas) ordenadas por utilidad e improvisación
+- Expandido tools/escalas.html (+240 líneas): patrones, referencias visuales y plan de aprendizaje
+- Actualizado 5 herramientas HTML: acordes, diapason, guia, index, oido
+
+**Archivos clave:** `TOP-ESCALAS.md`, `tools/escalas.html`, `tools/index.html`
+
+---
+
 ## 2026-03-31 | 18:20
 
 **Resumen:** Se mejoró la UI de la herramienta de escalas: etiquetas de pentatónicas más descriptivas y control de modo diagonal reubicado y condicionado.
