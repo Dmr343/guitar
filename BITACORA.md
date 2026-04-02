@@ -1,6 +1,18 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 19:46
+
+**Resumen:** Revisión editorial de la guía principal (`TOP-ESCALAS.md` y guía base) identificando inconsistencias, errores tipográficos y referencias huérfanas entre documentos.
+
+**Cambios:**
+- Ampliación mayor de `tools/escalas.html` (+306 líneas netas, refactoring de contenido)
+- Ajuste menor en `tools/acordes.html`, `diapason.html`, `guia.html`, `index.html`, `oido.html` (1 línea c/u)
+
+**Archivos clave:** `tools/escalas.html`, `TOP-ESCALAS.md`
+
+---
+
 ## 2026-04-01 | 15:38
 
 **Resumen:** Se corrigió un bug silencioso en `escalas.html` donde el toggle de modos no respondía al click por pasar el array incorrecto a `buildScaleNotes`.
