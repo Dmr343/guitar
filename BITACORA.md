@@ -1,6 +1,18 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 21:38
+
+**Resumen:** Se creó una guía de escucha curada (`MUSICA-RECOMENDADA.md`) con recomendaciones musicales organizadas por afinidad con el universo sonoro de Omar Rodríguez-López.
+
+**Cambios:**
+- Creado `MUSICA-RECOMENDADA.md` con raíces directas y universo sonoro paralelo de ORL
+- Modificaciones menores en 4 herramientas HTML (`diapason`, `guia`, `index`, `oido`)
+
+**Archivos clave:** `MUSICA-RECOMENDADA.md`, `tools/index.html`, `tools/guia.html`
+
+---
+
 ## 2026-04-01 | 21:36
 
 **Resumen:** Se implementaron mejoras en tres herramientas: soporte de acordes menores con presets y modo drill, metrónomo y quiz en la herramienta de escalas, y sección TOP-ESCALAS con contexto musical.
