@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 21:36
+
+**Resumen:** Se implementaron mejoras en tres herramientas: soporte de acordes menores con presets y modo drill, metrónomo y quiz en la herramienta de escalas, y sección TOP-ESCALAS con contexto musical.
+
+**Cambios:**
+- Acordes: añadidos acordes menores, sistema de presets y modo drill de práctica
+- Escalas: integrado metrónomo y quiz interactivo
+- Escalas: nueva sección TOP-ESCALAS con información musical contextual
+
+**Archivos clave:** `tools/acordes.html`, `tools/escalas.html`
+
+---
+
 ## 2026-04-01 | 21:35
 
 **Resumen:** Se expandieron las herramientas interactivas del ecosistema de guitarra, con mejoras mayores en acordes y escalas, y se consultó sobre artistas de referencia para el perfil musical del usuario.
