@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 20:20
+
+**Resumen:** Se reorganizó `TOP-ESCALAS.md` para convertirlo en una ruta de aprendizaje de 6 fases con referencias directas a las funciones de `escalas.html`, y se realizaron mejoras significativas a la herramienta de escalas interactiva.
+
+**Cambios:**
+- Reescritura mayor de `tools/escalas.html` (+295 líneas netas): nueva funcionalidad y UI mejorada
+- Creación de `TOP-ESCALAS.md` como guía de ruta ordenada por fases, con vínculos a botones específicos de la app
+- Actualizaciones menores de sincronización en `guia_guitarra.md` y el resto de herramientas HTML
+
+**Archivos clave:** `tools/escalas.html`, `TOP-ESCALAS.md`, `guia_guitarra.md`
+
+---
+
 ## 2026-04-01 | 19:51
 
 **Resumen:** Se simplificó el currículo de escalas y se corrigió la documentación principal de la guía de guitarra.
