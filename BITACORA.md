@@ -1,6 +1,21 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-01 | 20:42
+
+**Resumen:** Se implementaron herramientas interactivas de práctica en las apps de acordes y escalas, y se creó un documento de referencia de escalas con artistas de referencia.
+
+**Cambios:**
+- `acordes.html`: toggle mayor/menor para progresiones diatónicas + presets de progresiones por género con artistas de referencia
+- `acordes.html`: formas movibles de barré (F, Fm, F7) y tab de práctica de cambios con timer
+- `escalas.html`: quiz universal para cualquier escala calculada (antes solo 4 hardcodeadas)
+- `escalas.html`: metrónomo integrado permanente (20–200 BPM) con acento en beat 1
+- `TOP-ESCALAS.md`: nuevo documento conectando escalas clave con artistas del universo musical del usuario
+
+**Archivos clave:** `tools/acordes.html`, `tools/escalas.html`, `TOP-ESCALAS.md`
+
+---
+
 ## 2026-04-01 | 20:20
 
 **Resumen:** Se reorganizó `TOP-ESCALAS.md` para convertirlo en una ruta de aprendizaje de 6 fases con referencias directas a las funciones de `escalas.html`, y se realizaron mejoras significativas a la herramienta de escalas interactiva.
