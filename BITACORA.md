@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-03 | 00:22
+
+**Resumen:** Consulta sobre equipamiento de entrada (guitarra eléctrica, amplificadores y accesorios) con precios reales de Bansbach para armar un setup mínimo viable.
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-03 | 00:20
 
 **Resumen:** Se consultaron opciones de equipamiento para tocar guitarra con audífonos Bluetooth a través de un amplificador.
