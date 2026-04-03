@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-02 | 23:12
+
+**Resumen:** Sesión de consulta sobre equipamiento y criterios para comprar guitarra eléctrica usada a $200.
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-02 | 23:02
 
 **Resumen:** Consulta sobre selección de guitarra eléctrica con coil-split en presupuesto ajustado al mercado centroamericano.
