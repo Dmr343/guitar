@@ -1,6 +1,11 @@
 # Bitácora — maru_guide
 
 
+No recibí argumentos. Necesito dos datos antes de continuar:
+
+1. **Proyectos a incluir** — ¿cuáles repos de `/home/daniel-nhpc/Documents/work/` debo revisar?
+2. **Horas totales** — ¿cuántas horas trabajaste esta semana en total?
+
 ## 2026-04-03 | 13:02
 
 **Resumen:** Se expandió la herramienta de acordes con una refactorización mayor y ajustes menores en el resto de las apps del ecosistema.
