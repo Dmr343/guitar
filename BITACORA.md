@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-02 | 23:53
+
+**Resumen:** Sesión de consulta sobre compra de guitarra eléctrica, evaluando compatibilidad de una Les Paul Studio con el estilo melódico buscado.
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-02 | 23:50
 
 **Resumen:** Consulta de compra de guitarra eléctrica comparando Tagima TW-61, Yamaha Pacifica 112J y Gibson LP Studio IBG según el perfil musical del usuario.
