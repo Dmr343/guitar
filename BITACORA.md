@@ -1,6 +1,17 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-02 | 23:43
+
+**Resumen:** Se analizó comparativa de guitarras eléctricas de entrada (Yamaha Pacifica 112J vs Epiphone LP Studio) para orientar una decisión de compra según el perfil musical del usuario.
+
+**Cambios:**
+- Actualización menor en `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html` (1 línea cada uno)
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-02 | 23:40
 
 **Resumen:** Sesión de consulta sobre compra de guitarra eléctrica comparando modelos Fender/Squier vs Gibson LP Studio para el perfil musical del usuario.
