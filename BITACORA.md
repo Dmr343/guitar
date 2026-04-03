@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-03 | 13:02
+
+**Resumen:** Se expandió la herramienta de acordes con una refactorización mayor y ajustes menores en el resto de las apps del ecosistema.
+
+**Cambios:**
+- Refactorización extensa de `acordes.html`: +389 líneas netas con nueva lógica de visualización/interacción
+- Ajuste menor en `diapason.html`, `index.html` y `oido.html` (1 línea cada uno)
+- Ampliación de contenido en `guia.html` (+27 líneas)
+
+**Archivos clave:** `tools/acordes.html`, `tools/guia.html`
+
+---
+
 ## 2026-04-03 | 12:46
 
 **Resumen:** Se rediseñó la app de acordes para mostrar la relación entre escalas, tríadas y acordes, con diapasón interactivo y tab de improvisación.
