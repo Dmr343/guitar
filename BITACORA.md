@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-03 | 00:50
+
+**Resumen:** Consulta de asesoría para selección de guitarra eléctrica y equipamiento dentro de presupuesto (~$555 USD).
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-03 | 00:36
 
 **Resumen:** Se analizaron dos opciones de guitarra eléctrica (Epiphone Casino vs LP Studio IBG) según el perfil musical del usuario y disponibilidad local en David, Panamá.
