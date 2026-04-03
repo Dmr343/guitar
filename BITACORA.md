@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-03 | 00:29
+
+**Resumen:** Consulta sobre amplificadores de práctica para guitarra eléctrica, evaluando opciones en rango $150–$225 con salida de audífonos y Bluetooth.
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-03 | 00:25
 
 **Resumen:** Sesión de consulta sobre opciones de amplificadores de audífonos disponibles en Costa Rica como alternativas al Fender Mustang Micro.
