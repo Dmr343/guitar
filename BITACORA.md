@@ -1,6 +1,17 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-03 | 00:11
+
+**Resumen:** Se generó una comparativa de guitarras acústicas de la tienda Bansbach para apoyar una decisión de compra informada.
+
+**Cambios:**
+- Creado `comparativa_guitarras_bansbach.txt` con specs, tabla comparativa, opciones de audífonos, decisión final y checklist de compra
+
+**Archivos clave:** `comparativa_guitarras_bansbach.txt`, `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-02 | 23:53
 
 **Resumen:** Sesión de consulta sobre compra de guitarra eléctrica, evaluando compatibilidad de una Les Paul Studio con el estilo melódico buscado.
