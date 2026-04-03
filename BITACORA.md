@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-02 | 22:56
+
+**Resumen:** Sesión de consultoría sobre selección de guitarra eléctrica para el perfil del usuario (melodista, improvisación, múltiples géneros).
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-01 | 21:38
 
 **Resumen:** Se creó una guía de escucha curada (`MUSICA-RECOMENDADA.md`) con recomendaciones musicales organizadas por afinidad con el universo sonoro de Omar Rodríguez-López.
