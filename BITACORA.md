@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-02 | 23:19
+
+**Resumen:** Consulta sobre compra de guitarra eléctrica usada: comparación entre Yamaha Pacifica 012 vs 112V y evaluación de marca Stardust Les Paul.
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-02 | 23:13
 
 **Resumen:** Consulta sobre selección de guitarra eléctrica por rango de precio, perfilada según artistas de referencia del usuario (Opeth, Pink Floyd, ORL, Khruangbin).
