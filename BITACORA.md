@@ -1,6 +1,14 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-03 | 00:20
+
+**Resumen:** Se consultaron opciones de equipamiento para tocar guitarra con audífonos Bluetooth a través de un amplificador.
+
+**Archivos clave:** `tools/diapason.html`, `tools/guia.html`, `tools/index.html`, `tools/oido.html`
+
+---
+
 ## 2026-04-03 | 00:19
 
 **Resumen:** Consulta sobre equipamiento para guitarrista eléctrico principiante: opciones de dispositivos para tocar con audífonos y consideraciones sobre latencia Bluetooth.
