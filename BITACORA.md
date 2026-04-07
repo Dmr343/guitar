@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-07 | 12:10
+
+**Resumen:** Se expandió significativamente la herramienta de acordes y se actualizaron los demás módulos de la suite de guitarra.
+
+**Cambios:**
+- Reescritura mayor de `acordes.html`: +389 líneas netas con nuevos acordes o funcionalidad ampliada
+- Actualizaciones menores de compatibilidad/sincronización en `diapason.html`, `index.html` y `oido.html`
+- Revisión de contenido pedagógico en `guia.html` (+27 líneas)
+
+**Archivos clave:** `tools/acordes.html`, `tools/guia.html`
+
+---
+
 ## 2026-04-07 | 12:07
 
 **Resumen:** Se amplió significativamente la app de acordes con nueva funcionalidad, y se realizó una sesión de consulta sobre equipos de amplificación para guitarra acústica.
