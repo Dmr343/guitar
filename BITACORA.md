@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-07 | 12:07
+
+**Resumen:** Se amplió significativamente la app de acordes con nueva funcionalidad, y se realizó una sesión de consulta sobre equipos de amplificación para guitarra acústica.
+
+**Cambios:**
+- Refactorización y expansión mayor de `tools/acordes.html` (+389 líneas netas)
+- Ajustes menores de integración en `tools/diapason.html`, `tools/index.html` y `tools/oido.html`
+- Actualización de contenido en `tools/guia.html`
+
+**Archivos clave:** `tools/acordes.html`, `tools/guia.html`
+
+---
+
 No recibí argumentos. Necesito dos datos antes de continuar:
 
 1. **Proyectos a incluir** — ¿cuáles repos de `/home/daniel-nhpc/Documents/work/` debo revisar?
