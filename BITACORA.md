@@ -1,6 +1,19 @@
 # Bitácora — maru_guide
 
 
+## 2026-04-07 | 12:19
+
+**Resumen:** Se amplió significativamente la app de acordes y se aplicaron ajustes menores al resto de herramientas del ecosistema.
+
+**Cambios:**
+- Refactorización y expansión mayor de `acordes.html` (+389 líneas netas)
+- Ajustes menores en `diapason.html`, `index.html` y `oido.html`
+- Actualización de contenido en `guia.html`
+
+**Archivos clave:** `tools/acordes.html`, `tools/guia.html`
+
+---
+
 ## 2026-04-07 | 12:12
 
 **Resumen:** Se amplió significativamente la herramienta de acordes y se realizaron ajustes menores en el resto de las apps del ecosistema de guitarra.
