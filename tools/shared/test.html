@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tests — CAGED shared modules</title>
+  <style>
+    body{background:#0e0e0e;color:#e8d5b0;font-family:'Trebuchet MS',sans-serif;padding:24px;max-width:720px;margin:0 auto;}
+    h1{font-size:18px;font-weight:300;color:#d4a847;margin-bottom:6px;}
+    .notice{font-size:11px;color:#555;margin-bottom:24px;padding:10px 14px;border:1px solid #222;border-radius:6px;line-height:1.6;}
+    code{background:#1a1a1a;padding:1px 5px;border-radius:3px;color:#888;}
+    .summary{padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:14px;font-weight:700;}
+    .summary.pass{background:#0a1a0a;border:1px solid #2ecc71;color:#2ecc71;}
+    .summary.fail{background:#1a0a0a;border:1px solid #e74c3c;color:#e74c3c;}
+    .suite{margin-bottom:6px;border:1px solid #222;border-radius:6px;overflow:hidden;}
+    .suite summary{padding:8px 12px;cursor:pointer;font-weight:700;background:#141414;list-style:none;}
+    .suite-pass summary{color:#2ecc71;}
+    .suite-fail summary{color:#e74c3c;}
+    .test{padding:3px 12px 3px 26px;font-size:12px;}
+    .test.pass{color:#2ecc71;}
+    .test.fail{color:#e74c3c;}
+    .test pre{font-size:11px;color:#888;margin:2px 0 6px;white-space:pre-wrap;border-left:2px solid #333;padding-left:8px;}
+    a{color:#3498db;font-size:11px;}
+  </style>
+</head>
+<body>
+  <h1>Tests — CAGED shared modules</h1>
+  <div class="notice">
+    Requiere servir por HTTP — ES modules no funcionan con <code>file://</code>.<br>
+    Desde la raíz del repo: <code>python3 -m http.server 8080</code> → abrir
+    <code>http://localhost:8080/tools/shared/test.html</code>
+  </div>
+  <div id="test-results">Cargando tests...</div>
+  <script type="module">
+    import T from './test-runner.js';
+    import './theory.test.js';
+    import './fretboard.test.js';
+    T.run('test-results');
+  </script>
+</body>
+</html>

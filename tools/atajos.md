@@ -1,4 +1,20 @@
-# Atajos de teclado — Herramienta de improvisación
+# Atajos de teclado
+
+## CAGED — 5 Formas (`acordes.html`)
+
+| Tecla | Acción |
+|-------|--------|
+| `1` / `2` / `3` / `4` | Cambiar de modo (Forma / Mapa / Zona / Progresión) |
+| `C` `A` `G` `E` `D` | Seleccionar forma CAGED (en modos con forma activa) |
+| `←` / `→` | Modo 1: mover forma un semitono · Modo 4 manual: acorde anterior/siguiente |
+| `Espacio` | Play / pause metrónomo (modos 3 y 4) |
+| `Shift+↑` / `Shift+↓` | BPM +5 / −5 |
+| `M` | Toggle metrónomo auto / manual (modo 4) |
+| `Escape` | Salir del foco del metrónomo / limpiar overlay |
+
+---
+
+## Improvisar (`improvisar.html`)
 
 | Tecla | Acción |
 |-------|--------|
