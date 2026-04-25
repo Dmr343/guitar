@@ -853,6 +853,10 @@ QUALITIES.forEach(q => {
 document.getElementById('m4-add').addEventListener('click', () => {
   const { root, quality } = st.m4.pick;
   if (!root) return;
+  if (st.m4.progression.length >= 8) {
+    alert('Máximo 8 acordes por progresión.');
+    return;
+  }
   st.m4.progression.push({ root, quality });
   saveCAGED(st); renderModo4();
 });
