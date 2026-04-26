@@ -306,9 +306,11 @@
 
 <footer>Afinación estándar · E A D G B e · Trastes 0–12 · <a href="index.html">← Hub</a></footer>
 
-<script>
+<script type="module">
+import { CHROMATIC, MAJOR_STEPS, MINOR_STEPS } from './shared/theory.js';
+import { save, load, KEYS }                    from './shared/storage.js';
+
 // ── Constantes ────────────────────────────────────────────────────────────
-const CHROMATIC  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const OPEN_NOTES = ['E','A','D','G','B','E'];
 const STR_LABELS = ['E','A','D','G','B','e'];
 const STR_THICK  = [3.2,2.6,2.0,1.5,1.0,0.6];
@@ -337,13 +339,8 @@ function chordColor(root, type){
 }
 
 // ── Motor armónico ────────────────────────────────────────────────────────
-const STEPS = {
-  major: [2,2,1,2,2,2,1],
-  minor: [2,1,2,2,1,2,2],
-};
-
 function buildScale(root, isMinor){
-  const steps = isMinor ? STEPS.minor : STEPS.major;
+  const steps = isMinor ? MINOR_STEPS : MAJOR_STEPS;
   let cur = CHROMATIC.indexOf(root);
   const notes = [root];
   steps.slice(0,6).forEach(s=>{ cur=(cur+s)%12; notes.push(CHROMATIC[cur]); });
@@ -1298,42 +1295,34 @@ function updateMetroLabel(){
 }
 
 // ── Persistencia ─────────────────────────────────────────────────────────
-const LS_KEY = 'guitar_improv_state';
-
 function saveState(){
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      root: st.root,
-      isMinor: st.isMinor,
-      progression: st.progression,
-      activePreset: st.activePreset,
-      show3sTriads: st.show3sTriads,
-      show2sTriads: st.show2sTriads,
-      show7s: st.show7s,
-      susMode: st.susMode,
-    }));
-  } catch(e){}
+  save(KEYS.IMPROV, {
+    root: st.root,
+    isMinor: st.isMinor,
+    progression: st.progression,
+    activePreset: st.activePreset,
+    show3sTriads: st.show3sTriads,
+    show2sTriads: st.show2sTriads,
+    show7s: st.show7s,
+    susMode: st.susMode,
+  });
 }
 
 function loadState(){
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return false;
-    const s = JSON.parse(raw);
-    if(s.root && CHROMATIC.includes(s.root)) st.root = s.root;
-    if(typeof s.isMinor === 'boolean') st.isMinor = s.isMinor;
-    if(Array.isArray(s.progression)) st.progression = s.progression;
-    if(s.activePreset !== undefined) st.activePreset = s.activePreset;
-    if(typeof s.show3sTriads === 'boolean') st.show3sTriads = s.show3sTriads;
-    if(typeof s.show2sTriads === 'boolean') st.show2sTriads = s.show2sTriads;
-    if(typeof s.show7s === 'boolean') st.show7s = s.show7s;
-    if(s.susMode === null || s.susMode === 'sus2' || s.susMode === 'sus4') st.susMode = s.susMode;
-    return true;
-  } catch(e){ return false; }
+  const s = load(KEYS.IMPROV);
+  if(!s) return false;
+  if(s.root && CHROMATIC.includes(s.root)) st.root = s.root;
+  if(typeof s.isMinor === 'boolean') st.isMinor = s.isMinor;
+  if(Array.isArray(s.progression)) st.progression = s.progression;
+  if(s.activePreset !== undefined) st.activePreset = s.activePreset;
+  if(typeof s.show3sTriads === 'boolean') st.show3sTriads = s.show3sTriads;
+  if(typeof s.show2sTriads === 'boolean') st.show2sTriads = s.show2sTriads;
+  if(typeof s.show7s === 'boolean') st.show7s = s.show7s;
+  if(s.susMode === null || s.susMode === 'sus2' || s.susMode === 'sus4') st.susMode = s.susMode;
+  return true;
 }
 
 // ── Chord picker (acordes fuera de escala) ────────────────────────────────
-const CHROMATIC_IMPRO = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const EXTRA_QUALITIES = [
   {id:'major', label:'Mayor',  semitones:[0,4,7]},
   {id:'minor', label:'Menor',  semitones:[0,3,7]},
@@ -1346,8 +1335,8 @@ const EXTRA_QUALITY_LABEL  = {major:'Mayor',minor:'Menor',dom7:'Dom 7ª',maj7:'M
 
 function makeExtraChord(root, quality){
   const q = EXTRA_QUALITIES.find(x=>x.id===quality) || EXTRA_QUALITIES[0];
-  const ri = CHROMATIC_IMPRO.indexOf(root);
-  const notes = q.semitones.map(s=>CHROMATIC_IMPRO[(ri+s)%12]);
+  const ri = CHROMATIC.indexOf(root);
+  const notes = q.semitones.map(s=>CHROMATIC[(ri+s)%12]);
   return { root, type:quality, name:root+(EXTRA_QUALITY_SUFFIX[quality]||''),
            notes, roman:'✦', typeLabel:EXTRA_QUALITY_LABEL[quality]||quality };
 }
@@ -1359,7 +1348,7 @@ function setupExtraPicker(){
   const ps = { root: null };
 
   rootsRow.innerHTML = '';
-  CHROMATIC_IMPRO.forEach(note=>{
+  CHROMATIC.forEach(note=>{
     const btn = document.createElement('button');
     btn.className = 'ep-btn';
     btn.textContent = note;
