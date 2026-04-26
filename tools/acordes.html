@@ -270,6 +270,7 @@
       <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span>5ta</span>
       <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span>7ma</span>
       <span class="legend-item"><span class="legend-dot" style="background:#888;opacity:.5"></span>escala</span>
+      <span class="legend-item"><span class="legend-dot" style="background:transparent;border:1.5px dashed #fff;width:12px;height:12px"></span>común</span>
     </div>
     <div class="fb-wrap">
       <svg id="m4-svg" viewBox="0 0 920 220" preserveAspectRatio="xMidYMid meet"></svg>
@@ -404,9 +405,16 @@ function sa(el, attrs) {
   Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
 }
 
-function drawDot(container, si, fret, label, fill, isRoot, fretW) {
+function drawDot(container, si, fret, label, fill, isRoot, fretW, isCommon) {
   const cx = fretX(fret, fretW), cy = stringY(si);
   const r  = isRoot ? 14 : 11;
+  if (isCommon) {
+    // Outer halo for notes shared with previous chord — visual "anchor".
+    const halo = document.createElementNS(SVG_NS, 'circle');
+    sa(halo, { cx, cy, r:r+8, fill:'none', stroke:'#ffffff', 'stroke-width':2,
+      'stroke-opacity':0.55, 'stroke-dasharray':'2 3' });
+    container.appendChild(halo);
+  }
   if (isRoot) {
     const ring = document.createElementNS(SVG_NS, 'circle');
     sa(ring, { cx, cy, r:r+4, fill:'none', stroke:fill, 'stroke-width':2, 'stroke-opacity':0.9 });
@@ -614,13 +622,14 @@ function drawZoneHighlight(svg, fretRange) {
   svg.insertBefore(rect, dotsG);
 }
 
-function renderZoneAndOverlay(svg, fretRange, chord, scaleId) {
+function renderZoneAndOverlay(svg, fretRange, chord, scaleId, commonNotes) {
   const [fMin, fMax] = fretRange;
   const fretW = fbGetFretW(svg);
   const dotsG = fbGetDotsGroup(svg);
   const scaleNotes = buildScale(chord.root, scaleId);
   const inChord = new Map();
   chord.notes.forEach((n, i) => inChord.set(n, intervalToFunction(chord.intervals[i])));
+  const common = commonNotes || null;
 
   // Pass 1: scale overlay (so chord dots layer on top)
   for (let si = 0; si < 6; si++) {
@@ -637,7 +646,8 @@ function renderZoneAndOverlay(svg, fretRange, chord, scaleId) {
       const func = inChord.get(note);
       if (!func) continue;
       const color = FUNC_COLORS[func] || '#888';
-      drawDot(dotsG, si, f, note, color, func === 'R', fretW);
+      const isCommon = common && common.has(note);
+      drawDot(dotsG, si, f, note, color, func === 'R', fretW, isCommon);
     }
   }
 }
@@ -826,7 +836,15 @@ function renderModo4() {
     const chord   = buildChord(active.root, active.quality);
     const scaleId = effectiveScale(active.quality, m);
     document.getElementById('m4-chord-name').textContent = chordName(active.root, active.quality);
-    renderZoneAndOverlay(svg, m.fretRange, chord, scaleId);
+    // Common tones with previous chord — highlights the "anchor" notes when navigating changes.
+    let commonNotes = null;
+    if (m.progression.length > 1) {
+      const len = m.progression.length;
+      const prev = m.progression[(m.chordIdx - 1 + len) % len];
+      const prevChord = buildChord(prev.root, prev.quality);
+      commonNotes = new Set(prevChord.notes.filter(n => chord.notes.includes(n)));
+    }
+    renderZoneAndOverlay(svg, m.fretRange, chord, scaleId, commonNotes);
   } else {
     document.getElementById('m4-chord-name').textContent = '—';
   }
@@ -993,10 +1011,12 @@ function m4StartMetro() {
   m4Metro = new Metronome({
     bpm: st.m4.bpm,
     beatsPerChord: st.m4.beatsPerChord,
-    onChordChange: idx => {
+    onChordChange: () => {
+      // Advance from CURRENT chordIdx (not metro's internal counter),
+      // so manual slot clicks during auto-play don't desync.
       if (st.m4.metroMode !== 'auto') return;
       if (!st.m4.progression.length) return;
-      st.m4.chordIdx = idx % st.m4.progression.length;
+      st.m4.chordIdx = (st.m4.chordIdx + 1) % st.m4.progression.length;
       saveCAGED(st);
       renderModo4();
     },
