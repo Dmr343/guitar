@@ -3,6 +3,7 @@
   const T = G.testRunner;
   const {
     CHROMATIC, buildScale, buildChord, intervalToFunction, chordColor, cagedShapeFor,
+    commonChordTones, pickScaleForChord, advanceChord,
   } = G.theory;
 
   T.describe('CHROMATIC', () => {
@@ -84,6 +85,57 @@
       T.assert(chordColor('A', 'major') !== chordColor('A', 'minor')));
     T.it('devuelve string hsl', () =>
       T.assert(chordColor('E', 'major').startsWith('hsl(')));
+  });
+
+  T.describe('commonChordTones', () => {
+    T.it('G mayor → C mayor: tienen G y C... wait, G major (G B D), C major (C E G) → solo G en común', () => {
+      const a = buildChord('G', 'major');
+      const b = buildChord('C', 'major');
+      const common = commonChordTones(a, b);
+      T.assertEq(common.size, 1);
+      T.assert(common.has('G'));
+    });
+    T.it('Em → C mayor: E y G en común', () => {
+      const em = buildChord('E', 'minor'); // E G B
+      const c  = buildChord('C', 'major'); // C E G
+      const common = commonChordTones(em, c);
+      T.assertEq(common.size, 2);
+      T.assert(common.has('E'));
+      T.assert(common.has('G'));
+    });
+    T.it('chord vs sí mismo: todas las notas en común', () => {
+      const c = buildChord('A', 'minor');
+      T.assertEq(commonChordTones(c, c).size, 3);
+    });
+    T.it('null inputs → set vacío', () => {
+      T.assertEq(commonChordTones(null, buildChord('C','major')).size, 0);
+      T.assertEq(commonChordTones(buildChord('C','major'), null).size, 0);
+      T.assertEq(commonChordTones(null, null).size, 0);
+    });
+    T.it('returns a Set', () => {
+      const r = commonChordTones(buildChord('C','major'), buildChord('G','major'));
+      T.assert(r instanceof Set);
+    });
+  });
+
+  T.describe('pickScaleForChord — escala default por calidad', () => {
+    T.it('major → pent_major (auto)',     () => T.assertEq(pickScaleForChord('major', { scaleAuto:true }), 'pent_major'));
+    T.it('minor → pent_minor (auto)',     () => T.assertEq(pickScaleForChord('minor', { scaleAuto:true }), 'pent_minor'));
+    T.it('dom7 → mixolydian (auto)',      () => T.assertEq(pickScaleForChord('dom7',  { scaleAuto:true }), 'mixolydian'));
+    T.it('maj7 → major (auto)',           () => T.assertEq(pickScaleForChord('maj7',  { scaleAuto:true }), 'major'));
+    T.it('min7 → minor (auto)',           () => T.assertEq(pickScaleForChord('min7',  { scaleAuto:true }), 'minor'));
+    T.it('user override gana sobre auto', () => T.assertEq(pickScaleForChord('major', { scaleAuto:false, scale:'dorian' }), 'dorian'));
+    T.it('scaleAuto=true ignora override', () => T.assertEq(pickScaleForChord('major', { scaleAuto:true,  scale:'dorian' }), 'pent_major'));
+    T.it('sin scale + sin auto → fallback default por calidad', () => T.assertEq(pickScaleForChord('major', { scaleAuto:false }), 'pent_major'));
+    T.it('calidad desconocida → major', () => T.assertEq(pickScaleForChord('zzz', { scaleAuto:true }), 'major'));
+  });
+
+  T.describe('advanceChord — siempre +1 desde currentIdx (fix metro independence)', () => {
+    T.it('0 → 1 con 4 acordes',         () => T.assertEq(advanceChord(0, 4), 1));
+    T.it('3 → 0 wraps con 4 acordes',   () => T.assertEq(advanceChord(3, 4), 0));
+    T.it('1 acorde solo → siempre 0',   () => T.assertEq(advanceChord(0, 1), 0));
+    T.it('progresión vacía → 0',        () => T.assertEq(advanceChord(5, 0), 0));
+    T.it('manual click a slot 2 → next es 3, no salto', () => T.assertEq(advanceChord(2, 4), 3));
   });
 
   T.describe('cagedShapeFor G mayor', () => {

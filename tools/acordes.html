@@ -294,6 +294,7 @@ const { loadCAGED, saveCAGED, loadImprovState } = window.GuitarShared.storage;
 const {
   buildChord, buildScale, chordName,
   intervalToFunction, fretsForCagedShape,
+  commonChordTones, pickScaleForChord, advanceChord,
   CAGED_COLORS, FUNC_COLORS, CHROMATIC, QUALITY_LABELS,
 } = window.GuitarShared.theory;
 const {
@@ -317,14 +318,6 @@ const SCALES = [
   { id:'dorian',     label:'Dórico' },
 ];
 const SCALE_IDS = SCALES.map(s => s.id);
-
-const DEFAULT_SCALE_BY_QUALITY = {
-  major: 'pent_major',
-  minor: 'pent_minor',
-  dom7:  'mixolydian',
-  maj7:  'major',
-  min7:  'minor',
-};
 
 const DEFAULT_STATE = {
   mode:'mapa', root:'G', quality:'major', shape:'E', barre:3,
@@ -596,11 +589,6 @@ document.getElementById('m2-solo').addEventListener('click', () => {
 });
 
 // ─── Modo 3 / Modo 4 shared helpers ───────────────────────────────────────
-function effectiveScale(quality, mState) {
-  if (!mState.scaleAuto && mState.scale) return mState.scale;
-  return DEFAULT_SCALE_BY_QUALITY[quality] || 'major';
-}
-
 function drawScaleDot(container, si, fret, label, fretW) {
   const cx = fretX(fret, fretW), cy = stringY(si);
   const c = document.createElementNS(SVG_NS, 'circle');
@@ -671,7 +659,7 @@ function renderModo3() {
   const m = st.m3;
   m.fretRange = clampRange(m.fretRange);
   const chord     = buildChord(root, quality);
-  const scaleId   = effectiveScale(quality, m);
+  const scaleId   = pickScaleForChord(quality, m);
 
   document.getElementById('m3-chord-name').textContent = chordName(root, quality);
   document.querySelectorAll('#m3-root .btn').forEach(b =>
@@ -839,15 +827,14 @@ function renderModo4() {
   const active = m4ActiveChord();
   if (active) {
     const chord   = buildChord(active.root, active.quality);
-    const scaleId = effectiveScale(active.quality, m);
+    const scaleId = pickScaleForChord(active.quality, m);
     document.getElementById('m4-chord-name').textContent = chordName(active.root, active.quality);
     // Common tones with previous chord — highlights the "anchor" notes when navigating changes.
     let commonNotes = null;
     if (m.progression.length > 1) {
       const len = m.progression.length;
       const prev = m.progression[(m.chordIdx - 1 + len) % len];
-      const prevChord = buildChord(prev.root, prev.quality);
-      commonNotes = new Set(prevChord.notes.filter(n => chord.notes.includes(n)));
+      commonNotes = commonChordTones(buildChord(prev.root, prev.quality), chord);
     }
     renderZoneAndOverlay(svg, m.fretRange, chord, scaleId, commonNotes);
   } else {
@@ -1017,11 +1004,8 @@ function m4StartMetro() {
     bpm: st.m4.bpm,
     beatsPerChord: st.m4.beatsPerChord,
     onChordChange: () => {
-      // Advance from CURRENT chordIdx (not metro's internal counter),
-      // so manual slot clicks during auto-play don't desync.
       if (st.m4.metroMode !== 'auto') return;
-      if (!st.m4.progression.length) return;
-      st.m4.chordIdx = (st.m4.chordIdx + 1) % st.m4.progression.length;
+      st.m4.chordIdx = advanceChord(st.m4.chordIdx, st.m4.progression.length);
       saveCAGED(st);
       renderModo4();
     },

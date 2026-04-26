@@ -119,6 +119,38 @@
     return root + (QUALITY_SUFFIX[quality] || '');
   }
 
+  // Returns the set of note names shared between two chords. Used by Modo 4
+  // to highlight "anchor" notes when navigating progressions.
+  function commonChordTones(chordA, chordB) {
+    if (!chordA || !chordB || !chordA.notes || !chordB.notes) return new Set();
+    const inB = new Set(chordB.notes);
+    return new Set(chordA.notes.filter(n => inB.has(n)));
+  }
+
+  // Default scale (for improvisation overlay) per chord quality.
+  const DEFAULT_SCALE_BY_QUALITY = {
+    major: 'pent_major',
+    minor: 'pent_minor',
+    dom7:  'mixolydian',
+    maj7:  'major',
+    min7:  'minor',
+  };
+
+  // Picks the scale to overlay over a chord. When opts.scaleAuto is true
+  // (or no manual scale given), falls back to the calidad-based default.
+  function pickScaleForChord(quality, opts) {
+    const o = opts || {};
+    if (!o.scaleAuto && o.scale) return o.scale;
+    return DEFAULT_SCALE_BY_QUALITY[quality] || 'major';
+  }
+
+  // Advance to next chord in a progression. Always +1 from current
+  // (not a stateful counter), so manual jumps don't desync auto-play.
+  function advanceChord(currentIdx, totalChords) {
+    if (!totalChords || totalChords <= 0) return 0;
+    return ((currentIdx + 1) % totalChords + totalChords) % totalChords;
+  }
+
   G.theory = {
     CHROMATIC, MAJOR_STEPS, MINOR_STEPS,
     PENTATONIC_MAJOR_STEPS, PENTATONIC_MINOR_STEPS,
@@ -126,6 +158,7 @@
     CAGED_COLORS, FUNC_COLORS, QUALITY_LABELS, QUALITY_SUFFIX,
     chordColor, buildScale, buildChord, intervalToFunction,
     cagedShapeFor, fretsForCagedShape, chordName,
+    commonChordTones, pickScaleForChord, advanceChord,
   };
 })(typeof window !== 'undefined'
     ? (window.GuitarShared = window.GuitarShared || {})
