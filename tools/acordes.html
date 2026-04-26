@@ -85,6 +85,11 @@
 
     .empty-tip{text-align:center;color:var(--text-dim);font-size:11px;font-style:italic;margin:14px 0;}
 
+    /* ─── Help text per mode ─── */
+    .mode-help{max-width:760px;margin:0 auto 16px;padding:10px 14px;background:#141214;border-left:3px solid var(--gold);border-radius:0 6px 6px 0;font-size:12px;color:var(--text-mid);line-height:1.55;}
+    .mode-help strong{color:var(--text);font-weight:700;}
+    .mode-help code{background:#0a0a0a;padding:1px 6px;border-radius:3px;color:var(--gold);font-size:11px;}
+
     footer{text-align:center;margin-top:32px;font-size:10px;color:#333;letter-spacing:.08em;}
     footer a{color:var(--accent);text-decoration:none;opacity:.5;}
     footer a:hover{opacity:1;}
@@ -108,6 +113,11 @@
 <!-- ── Modo 1 ── -->
 <div id="pane-forma" class="mode-pane">
   <div class="ctrl-wrap">
+    <div class="mode-help">
+      <strong>Forma movible.</strong> Las 5 formas CAGED son digitaciones que vienen de los acordes abiertos C, A, G, E, D.
+      Al moverlas con cejilla, suenan distinto: <strong>Forma E en traste 0 = E mayor; en traste 3 = G mayor; en traste 5 = A mayor</strong>.
+      Acá: tocá una forma → arranca en posición abierta (acorde igual al nombre de la forma) → usá <code>←</code>/<code>→</code> para deslizarla y ver qué acorde produce en cada traste.
+    </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
         <span class="ctrl-label">Forma</span>
@@ -137,6 +147,11 @@
 <!-- ── Modo 2 ── -->
 <div id="pane-mapa" class="mode-pane">
   <div class="ctrl-wrap">
+    <div class="mode-help">
+      <strong>Mapa del acorde.</strong> Elegís un acorde (ej: G mayor) y ves <strong>las 5 formas que producen ese acorde</strong> superpuestas en el mástil completo.
+      Cada forma está pintada en su color (C verde, A azul, G amarillo, E rojo, D violeta) y todas las tónicas en dorado.
+      Sirve como mapa visual: "¿dónde está G en todo el diapasón?". Toggleá las formas individuales con los botones, o "Solo tónicas" para ver solo las anclas.
+    </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
         <span class="ctrl-label">Raíz</span>
@@ -163,6 +178,11 @@
 <!-- ── Modo 3 ── -->
 <div id="pane-zona" class="mode-pane">
   <div class="ctrl-wrap">
+    <div class="mode-help">
+      <strong>Zona de improvisación.</strong> Para practicar improvisación sobre <strong>un acorde estático</strong>. Elegís un acorde + una zona del mástil + una escala.
+      Los chord tones (notas del acorde) aparecen coloreados por <strong>función</strong>: tónica dorada, 3ra naranja, 5ta azul, 7ma verde. La escala alrededor en gris tenue.
+      La forma CAGED define la zona por defecto, pero podés ajustar con el slider.
+    </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
         <span class="ctrl-label">Raíz</span>
@@ -208,6 +228,11 @@
 <!-- ── Modo 4 ── -->
 <div id="pane-prog" class="mode-pane">
   <div class="ctrl-wrap">
+    <div class="mode-help">
+      <strong>Progresión con cambios.</strong> Para practicar <strong>navegar progresiones</strong> sin mover mucho la mano. Armás una progresión (manual o cargada de Improvisar), elegís una zona fija del mástil + escala.
+      Apretás <code>Play</code> y el metrónomo cicla los acordes — el mástil va mostrando los chord tones del acorde activo en la misma zona.
+      Las notas con halo blanco son <strong>común con el acorde anterior</strong>: tus puntos de anclaje al cambiar.
+    </div>
     <div class="slots-row" id="m4-slots"></div>
 
     <div class="picker-card">
@@ -470,7 +495,12 @@ SHAPES.forEach(s => {
   b.className = 'btn'; b.dataset.shape = s; b.textContent = s;
   b.style.setProperty('--c', CAGED_COLORS[s]);
   b.addEventListener('click', () => {
-    st.shape = s; st.barre = defaultBarre(s, st.root);
+    // Click "Forma X" → start at barre 0 (open position) so the shape name
+    // matches the chord (Forma C = C abierto, Forma A = A abierto, etc).
+    // User uses ←/→ to slide the shape up the neck.
+    st.shape = s;
+    st.barre = 0;
+    st.root  = shapeRoot(s, 0);
     saveCAGED(st); renderModo1();
   });
   document.getElementById('m1-shapes').appendChild(b);
@@ -1078,7 +1108,9 @@ document.addEventListener('keydown', e => {
     const sk = e.key.toUpperCase();
     if (SHAPES.includes(sk)) {
       e.preventDefault();
-      st.shape = sk; st.barre = defaultBarre(sk, st.root);
+      st.shape = sk;
+      st.barre = 0;
+      st.root  = shapeRoot(sk, 0);
       saveCAGED(st); renderModo1();
     }
     return;
