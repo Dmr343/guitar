@@ -284,18 +284,23 @@
   <a href="atajos.md">Atajos</a>
 </footer>
 
-<script type="module">
-import { loadCAGED, saveCAGED, loadImprovState } from './shared/storage.js';
-import {
+<!-- Shared modules (plain script tags — work with file:// and HTTP). -->
+<script src="./shared/theory.js"></script>
+<script src="./shared/fretboard.js"></script>
+<script src="./shared/storage.js"></script>
+<script src="./shared/metronome.js"></script>
+<script>
+const { loadCAGED, saveCAGED, loadImprovState } = window.GuitarShared.storage;
+const {
   buildChord, buildScale, chordName,
   intervalToFunction, fretsForCagedShape,
   CAGED_COLORS, FUNC_COLORS, CHROMATIC, QUALITY_LABELS,
-} from './shared/theory.js';
-import {
+} = window.GuitarShared.theory;
+const {
   fbInitBoard, fbNoteAt, fbDrawBarre, fbGetFretW, fbGetDotsGroup,
   fretX, stringY, OPEN_NOTES, FB_NUT, FB_STR_TOP, FB_STR_BOT,
-} from './shared/fretboard.js';
-import { Metronome } from './shared/metronome.js';
+} = window.GuitarShared.fretboard;
+const { Metronome } = window.GuitarShared.metronome;
 
 const MODES     = ['forma','mapa','zona','prog'];
 const SHAPES    = ['C','A','G','E','D'];

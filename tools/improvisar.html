@@ -306,9 +306,12 @@
 
 <footer>Afinación estándar · E A D G B e · Trastes 0–12 · <a href="index.html">← Hub</a></footer>
 
-<script type="module">
-import { CHROMATIC, MAJOR_STEPS, MINOR_STEPS } from './shared/theory.js';
-import { save, load, KEYS }                    from './shared/storage.js';
+<!-- Shared modules (plain script tags — work with file:// and HTTP). -->
+<script src="./shared/theory.js"></script>
+<script src="./shared/storage.js"></script>
+<script>
+const { CHROMATIC, MAJOR_STEPS, MINOR_STEPS } = window.GuitarShared.theory;
+const { save, load, KEYS }                    = window.GuitarShared.storage;
 
 // ── Constantes ────────────────────────────────────────────────────────────
 const OPEN_NOTES = ['E','A','D','G','B','E'];

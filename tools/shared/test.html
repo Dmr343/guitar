@@ -25,16 +25,21 @@
 <body>
   <h1>Tests — CAGED shared modules</h1>
   <div class="notice">
-    Requiere servir por HTTP — ES modules no funcionan con <code>file://</code>.<br>
-    Desde la raíz del repo: <code>python3 -m http.server 8080</code> → abrir
-    <code>http://localhost:8080/tools/shared/test.html</code>
+    Funciona con <code>file://</code> y con HTTP indistintamente — los módulos
+    shared usan IIFE + namespace global, no ES modules.
   </div>
   <div id="test-results">Cargando tests...</div>
-  <script type="module">
-    import T from './test-runner.js';
-    import './theory.test.js';
-    import './fretboard.test.js';
-    T.run('test-results');
+
+  <!-- Order matters: theory.js → fretboard.js (depends on theory) → tests -->
+  <script src="./theory.js"></script>
+  <script src="./fretboard.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./metronome.js"></script>
+  <script src="./test-runner.js"></script>
+  <script src="./theory.test.js"></script>
+  <script src="./fretboard.test.js"></script>
+  <script>
+    window.GuitarShared.testRunner.run('test-results');
   </script>
 </body>
 </html>
