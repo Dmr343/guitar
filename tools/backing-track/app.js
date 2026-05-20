@@ -1174,11 +1174,41 @@
   }
 
   // ─── Proyectos y persistencia ───
+  //
+  // takeSnapshot — extiende engine.snapshot() con el estado de la
+  // progresión de fábrica activa (id + tonalidad) si lo hay. Permite
+  // restaurar la sesión preservando los grados como fuente de verdad:
+  // si el catálogo cambia, las progresiones se re-realizan correctamente.
+  function takeSnapshot() {
+    const s = engine.snapshot();
+    if (factoryProgState.id) {
+      s.factoryProg = {
+        id: factoryProgState.id,
+        tonalidad: factoryProgState.tonalidad,
+      };
+    }
+    return s;
+  }
+
   function restoreSnapshot(snap) {
     if (!snap) return;
     if (editing) closeEditor();
     engine.restore(snap);
-    model.loadProgression(snap.progression || []);
+    // Si el snapshot trae factoryProg (formato nuevo), re-realiza la
+    // progresión desde el catálogo. Esto mantiene los grados como fuente
+    // de verdad — si el catálogo se editó, la próxima carga aplica los
+    // cambios. Si el id ya no existe en el catálogo, cae al fallback.
+    let loaded = false;
+    if (snap.factoryProg && snap.factoryProg.id &&
+        BT.factoryProgressions.byId(snap.factoryProg.id)) {
+      loaded = loadFactoryProgression(snap.factoryProg.id, snap.factoryProg.tonalidad);
+      if (loaded) progSelect.value = snap.factoryProg.id;
+    }
+    if (!loaded) {
+      // Formato viejo o progresión personalizada: cargar acordes inline.
+      model.loadProgression(snap.progression || []);
+      unbindFromCatalog();
+    }
     // loadProgression resetea el loop; reponemos el rango guardado.
     if (Array.isArray(snap.loopRange)) {
       model.setLoopRange(snap.loopRange[0], snap.loopRange[1]);
@@ -1360,7 +1390,7 @@
   // Proyectos
   btnSaveProj.addEventListener('click', function () {
     const nombre = projName.value.trim() || 'Proyecto';
-    storage.saveProject(nombre, engine.snapshot());
+    storage.saveProject(nombre, takeSnapshot());
     refreshProjects();
     projSelect.value = '';
     setStatus('Proyecto "' + nombre + '" guardado');
@@ -1420,7 +1450,7 @@
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
-      storage.saveSession(engine.snapshot());
+      storage.saveSession(takeSnapshot());
     }, 400);
   });
   engine.onTransport(function (ev) {
