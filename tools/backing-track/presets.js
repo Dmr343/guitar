@@ -20,6 +20,24 @@
 (function (W) {
   'use strict';
 
+  // wafDrum — helper para piezas de kit que disparan un sample individual
+  // del drum kit GM de FluidR3. Pasale el midi note (35-81); devuelve el
+  // spec listo para engine: 'waf-drum'. Sonidos relevantes:
+  //   56=cencerro · 60=hi bongó · 61=lo bongó · 62=mute hi conga ·
+  //   63=open hi conga · 64=low conga · 65=hi timbal · 66=lo timbal ·
+  //   67=hi agogo · 68=lo agogo · 69=cabasa · 70=maracas ·
+  //   73=güiro corto · 74=güiro largo · 75=claves · 76/77=wood block ·
+  //   78/79=cuica · 54=tambourine · 80/81=triangle · 39=hand clap
+  function wafDrum(midi) {
+    return {
+      engine: 'waf-drum',
+      url: 'https://surikov.github.io/webaudiofontdata/sound/128' + midi
+           + '_0_FluidR3_GM_sf2_file.js',
+      variable: '_drum_' + midi + '_0_FluidR3_GM_sf2_file',
+      note: midi,
+    };
+  }
+
   const PRESETS = [
 
     // ═══════════════════ BAJO ═══════════════════
@@ -1042,6 +1060,104 @@
         },
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.15 }],
+    },
+
+    // ── Kits regionales reales (WAF GM drum kit) ──
+    // Cada lane carga su propio sample del drum kit GM FluidR3.
+    // Suenan a percusión acústica real, no a síntesis.
+
+    // Cuba — son, salsa clásica. Claves como heartbeat.
+    {
+      id: 'percCubaReal', nombre: 'Cuba real (claves + bongó + congas)',
+      tipo: 'percusion', motor: 'sampler',
+      config: {
+        pieces: {
+          bongo_hi: wafDrum(60),   // Hi Bongo
+          bongo_lo: wafDrum(61),   // Lo Bongo
+          conga:    wafDrum(63),   // Open Hi Conga
+          shaker:   wafDrum(75),   // Claves
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.18 }],
+    },
+
+    // Salsa — ensamble con cowbell y conga grave. Para tumbao denso.
+    {
+      id: 'percSalsaReal', nombre: 'Salsa real (cowbell + congas + claves)',
+      tipo: 'percusion', motor: 'sampler',
+      config: {
+        pieces: {
+          bongo_hi: wafDrum(63),   // Open Hi Conga
+          bongo_lo: wafDrum(64),   // Low Conga
+          conga:    wafDrum(56),   // Cowbell (cencerro)
+          shaker:   wafDrum(75),   // Claves
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.16 }],
+    },
+
+    // Brasil — samba/bossa: agogos + cuica + maracas.
+    {
+      id: 'percBrasilReal', nombre: 'Brasil real (agogos + cuica + maracas)',
+      tipo: 'percusion', motor: 'sampler',
+      config: {
+        pieces: {
+          bongo_hi: wafDrum(67),   // High Agogo
+          bongo_lo: wafDrum(68),   // Low Agogo
+          conga:    wafDrum(78),   // Mute Cuica
+          shaker:   wafDrum(70),   // Maracas
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.2 }],
+    },
+
+    // Latín general — paquete amplio: congas + güiro + maracas + cowbell.
+    {
+      id: 'percLatinaReal', nombre: 'Latina real (congas + güiro + maracas)',
+      tipo: 'percusion', motor: 'sampler',
+      config: {
+        pieces: {
+          bongo_hi: wafDrum(62),   // Mute Hi Conga
+          bongo_lo: wafDrum(64),   // Low Conga
+          conga:    wafDrum(74),   // Long Guiro
+          shaker:   wafDrum(70),   // Maracas
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.16 }],
+    },
+
+    // Timbales latinos — para latin jazz. Timbales altos/bajos con
+    // cowbell y claves para el clave del 3-2 / 2-3.
+    {
+      id: 'percTimbalesReal', nombre: 'Timbales reales (latin jazz)',
+      tipo: 'percusion', motor: 'sampler',
+      config: {
+        pieces: {
+          bongo_hi: wafDrum(65),   // High Timbale
+          bongo_lo: wafDrum(66),   // Low Timbale
+          conga:    wafDrum(56),   // Cowbell
+          shaker:   wafDrum(75),   // Claves
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.2 }],
+    },
+
+    // Medio oriente — aproximación dumbek con bongós + tambourine +
+    // triángulo. La GM no tiene darbuka real; bongó cumple el rol
+    // tek/dum (alto/bajo) y el triángulo aporta el brillo metálico
+    // del riq.
+    {
+      id: 'percMedioOrienteReal', nombre: 'Medio oriente real (dumbek + tambourine)',
+      tipo: 'percusion', motor: 'sampler',
+      config: {
+        pieces: {
+          bongo_hi: wafDrum(60),   // Hi Bongo (≈ dumbek tek)
+          bongo_lo: wafDrum(61),   // Lo Bongo (≈ dumbek dum)
+          conga:    wafDrum(54),   // Tambourine
+          shaker:   wafDrum(80),   // Mute Triangle
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.25 }],
     },
   ];
 
