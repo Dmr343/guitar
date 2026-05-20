@@ -685,12 +685,11 @@
       () => engine.updateTrack(track.id, { volumen: Number(vol.value) / 100 }));
     row.appendChild(vol);
 
-    // Editar sonido (solo pistas melódicas).
-    if (MELODIC_TIPOS.indexOf(track.tipo) >= 0) {
-      const gear = mkBtn('track-btn', '⚙', () => openEditor(track.id));
-      gear.title = 'Editar sonido';
-      row.appendChild(gear);
-    }
+    // Editar sonido — melódicos editan osc/env/filter; percusión/batería
+    // editan vol/tune por pieza del kit. Ambos comparten efectos.
+    const gear = mkBtn('track-btn', '⚙', () => openEditor(track.id));
+    gear.title = 'Editar sonido';
+    row.appendChild(gear);
 
     const rm = mkBtn('track-btn danger', '✕', () => {
       engine.removeTrack(track.id);
@@ -812,41 +811,75 @@
       '. Los cambios afectan solo a esta pista hasta que guardes.';
     presetEditorEl.appendChild(sub);
 
-    // Oscilador
-    presetEditorEl.appendChild(peGroupLabel('Oscilador'));
-    presetEditorEl.appendChild(peSelectRow('Forma de onda', OSC_TYPES,
-      (cfg.oscillator && cfg.oscillator.type) || 'sine', v => {
-        cfg.oscillator = { type: v };
-      }));
+    const isPercusion = (track.tipo === 'percusion' || track.tipo === 'bateria');
 
-    // Envolvente ADSR
-    presetEditorEl.appendChild(peGroupLabel('Envolvente (ADSR)'));
-    const secs = v => v.toFixed(2) + ' s';
-    presetEditorEl.appendChild(peParamRow('Attack', 0, 2, 0.01,
-      env.attack != null ? env.attack : 0.01, secs, v => { env.attack = v; }));
-    presetEditorEl.appendChild(peParamRow('Decay', 0, 2, 0.01,
-      env.decay != null ? env.decay : 0.2, secs, v => { env.decay = v; }));
-    presetEditorEl.appendChild(peParamRow('Sustain', 0, 1, 0.01,
-      env.sustain != null ? env.sustain : 0.5,
-      v => Math.round(v * 100) + '%', v => { env.sustain = v; }));
-    presetEditorEl.appendChild(peParamRow('Release', 0, 4, 0.01,
-      env.release != null ? env.release : 0.3, secs, v => { env.release = v; }));
+    if (isPercusion) {
+      // Editor de piezas del kit: vol y tune por lane.
+      const pieces = cfg.pieces || (cfg.pieces = {});
+      presetEditorEl.appendChild(peGroupLabel('Piezas del kit'));
+      Object.keys(pieces).forEach(lane => {
+        const piece = pieces[lane];
+        if (!piece) return;
+        // Asegurar defaults numéricos para evitar undefined en UI.
+        if (typeof piece.vol !== 'number') piece.vol = 1;
+        if (typeof piece.tune !== 'number') piece.tune = 0;
 
-    // Filtro (solo el bajo es MonoSynth con filtro propio)
-    if (track.tipo === 'bajo') {
-      const filt = cfg.filter || (cfg.filter = { type: 'lowpass', Q: 1 });
-      const fenv = cfg.filterEnvelope || (cfg.filterEnvelope = {});
-      presetEditorEl.appendChild(peGroupLabel('Filtro'));
-      presetEditorEl.appendChild(peSelectRow('Tipo', FILTER_TYPES,
-        filt.type || 'lowpass', v => { filt.type = v; }));
-      presetEditorEl.appendChild(peParamRow('Resonancia (Q)', 0, 12, 0.1,
-        filt.Q != null ? filt.Q : 1, v => v.toFixed(1), v => { filt.Q = v; }));
-      presetEditorEl.appendChild(peParamRow('Frecuencia base', 40, 1200, 10,
-        fenv.baseFrequency != null ? fenv.baseFrequency : 200,
-        v => Math.round(v) + ' Hz', v => { fenv.baseFrequency = v; }));
-      presetEditorEl.appendChild(peParamRow('Octavas', 0, 6, 0.1,
-        fenv.octaves != null ? fenv.octaves : 3, v => v.toFixed(1),
-        v => { fenv.octaves = v; }));
+        const header = document.createElement('div');
+        header.className = 'pe-piece-name';
+        header.textContent = pieceLabel(lane, piece);
+        presetEditorEl.appendChild(header);
+
+        // Volumen 0..100%
+        presetEditorEl.appendChild(peParamRow('Volumen', 0, 1, 0.01,
+          piece.vol, v => Math.round(v * 100) + '%',
+          v => { piece.vol = v; }));
+
+        // Tune solo para engines con pitch.
+        if (piece.engine === 'membrane' || piece.engine === 'sample' ||
+            piece.engine === 'waf-drum') {
+          presetEditorEl.appendChild(peParamRow('Tono', -12, 12, 1,
+            piece.tune,
+            v => (v > 0 ? '+' : '') + Math.round(v) + ' st',
+            v => { piece.tune = Math.round(v); }));
+        }
+      });
+    } else {
+      // Oscilador (solo para melódicos synth — WAF y sampler lo ignoran).
+      presetEditorEl.appendChild(peGroupLabel('Oscilador'));
+      presetEditorEl.appendChild(peSelectRow('Forma de onda', OSC_TYPES,
+        (cfg.oscillator && cfg.oscillator.type) || 'sine', v => {
+          cfg.oscillator = { type: v };
+        }));
+
+      // Envolvente ADSR
+      presetEditorEl.appendChild(peGroupLabel('Envolvente (ADSR)'));
+      const secs = v => v.toFixed(2) + ' s';
+      presetEditorEl.appendChild(peParamRow('Attack', 0, 2, 0.01,
+        env.attack != null ? env.attack : 0.01, secs, v => { env.attack = v; }));
+      presetEditorEl.appendChild(peParamRow('Decay', 0, 2, 0.01,
+        env.decay != null ? env.decay : 0.2, secs, v => { env.decay = v; }));
+      presetEditorEl.appendChild(peParamRow('Sustain', 0, 1, 0.01,
+        env.sustain != null ? env.sustain : 0.5,
+        v => Math.round(v * 100) + '%', v => { env.sustain = v; }));
+      presetEditorEl.appendChild(peParamRow('Release', 0, 4, 0.01,
+        env.release != null ? env.release : 0.3, secs, v => { env.release = v; }));
+
+      // Filtro (solo el bajo es MonoSynth con filtro propio)
+      if (track.tipo === 'bajo') {
+        const filt = cfg.filter || (cfg.filter = { type: 'lowpass', Q: 1 });
+        const fenv = cfg.filterEnvelope || (cfg.filterEnvelope = {});
+        presetEditorEl.appendChild(peGroupLabel('Filtro'));
+        presetEditorEl.appendChild(peSelectRow('Tipo', FILTER_TYPES,
+          filt.type || 'lowpass', v => { filt.type = v; }));
+        presetEditorEl.appendChild(peParamRow('Resonancia (Q)', 0, 12, 0.1,
+          filt.Q != null ? filt.Q : 1, v => v.toFixed(1), v => { filt.Q = v; }));
+        presetEditorEl.appendChild(peParamRow('Frecuencia base', 40, 1200, 10,
+          fenv.baseFrequency != null ? fenv.baseFrequency : 200,
+          v => Math.round(v) + ' Hz', v => { fenv.baseFrequency = v; }));
+        presetEditorEl.appendChild(peParamRow('Octavas', 0, 6, 0.1,
+          fenv.octaves != null ? fenv.octaves : 3, v => v.toFixed(1),
+          v => { fenv.octaves = v; }));
+      }
     }
 
     // Efectos
@@ -943,6 +976,32 @@
     cymbal: 'Platillo', bongo_hi: 'Bongó ↑', bongo_lo: 'Bongó ↓',
     conga: 'Conga', shaker: 'Shaker',
   };
+
+  // Etiquetas de instrumentos del GM drum kit por midi note. Permite que
+  // el editor de kit muestre "Claves" en lugar de "Shaker" cuando la lane
+  // está cargada con un waf-drum específico.
+  const WAF_DRUM_LABEL = {
+    35: 'Bombo acústico', 36: 'Bombo', 37: 'Sidestick', 38: 'Caja',
+    39: 'Palmas', 40: 'Caja eléctrica', 41: 'Tom piso', 42: 'Hi-hat cerrado',
+    43: 'Tom piso alto', 44: 'Hi-hat pedal', 45: 'Tom bajo', 46: 'Hi-hat abierto',
+    47: 'Tom medio bajo', 48: 'Tom medio alto', 49: 'Crash 1', 50: 'Tom alto',
+    51: 'Ride 1', 52: 'Chinese', 53: 'Ride bell', 54: 'Pandereta',
+    55: 'Splash', 56: 'Cencerro', 57: 'Crash 2', 58: 'Vibraslap',
+    59: 'Ride 2', 60: 'Bongó ↑', 61: 'Bongó ↓',
+    62: 'Conga muda', 63: 'Conga ↑', 64: 'Conga ↓',
+    65: 'Timbal ↑', 66: 'Timbal ↓', 67: 'Agogo ↑', 68: 'Agogo ↓',
+    69: 'Cabasa', 70: 'Maracas', 71: 'Silbato ↑', 72: 'Silbato ↓',
+    73: 'Güiro corto', 74: 'Güiro largo', 75: 'Claves',
+    76: 'Wood block ↑', 77: 'Wood block ↓',
+    78: 'Cuica muda', 79: 'Cuica abierta',
+    80: 'Triángulo mudo', 81: 'Triángulo abierto',
+  };
+  function pieceLabel(lane, piece) {
+    if (piece && piece.engine === 'waf-drum' && WAF_DRUM_LABEL[piece.note]) {
+      return WAF_DRUM_LABEL[piece.note];
+    }
+    return LANE_LABEL[lane] || lane;
+  }
   const VOICING_OPTS = [
     { id: 'close', nombre: 'Cerrado' },
     { id: 'open', nombre: 'Abierto (drop-2)' },

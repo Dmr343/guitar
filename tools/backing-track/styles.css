@@ -625,6 +625,15 @@ body.playing .track .track-btn.danger { display: none; }
   color: var(--text-dim);
   margin: 13px 0 4px;
 }
+/* Encabezado de cada pieza del kit en el editor — nombre del
+   instrumento (Claves, Maracas, Cencerro…) sobre sus sliders. */
+.pe-piece-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 10px 0 2px;
+  letter-spacing: 0.04em;
+}
 .pe-row {
   display: flex;
   align-items: center;
