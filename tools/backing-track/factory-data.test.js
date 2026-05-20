@@ -115,6 +115,64 @@
     });
   });
 
+  T.describe('factoryProgressions — realización con transpose', () => {
+    // Why: el catálogo de progresiones es 34 entradas con grados escritos
+    // a mano. Un grado mal escrito (typo, mayúscula/minúscula confundida)
+    // no se detecta hasta runtime cuando alguien lo carga. Estos tests
+    // ejercen realizeProgression sobre TODOS los IDs contra varias
+    // tonalidades para cazar errores en el catálogo o regresiones en
+    // transpose.js antes de que lleguen al usuario.
+    const transpose = BT.transpose;
+    const VALID_ROOTS = new Set([
+      'C','C#','Db','D','D#','Eb','E','F','F#','Gb',
+      'G','G#','Ab','A','A#','Bb','B',
+    ]);
+
+    T.it('cada progresión se realiza en su tonalidad nativa sin huecos', () => {
+      progressions.PROGRESSIONS.forEach(p => {
+        const out = transpose.realizeProgression(p, p.tonalidad);
+        T.assertEq(out.length, p.chords.length,
+          p.id + ': realización dejó acordes fuera');
+        out.forEach((c, i) => {
+          T.assert(VALID_ROOTS.has(c.root),
+            p.id + '[' + i + ']: root inválido "' + c.root + '"');
+          T.assert(QUALITIES.indexOf(c.quality) >= 0,
+            p.id + '[' + i + ']: calidad inválida "' + c.quality + '"');
+          T.assert(c.bars >= 1,
+            p.id + '[' + i + ']: bars inválido');
+        });
+      });
+    });
+
+    T.it('cada progresión transponible se realiza contra C, G y Eb', () => {
+      const targets = ['C', 'G', 'Eb'];
+      progressions.PROGRESSIONS.forEach(p => {
+        if (p.transponible === false) return;
+        targets.forEach(t => {
+          const out = transpose.realizeProgression(p, t);
+          T.assertEq(out.length, p.chords.length,
+            p.id + ' en ' + t + ': realización dejó acordes fuera');
+          out.forEach((c, i) => {
+            T.assert(VALID_ROOTS.has(c.root),
+              p.id + ' en ' + t + '[' + i + ']: root inválido "' + c.root + '"');
+          });
+        });
+      });
+    });
+
+    T.it('progresiones no transponibles devuelven sus root fijos', () => {
+      progressions.PROGRESSIONS.forEach(p => {
+        if (p.transponible !== false) return;
+        // realizeProgression debe ignorar la tonalidad destino y devolver
+        // exactamente los root del archivo.
+        const out1 = transpose.realizeProgression(p, p.tonalidad);
+        const out2 = transpose.realizeProgression(p, 'F#');
+        T.assertEq(JSON.stringify(out1), JSON.stringify(out2),
+          p.id + ': la tonalidad destino afectó el resultado de un no-transponible');
+      });
+    });
+  });
+
   T.describe('datos de fábrica — integración con el scheduler', () => {
     T.it('el scheduler produce eventos con datos de fábrica reales', () => {
       if (!BT.scheduler) { T.assert(true); return; }
