@@ -180,17 +180,42 @@
     return sel;
   }
 
+  // Etiquetas visibles para cada categoría del desplegable.
+  const CATEGORIA_LABEL = {
+    estudio: 'Estudio',
+    improvisacion: 'Improvisación',
+    bailable: 'Bailables',
+    experimental: 'Experimental',
+  };
+  // Orden de aparición de los optgroups.
+  const CATEGORIA_ORDER = ['estudio', 'improvisacion', 'bailable', 'experimental'];
+
   function initProgSelect() {
     progSelect.innerHTML = '';
     const custom = document.createElement('option');
     custom.value = '';
     custom.textContent = '(personalizada)';
     progSelect.appendChild(custom);
+    // Agrupa por categoría preservando el orden interno del array.
+    const groups = {};
     BT.factoryProgressions.PROGRESSIONS.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.nombre;
-      progSelect.appendChild(opt);
+      const cat = p.categoria || 'otros';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    });
+    const ordered = CATEGORIA_ORDER
+      .filter(c => groups[c])
+      .concat(Object.keys(groups).filter(c => CATEGORIA_ORDER.indexOf(c) < 0));
+    ordered.forEach(cat => {
+      const og = document.createElement('optgroup');
+      og.label = CATEGORIA_LABEL[cat] || cat;
+      groups[cat].forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nombre;
+        og.appendChild(opt);
+      });
+      progSelect.appendChild(og);
     });
   }
 

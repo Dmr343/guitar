@@ -171,7 +171,8 @@
       steps: 16, lanes: ['main'], hits: mono([0, 3, 8, 11], 0.84) },
 
     // Acordes —
-    // Stabs a contratiempo: acordeón/guitarra de cumbia y merengue.
+    // Stabs a contratiempo: acordeón/guitarra de cumbia y merengue;
+    // también es el "skank" del reggae.
     { id: 'acordesContratiempo', nombre: 'Contratiempo', tipo: 'chord',
       steps: 16, lanes: ['main'], hits: mono([2, 6, 10, 14], 0.66) },
     // Montuno: comping sincopado de salsa.
@@ -229,6 +230,22 @@
         lane('bongo_hi', [0, 4, 8, 12], 0.6),
         lane('bongo_lo', [2, 6, 10, 14], 0.5),
         lane('conga',    [0, 8], 0.5)) },
+
+    // ─── Reggae ───
+    // Bajo reggae: sincopado y melódico, con espacio. La identidad
+    // del bajo reggae son los silencios tanto como las notas.
+    { id: 'bajoReggae', nombre: 'Reggae', tipo: 'bass',
+      steps: 16, lanes: ['main'], hits: mono([0, 6, 8, 11], 0.84) },
+    // One drop: la marca distintiva del reggae roots es que NO hay
+    // bombo en el pulso 1. Bombo + caja golpean juntos en el pulso 3
+    // (paso 8). Hi-hat estable en corcheas.
+    { id: 'reggaeOneDrop', nombre: 'Reggae one drop', tipo: 'drums',
+      steps: 16, lanes: KIT_LANES, hits: [].concat(
+        lane('kick',  [8], 0.92),
+        lane('snare', [8], 0.85),
+        lane('hat',   [0, 2, 4, 6, 8, 10, 12, 14], 0.5)) },
+    // (El skank de reggae — el acorde a contratiempo — se hace con
+    // el patrón existente `acordesContratiempo`.)
   ];
 
   function byId(id) {

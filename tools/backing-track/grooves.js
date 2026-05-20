@@ -85,6 +85,15 @@
       patterns: { bass: 'bajoBachata', chord: 'acordesCorcheas',
                   drums: 'bachataDrums', perc: 'percBachata' },
     },
+
+    // ─── Reggae ───
+    // One drop clásico: bombo+caja en el 3, skank a contratiempo, bajo
+    // sincopado con espacios. Sin percusión asignada — opcional sumarla.
+    {
+      id: 'reggaeRoots', nombre: 'Reggae — one drop', genero: 'reggae', tempo: 80,
+      patterns: { bass: 'bajoReggae', chord: 'acordesContratiempo',
+                  drums: 'reggaeOneDrop' },
+    },
   ];
 
   function byId(id) {
