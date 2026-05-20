@@ -151,9 +151,15 @@
       const reverbSend = new (Tone().Gain)(reverbAmountOf(preset));
       gain.connect(reverbSend);
       reverbSend.connect(sharedReverb);
+      // rt.preset es un SNAPSHOT — guarda una copia profunda del preset,
+      // NO la referencia. Sin esto, mutaciones a editing.preset (que es
+      // la misma referencia que track.customPreset) propagaban a
+      // rt.preset y los checks fxSame/piecesSame veían "nada cambió"
+      // — los sliders del editor no aplicaban hasta Ctrl+R.
+      const sig = JSON.stringify(preset);
       return {
         instrument: instrument, gain: gain, reverbSend: reverbSend,
-        preset: preset, sig: JSON.stringify(preset),
+        preset: JSON.parse(sig), sig: sig,
       };
     }
 
@@ -255,8 +261,12 @@
             }
           });
         }
-        rt.preset = preset;
-        rt.sig = JSON.stringify(preset);
+        // Deep-clone — ver buildInstrument para el por qué. Sin clone,
+        // las siguientes mutaciones a editing.preset propagan a rt.preset
+        // y los checks fxSame/piecesSame ven "no cambió nada".
+        const sig = JSON.stringify(preset);
+        rt.preset = JSON.parse(sig);
+        rt.sig = sig;
       } else {
         disposeRuntime(id);
         const built = buildInstrument(track);
