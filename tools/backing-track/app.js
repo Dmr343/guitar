@@ -101,6 +101,39 @@
   const engine = BT.createEngine();
   const storage = BT.createStorage();
 
+  // ─── Estado de progresión de fábrica activa ───
+  // Cuando el usuario carga una progresión del catálogo, registramos su id
+  // y la tonalidad activa (la nativa por defecto). Esto permite que el
+  // selector de tonalidad sepa contra qué progresión re-realizar al cambiar,
+  // y que el storage persista la tonalidad elegida (no la nativa).
+  // Si el usuario edita acordes manualmente (progSelect.value = ''), se
+  // pone factoryProgState.id = null y la sesión deja de ser transponible.
+  const factoryProgState = { id: null, tonalidad: null };
+
+  function loadFactoryProgression(id, tonalidad) {
+    const prog = BT.factoryProgressions.byId(id);
+    if (!prog) return false;
+    const T = BT.transpose;
+    const dest = (prog.transponible === false)
+      ? null                                          // root fijo: tonalidad no aplica
+      : (tonalidad || prog.tonalidad);
+    factoryProgState.id = id;
+    factoryProgState.tonalidad = dest;
+    const chords = T.realizeProgression(prog, dest || prog.tonalidad);
+    model.loadProgression(chords);
+    engine.setTempo(prog.tempo || engine.getTempo());
+    return true;
+  }
+
+  // unbindFromCatalog — el usuario editó la progresión manualmente
+  // (add/clear/personalizar). Pierde el link con el catálogo y la
+  // sesión deja de ser transponible automáticamente.
+  function unbindFromCatalog() {
+    factoryProgState.id = null;
+    factoryProgState.tonalidad = null;
+    progSelect.value = '';
+  }
+
   // ─── Modelo de progresión (reutilizado del Atlas) ───
   const model = new ProgressionModel({
     onChange: function () {
@@ -226,9 +259,7 @@
     engine.addTrack({ tipo: 'bateria' });
   }
   function loadDefaultProject() {
-    const prog = BT.factoryProgressions.byId('blues12A');
-    model.loadProgression(BT.factoryProgressions.chordsOf('blues12A'));
-    engine.setTempo(prog ? prog.tempo : 100);
+    loadFactoryProgression('blues12A');
     progSelect.value = 'blues12A';
     setupDefaultTracks();
   }
@@ -1206,22 +1237,24 @@
 
   progSelect.addEventListener('change', function () {
     const id = progSelect.value;
-    if (!id) return;
-    const prog = BT.factoryProgressions.byId(id);
-    if (!prog) return;
-    model.loadProgression(BT.factoryProgressions.chordsOf(id));
-    engine.setTempo(prog.tempo || engine.getTempo());
-    syncControls();
+    if (!id) {
+      // "(personalizada)" — desvincula del catálogo.
+      factoryProgState.id = null;
+      factoryProgState.tonalidad = null;
+      syncControls();
+      return;
+    }
+    if (loadFactoryProgression(id)) syncControls();
   });
 
   btnAddChord.addEventListener('click', function () {
     model.addChord({ root: newRoot.value, quality: newQuality.value, bars: 1 });
     model.setActiveChord(model.progression.length - 1);
-    progSelect.value = '';
+    unbindFromCatalog();
   });
   btnClearProg.addEventListener('click', function () {
     model.clear();
-    progSelect.value = '';
+    unbindFromCatalog();
   });
 
   btnAdd.addEventListener('click', function () {
@@ -1330,7 +1363,7 @@
     // defecto + la progresión recibida.
     setupDefaultTracks();
     model.loadProgression(handoff);
-    progSelect.value = '';
+    unbindFromCatalog();
   } else if (session && Array.isArray(session.tracks) && session.tracks.length) {
     restoreSnapshot(session);         // reabrir donde se dejó
   } else {
