@@ -253,12 +253,15 @@
     }
 
     // setTrackPattern — guarda una variante editada del patrón en la
-    // pista (variante A o B según track.variant).
+    // pista (variante A o B según track.variant). Idempotente: si el
+    // patrón guardado es idéntico al nuevo, no dispara rebuild.
     function setTrackPattern(id, pattern) {
       const track = tracks.find(t => t.id === id);
       if (!track || !pattern) return;
       if (!track.patterns) track.patterns = { A: null, B: null };
-      track.patterns[track.variant || 'A'] = pattern;
+      const v = track.variant || 'A';
+      if (JSON.stringify(track.patterns[v]) === JSON.stringify(pattern)) return;
+      track.patterns[v] = pattern;
       refreshIfPlaying();
       emit('state');
     }
@@ -266,7 +269,9 @@
     function setTrackVariant(id, variant) {
       const track = tracks.find(t => t.id === id);
       if (!track) return;
-      track.variant = (variant === 'B') ? 'B' : 'A';
+      const next = (variant === 'B') ? 'B' : 'A';
+      if (track.variant === next) return;
+      track.variant = next;
       refreshIfPlaying();
       emit('state');
     }
@@ -452,7 +457,9 @@
     function setTempo(bpm) {
       bpm = Math.round(Number(bpm));
       if (!Number.isFinite(bpm)) return;
-      tempo = Math.max(40, Math.min(240, bpm));
+      const next = Math.max(40, Math.min(240, bpm));
+      if (next === tempo) return;     // idempotente
+      tempo = next;
       applyTransport();           // cambio en vivo, sin reprogramar
       // Con humanización los eventos van en segundos: hay que
       // reprogramarlos al cambiar el tempo (cuantizado al loop).
@@ -463,8 +470,10 @@
 
     function setHumanize(amount) {
       amount = Number(amount);
-      humanizeAmount = Number.isFinite(amount)
+      const next = Number.isFinite(amount)
         ? Math.max(0, Math.min(1, amount)) : 0;
+      if (next === humanizeAmount) return;     // idempotente
+      humanizeAmount = next;
       refreshIfPlaying();
       emit('state');
     }
@@ -507,31 +516,47 @@
     }
 
     function removeTrack(id) {
+      const before = tracks.length;
       tracks = tracks.filter(t => t.id !== id);
+      if (tracks.length === before) return;   // id inexistente, nada que hacer
       disposeRuntime(id);
       refreshIfPlaying();
       emit('state');
     }
 
+    // updateTrack — aplica un patch parcial sobre la pista. Idempotente
+    // por campo: si el valor nuevo coincide con el actual, no se aplica
+    // la lógica de invalidación (preset/pattern wipe), no se marca instant
+    // ni structural, y al final si nada cambió no se dispara refresh ni
+    // se emite 'state'. Esto evita rebuilds espurios cuando la UI re-aplica
+    // un valor existente (p. ej. selects que disparan 'change' sin que el
+    // usuario haya cambiado nada).
     function updateTrack(id, patch) {
       const track = tracks.find(t => t.id === id);
       if (!track || !patch) return;
-      // Elegir un preset de fábrica descarta la copia de trabajo editada.
-      if ('presetId' in patch) delete track.customPreset;
-      // Elegir otro patrón de fábrica descarta las variantes editadas.
-      if ('patternId' in patch) { delete track.patterns; track.variant = 'A'; }
-      Object.keys(patch).forEach(k => { track[k] = patch[k]; });
+      let instantChanged = false;
+      let structuralChanged = false;
+      Object.keys(patch).forEach(k => {
+        if (track[k] === patch[k]) return;
+        // Side effects solo en cambios reales.
+        // Elegir un preset de fábrica distinto descarta la copia editada.
+        if (k === 'presetId') delete track.customPreset;
+        // Elegir otro patrón descarta las variantes editadas.
+        if (k === 'patternId') { delete track.patterns; track.variant = 'A'; }
+        track[k] = patch[k];
+        if (k === 'volumen' || k === 'enabled') instantChanged = true;
+        else structuralChanged = true;
+      });
+      if (!instantChanged && !structuralChanged) return;
       // Volumen y mute → instantáneos sobre la ganancia de la pista,
       // sin reprogramar (reconstruir en cada tick del slider traba el audio).
       const rt = runtime[id];
-      if (rt && ('volumen' in patch || 'enabled' in patch)) {
+      if (rt && instantChanged) {
         rt.gain.gain.value = trackGainValue(track);
       }
       // Patrón, preset, voicing, etc. → cambian el scheduling: se
-      // reprograman cuantizados al próximo límite de loop.
-      const structural = Object.keys(patch).some(
-        k => k !== 'volumen' && k !== 'enabled');
-      if (structural) refreshIfPlaying();
+      // reprograman cuantizados al próximo límite de compás.
+      if (structuralChanged) refreshIfPlaying();
       emit('state');
     }
 
