@@ -242,11 +242,75 @@
               (err && err.message ? err.message : err));
           },
         });
+      case 'waf-drum':
+        return buildWafDrumPiece(spec);
       case 'noise':
       default:
         return new T.NoiseSynth(Object.assign(
           { noise: { type: spec.noise || 'white' } }, spec.options || {}));
     }
+  }
+
+  // buildWafDrumPiece — una pieza de kit que reproduce un sample
+  // individual del drum kit GM de FluidR3 (program 128, midi 35-81).
+  // Permite armar kits regionales reales (claves, maracas, güiro,
+  // cencerro, congas, timbales, bongó, agogo, etc.) usando samples
+  // de un instrumento acústico, no síntesis.
+  //
+  // spec: { engine: 'waf-drum', url, variable, note }
+  //   url      — URL del soundfont del drum (un archivo por midi note).
+  //   variable — nombre de la variable global que el soundfont declara
+  //              (ej. _drum_75_0_FluidR3_GM_sf2_file).
+  //   note     — número midi 35-81 que dispara este sonido.
+  //
+  // Implementa la interfaz mínima que espera createDrumkit:
+  //   .connect(target), .triggerAttackRelease(_note, _dur, time, vel), .dispose()
+  function buildWafDrumPiece(spec) {
+    const T = Tone();
+    const rawCtx = T.getContext().rawContext;
+    if (typeof W.WebAudioFontPlayer === 'undefined') {
+      console.warn('[backing-track] WebAudioFontPlayer no cargado — pieza muda');
+      // Fallback silencioso: noise piece corto para no romper el kit.
+      return new T.NoiseSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0 } });
+    }
+    const player = new W.WebAudioFontPlayer();
+    const out = new T.Gain();
+    const midiNote = Math.round(Number(spec.note));
+    let presetData = null;
+
+    // Cache check: si el soundfont ya está como global, usar al toque.
+    if (spec.variable && W[spec.variable]) {
+      presetData = W[spec.variable];
+    } else if (spec.url && spec.variable) {
+      try {
+        player.loader.startLoad(rawCtx, spec.url, spec.variable);
+        player.loader.waitLoad(function () {
+          presetData = W[spec.variable] || null;
+        });
+      } catch (err) {
+        console.warn('[backing-track] WAF drum: no cargó "' +
+          spec.variable + '": ' + (err && err.message ? err.message : err));
+      }
+    }
+
+    return {
+      connect: function (target) { out.connect(target); },
+      // Firma compatible con membrane/sample (note, dur, time, velocity);
+      // _note y _dur se ignoran — el midi está baked en spec.note.
+      triggerAttackRelease: function (_note, _dur, time, velocity) {
+        if (!presetData) return;
+        const vol = Number.isFinite(velocity) ? velocity : 0.8;
+        const t = (typeof time === 'number') ? time : rawCtx.currentTime;
+        try {
+          // Duración fija de 0.4s — los drums GM tienen sus propios envelopes.
+          player.queueWaveTable(rawCtx, out.input, presetData, t, midiNote, 0.4, vol);
+        } catch (e) {}
+      },
+      dispose: function () {
+        try { player.cancelQueue(rawCtx); } catch (e) {}
+        try { out.dispose(); } catch (e) {}
+      },
+    };
   }
 
   function createDrumkit(preset) {
@@ -283,8 +347,10 @@
       triggerHit: function (lane, time, velocity) {
         const v = voices[lane];
         if (!v) return;   // lane sin pieza registrada: se ignora
-        if (v.spec.engine === 'membrane' || v.spec.engine === 'sample') {
-          // MembraneSynth y Sampler disparan con altura (nota fija).
+        const eng = v.spec.engine;
+        if (eng === 'membrane' || eng === 'sample' || eng === 'waf-drum') {
+          // MembraneSynth, Sampler y WAF drum disparan con altura (o midi
+          // baked en la spec). triggerAttackRelease ignora lo que no aplique.
           v.voice.triggerAttackRelease(v.spec.note || 'C3', '16n', time, velocity);
         } else {
           // NoiseSynth / MetalSynth: sin altura.
