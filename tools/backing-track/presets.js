@@ -106,6 +106,33 @@
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.25 }],
     },
+    {
+      // Slap bass: funk eléctrico, el bajo con "pop".
+      id: 'wafBajoSlap', nombre: 'Bajo slap', tipo: 'bajo', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0370_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0370_FluidR3_GM_sf2_file',
+      },
+      efectos: [],
+    },
+    {
+      // Synth bass clásico: electrónica, synthwave.
+      id: 'wafBajoSynth1', nombre: 'Bajo synth', tipo: 'bajo', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0380_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0380_FluidR3_GM_sf2_file',
+      },
+      efectos: [],
+    },
+    {
+      // Synth bass 2: variante más resonante.
+      id: 'wafBajoSynth2', nombre: 'Bajo synth 2', tipo: 'bajo', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0390_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0390_FluidR3_GM_sf2_file',
+      },
+      efectos: [],
+    },
 
     // ═══════════════════ ACORDES ═══════════════════
 
@@ -173,6 +200,24 @@
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.18 }],
     },
+    {
+      // Honky-tonk: piano de salón, country, blues.
+      id: 'wafPianoHonky', nombre: 'Piano honky-tonk', tipo: 'acordes', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0030_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0030_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.18 }],
+    },
+    {
+      // Clavinet: funk eléctrico — el sonido de Stevie Wonder en "Superstition".
+      id: 'wafClavinet', nombre: 'Clavinet', tipo: 'acordes', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0070_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0070_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.12 }],
+    },
 
     // ═══════════════════ PAD ═══════════════════
 
@@ -200,6 +245,26 @@
         envelope: { attack: 1.5, decay: 1, sustain: 0.7, release: 2.5 },
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.55 }],
+    },
+
+    // ── WebAudioFont (soundfonts GM por CDN) ──
+    {
+      // Pad halo: textura etérea y resonante, brillo arriba.
+      id: 'wafPadHalo', nombre: 'Pad halo', tipo: 'pad', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0940_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0940_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.55 }],
+    },
+    {
+      // Pad sweep / atmósfera: barrido lento, color cinematográfico.
+      id: 'wafPadAtmosfera', nombre: 'Pad atmósfera', tipo: 'pad', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0950_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0950_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.6 }],
     },
 
     // ═══════════════════ LEAD ═══════════════════
@@ -304,6 +369,24 @@
       efectos: [{ tipo: 'reverb', cantidad: 0.18 }],
     },
     {
+      // Guitarra con overdrive: saturación suave, blues/rock clásico.
+      id: 'wafGuitarraOverdrive', nombre: 'Guitarra overdrive', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0290_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0290_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.18 }],
+    },
+    {
+      // Guitarra distorsionada: rock pesado.
+      id: 'wafGuitarraDistorsion', nombre: 'Guitarra distorsionada', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0300_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0300_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.18 }],
+    },
+    {
       id: 'wafBanjo', nombre: 'Banjo', tipo: 'lead', motor: 'webaudiofont',
       config: {
         url: 'https://surikov.github.io/webaudiofontdata/sound/1050_FluidR3_GM_sf2_file.js',
@@ -338,6 +421,24 @@
       efectos: [{ tipo: 'reverb', cantidad: 0.35 }],
     },
     {
+      // Fiddle: violín folk/country/celta, distinto del clásico.
+      id: 'wafFiddle', nombre: 'Fiddle (violín folk)', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/1100_FluidR3_GM_sf2_file.js',
+        variable: '_tone_1100_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.3 }],
+    },
+    {
+      // Pizzicato strings: cuerdas pulsadas, distinto del ensemble normal.
+      id: 'wafPizzicato', nombre: 'Cuerdas pizzicato', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0450_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0450_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.3 }],
+    },
+    {
       id: 'wafViola', nombre: 'Viola', tipo: 'lead', motor: 'webaudiofont',
       config: {
         url: 'https://surikov.github.io/webaudiofontdata/sound/0410_FluidR3_GM_sf2_file.js',
@@ -363,6 +464,15 @@
     },
 
     // ── WebAudioFont — bronces ──
+    {
+      // Brass section: el ensemble entero — salsa/funk/Motown.
+      id: 'wafBrassSection', nombre: 'Sección de bronces', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0610_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0610_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.28 }],
+    },
     {
       id: 'wafTrompeta', nombre: 'Trompeta', tipo: 'lead', motor: 'webaudiofont',
       config: {
@@ -437,6 +547,33 @@
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.3 }],
     },
+    {
+      // Pan flute: flauta de pan andina, color sudamericano.
+      id: 'wafPanFlauta', nombre: 'Flauta de pan', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0750_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0750_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.4 }],
+    },
+    {
+      // Ocarina: flautita dulce, color de cuento.
+      id: 'wafOcarina', nombre: 'Ocarina', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0790_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0790_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.38 }],
+    },
+    {
+      // Gaita escocesa: drone permanente, sabor folk.
+      id: 'wafGaita', nombre: 'Gaita escocesa', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/1090_FluidR3_GM_sf2_file.js',
+        variable: '_tone_1090_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.3 }],
+    },
 
     // ── WebAudioFont — teclas y voz ──
     {
@@ -462,6 +599,35 @@
         variable: '_tone_0520_FluidR3_GM_sf2_file',
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.5 }],
+    },
+    {
+      // Celesta: campanitas etéreas, color navideño/onírico.
+      id: 'wafCelesta', nombre: 'Celesta', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0080_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0080_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.4 }],
+    },
+
+    // ── WebAudioFont — sintetizadores ──
+    {
+      // Lead 1 (square): lead synth clásico de los 80.
+      id: 'wafLeadSquare', nombre: 'Lead synth (cuadrada)', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0800_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0800_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.25 }],
+    },
+    {
+      // Lead 2 (sawtooth): el otro lead 80 arquetípico.
+      id: 'wafLeadSaw', nombre: 'Lead synth (sierra)', tipo: 'lead', motor: 'webaudiofont',
+      config: {
+        url: 'https://surikov.github.io/webaudiofontdata/sound/0810_FluidR3_GM_sf2_file.js',
+        variable: '_tone_0810_FluidR3_GM_sf2_file',
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.25 }],
     },
 
     // ── WebAudioFont — láminas y del mundo ──

@@ -255,10 +255,24 @@
       bars.textContent = '●'.repeat(c.bars);
       chip.appendChild(name);
       chip.appendChild(bars);
-      chip.title = 'Clic: seleccionar · Shift+clic: marcar loop · arrastrar: reordenar';
+      // Botón de borrar visible al hover sobre el chip.
+      const del = document.createElement('span');
+      del.className = 'chip-del';
+      del.textContent = '×';
+      del.title = 'Quitar acorde';
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();         // no seleccionar al borrar
+        model.removeChordAt(i);
+      });
+      del.addEventListener('mousedown', (e) => e.stopPropagation()); // no iniciar drag
+      chip.appendChild(del);
+      chip.title = 'Clic: seleccionar · Shift+clic: marcar loop · arrastrar: reordenar · Supr/Backspace: borrar';
       chip.addEventListener('click', (e) => {
         if (e.shiftKey) handleLoopClick(i);
-        else model.setActiveChord(i);
+        else {
+          model.setActiveChord(i);
+          engine.jumpToChord(i);   // si está sonando, salta al instante
+        }
       });
       // Reordenar por arrastre → model.moveChord(origen, destino).
       chip.addEventListener('dragstart', (e) => {
@@ -1148,6 +1162,20 @@
       case 'ArrowRight': navChord(1);  e.preventDefault(); break;
       case 'ArrowUp':    model.changeActiveBars(1);  e.preventDefault(); break;
       case 'ArrowDown':  model.changeActiveBars(-1); e.preventDefault(); break;
+      case 'Delete':
+      case 'Backspace': {
+        // Borra el acorde seleccionado. Re-selecciona el anterior (o el
+        // primero) para no perder el foco del editor.
+        const n = model.progression.length;
+        const idx = model.activeIdx;
+        if (n > 0 && idx >= 0 && idx < n) {
+          model.removeChordAt(idx);
+          const after = model.progression.length;
+          if (after > 0) model.setActiveChord(Math.min(idx, after - 1));
+          e.preventDefault();
+        }
+        break;
+      }
     }
   });
 

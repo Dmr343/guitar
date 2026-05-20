@@ -53,8 +53,6 @@
 
   function createEngine() {
     const transport = Tone().getTransport();
-    // En cada vuelta del loop se aplican las ediciones en vivo pendientes.
-    transport.on('loop', function () { onTransportLoop(); });
     // El grafo de audio se crea recién en el primer Play (tras el
     // gesto del usuario / Tone.start), para no tocar el AudioContext
     // antes de tiempo — eso disparaba warnings al cargar la página.
@@ -99,10 +97,11 @@
     let notePart = null;
     let chordPart = null;
     let tickLoop = null;           // Tone.Loop por pulso para el indicador
+    let barRebuildId = null;       // scheduleRepeat por compás para aplicar pendientes
     let playing = false;
     let activeChordIndex = -1;
     let loopStartBBS = '0:0:0';    // posición de inicio del loop (tiempo musical)
-    let pendingRebuild = false;    // hay una edición esperando el próximo límite de loop
+    let pendingRebuild = false;    // hay una edición esperando el próximo límite de compás
 
     // ─── Listeners ───
     const listeners = { chord: [], state: [], transport: [], tick: [] };
@@ -179,22 +178,46 @@
     }
 
     // applyTrackPreset — instala una copia de trabajo del preset en la
-    // pista. Si solo cambió la config de síntesis (mismo motor, mismos
-    // efectos) y el instrumento ya existe, lo actualiza en vivo sin
-    // reconstruir. Si cambió la estructura (efectos / motor), reconstruye.
+    // pista. Actualiza in-place si puede: config de síntesis, cantidades
+    // de efectos y nivel de reverb se cambian sin reconstruir el
+    // instrumento. Solo reconstruye si cambió el motor o el conjunto de
+    // efectos (agregar/quitar un tipo).
+    //
+    // Why: en motores sampler/WAF, reconstruir tras cada mover-slider
+    // dejaba al instrumento mudo durante la (re)carga asíncrona de
+    // samples/soundfont, sobre todo si se encadenaban movimientos.
     function applyTrackPreset(id, preset) {
       const track = tracks.find(t => t.id === id);
       if (!track || !preset) return;
       track.customPreset = preset;
       const rt = runtime[id];
-      const fxSame = rt &&
-        JSON.stringify(rt.preset.efectos || []) === JSON.stringify(preset.efectos || []);
-      if (rt && rt.instrument.kind === 'melodic' &&
-          rt.preset.motor === preset.motor && fxSame) {
-        rt.instrument.setConfig(preset.config);   // actualización en vivo
+      if (!rt) { emit('state'); return; }
+
+      const motorSame = rt.preset.motor === preset.motor;
+      const oldFx = rt.preset.efectos || [];
+      const newFx = preset.efectos || [];
+      const fxSame = JSON.stringify(oldFx) === JSON.stringify(newFx);
+      // Mismo conjunto de tipos en el mismo orden → solo cambian cantidades.
+      const sameTipos = oldFx.length === newFx.length &&
+        oldFx.every((e, i) => e.tipo === newFx[i].tipo);
+      const amountOnly = sameTipos && !fxSame;
+
+      if (motorSame && (fxSame || amountOnly)) {
+        if (rt.instrument.kind === 'melodic') {
+          rt.instrument.setConfig(preset.config);
+        }
+        if (amountOnly) {
+          rt.reverbSend.gain.value = reverbAmountOf(preset);
+          newFx.forEach(spec => {
+            if (spec.tipo === 'reverb') return;
+            if (rt.instrument.setEffectAmount) {
+              rt.instrument.setEffectAmount(spec.tipo, Number(spec.cantidad));
+            }
+          });
+        }
         rt.preset = preset;
         rt.sig = JSON.stringify(preset);
-      } else if (rt) {
+      } else {
         disposeRuntime(id);
         const built = buildInstrument(track);
         if (built) runtime[id] = built;
@@ -370,17 +393,18 @@
     }
 
     // Edición en vivo: en vez de reprogramar al instante (lo que cortaría
-    // el audio a mitad de loop), se marca un pedido pendiente; la
-    // reprogramación entra limpia en el próximo límite de loop. El flag
-    // booleano hace el coalescing: varios cambios → una sola reconstrucción.
+    // el audio a mitad de compás), se marca un pedido pendiente; la
+    // reprogramación entra limpia en el próximo límite de compás. El flag
+    // booleano hace el coalescing: varios cambios dentro del mismo compás
+    // → una sola reconstrucción al inicio del siguiente.
     function refreshIfPlaying() {
       if (playing) pendingRebuild = true;
     }
 
-    // Se dispara en cada vuelta del loop: si hay una edición pendiente,
-    // reconstruye instrumentos y scheduling con el transporte ya en el
-    // inicio del loop (sin cortes).
-    function onTransportLoop() {
+    // Se dispara al inicio de cada compás (via scheduleRepeat '1m'): si
+    // hay una edición pendiente, reconstruye instrumentos y scheduling.
+    // Mucho más responsivo que esperar al final del loop entero.
+    function onBarBoundary() {
       if (!pendingRebuild) return;
       pendingRebuild = false;
       ensureInstruments();
@@ -534,11 +558,48 @@
     }
     function getSubdivision() { return subdivision; }
 
-    // setFocusChord — índice del acorde con foco. Al editar en vivo, la
-    // reproducción reinicia desde este acorde. No reprograma por sí solo.
+    // setFocusChord — índice del acorde con foco. Lo usa play() como
+    // punto de arranque si está parado. No mueve el transporte por sí
+    // solo: para saltar en vivo, usar jumpToChord.
     function setFocusChord(idx) {
       idx = Math.round(Number(idx));
       focusChordIndex = Number.isFinite(idx) && idx >= 0 ? idx : 0;
+    }
+
+    // Step de inicio de un acorde dentro de la progresión.
+    function chordStartStep(idx) {
+      let step = 0;
+      for (let i = 0; i < idx; i++) {
+        step += (progression[i] && progression[i].bars > 0 ? progression[i].bars : 1)
+              * STEPS_PER_BAR;
+      }
+      return step;
+    }
+
+    // jumpToChord — salto explícito a un acorde de la progresión. Si está
+    // reproduciendo, mueve el transporte al instante y silencia notas
+    // sostenidas. Si está parado, queda como punto de arranque para Play.
+    //
+    // Why: la "selección" de acorde no servía para nada en reproducción
+    // — solo abría el editor. Ahora un clic en el chip salta de verdad.
+    function jumpToChord(idx) {
+      if (!progression.length) return;
+      if (!Number.isFinite(idx) || idx < 0 || idx >= progression.length) return;
+      focusChordIndex = idx;
+      if (!playing) return;
+      silenceAll();                             // corta pad/bajo sostenido
+      transport.position = stepToBBS(chordStartStep(idx));
+      activeChordIndex = idx;
+      emit('chord', idx);
+    }
+
+    // Posición BBS desde la que arranca play(): el acorde con foco si
+    // está dentro de la progresión, o el inicio del loop si no.
+    function startBBSForPlay() {
+      if (focusChordIndex > 0 && focusChordIndex < progression.length) {
+        return stepToBBS(chordStartStep(focusChordIndex));
+      }
+      return loopStartBBS;
     }
 
     function setMode(m) {
@@ -554,8 +615,13 @@
       ensureInstruments();
       rebuildSchedule();
       applyTransport();
-      transport.position = loopStartBBS;   // arranca al inicio del loop
-      tickCounter = -1;                    // el indicador arranca en el pulso 1
+      transport.position = startBBSForPlay();   // acorde con foco o inicio del loop
+      tickCounter = -1;                          // el indicador arranca en el pulso 1
+      // Coalescer de ediciones por compás: consume pendingRebuild al
+      // inicio de cada compás (en vez de esperar al final del loop entero).
+      barRebuildId = transport.scheduleRepeat(function () {
+        onBarBoundary();
+      }, '1m');
       transport.start();
       playing = true;
       emit('transport', 'play');
@@ -566,6 +632,10 @@
       transport.stop();
       transport.position = loopStartBBS;
       disposeParts();
+      if (barRebuildId !== null) {
+        try { transport.clear(barRebuildId); } catch (e) {}
+        barRebuildId = null;
+      }
       silenceAll();          // corta las notas que sigan sonando
       pendingRebuild = false;
       playing = false;
@@ -649,7 +719,7 @@
       setLoop, getLoop,
       setLoopRange, getLoopRange,
       setSubdivision, getSubdivision,
-      setFocusChord,
+      setFocusChord, jumpToChord,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
       snapshot, restore, dispose,

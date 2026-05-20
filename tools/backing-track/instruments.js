@@ -72,6 +72,34 @@
     return efectos.map(buildEffect).filter(Boolean);
   }
 
+  // Como buildEffectChain pero conserva el `tipo` de cada efecto, para
+  // poder actualizar su cantidad en vivo sin reconstruirlo.
+  function buildLabeledEffectChain(efectos) {
+    if (!Array.isArray(efectos)) return [];
+    return efectos.map(function (spec) {
+      const node = buildEffect(spec);
+      return node ? { tipo: spec.tipo, node: node } : null;
+    }).filter(Boolean);
+  }
+
+  // Actualiza la cantidad de un efecto in-place. Devuelve true si lo
+  // pudo aplicar. El reverb es bus compartido — se maneja fuera.
+  function setEffectAmountOn(entry, amount) {
+    const v = Number.isFinite(amount) ? amount : 0.3;
+    try {
+      if (entry.tipo === 'distortion') {
+        entry.node.distortion = v;
+        return true;
+      }
+      if (entry.tipo === 'chorus') {
+        // Chorus.depth controla la profundidad; wet queda fijo en 1.
+        entry.node.depth = v;
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
   // ─── Construcción de instrumentos melódicos ───
 
   function buildMelodicSynth(preset) {
@@ -139,8 +167,9 @@
     const inputBus = new T.Gain();
     const outputGain = new T.Gain();
     instrument.connect(inputBus);
-    const effects = buildEffectChain(preset.efectos);
-    inputBus.chain.apply(inputBus, effects.concat([outputGain]));
+    const effects = buildLabeledEffectChain(preset.efectos);
+    const effectNodes = effects.map(e => e.node);
+    inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     const isSampler = (preset.motor === 'sampler');
 
@@ -178,9 +207,16 @@
         if (isMono && config.filterEnvelope) opts.filterEnvelope = config.filterEnvelope;
         try { instrument.set(opts); } catch (e) {}
       },
+      // setEffectAmount — actualiza la cantidad de un efecto in-place.
+      // Evita disponer y reconstruir todo el instrumento al mover sliders
+      // (que en sampler/WAF dejaba al instrumento mudo mientras recargaba).
+      setEffectAmount: function (tipo, amount) {
+        const entry = effects.find(e => e.tipo === tipo);
+        if (entry) setEffectAmountOn(entry, amount);
+      },
       dispose: function () {
         try { instrument.dispose(); } catch (e) {}
-        effects.forEach(fx => { try { fx.dispose(); } catch (e) {} });
+        effects.forEach(fx => { try { fx.node.dispose(); } catch (e) {} });
         try { inputBus.dispose(); } catch (e) {}
         try { outputGain.dispose(); } catch (e) {}
       },
@@ -220,8 +256,9 @@
 
     const inputBus = new T.Gain();
     const outputGain = new T.Gain();
-    const effects = buildEffectChain(preset.efectos);
-    inputBus.chain.apply(inputBus, effects.concat([outputGain]));
+    const effects = buildLabeledEffectChain(preset.efectos);
+    const effectNodes = effects.map(e => e.node);
+    inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     // Un synth por lane; todos van al bus de entrada del kit.
     const voices = {};
@@ -237,6 +274,10 @@
       output: outputGain,
       triggerNote: function () { /* no aplica a un kit de batería */ },
       setConfig: function () { /* la edición de kit no aplica en v1 */ },
+      setEffectAmount: function (tipo, amount) {
+        const entry = effects.find(e => e.tipo === tipo);
+        if (entry) setEffectAmountOn(entry, amount);
+      },
       voiceCount: function () { return 0; },   // golpes one-shot cortos
       silence: function () { /* los golpes de batería son one-shots cortos */ },
       triggerHit: function (lane, time, velocity) {
@@ -254,7 +295,7 @@
         Object.keys(voices).forEach(lane => {
           try { voices[lane].voice.dispose(); } catch (e) {}
         });
-        effects.forEach(fx => { try { fx.dispose(); } catch (e) {} });
+        effects.forEach(fx => { try { fx.node.dispose(); } catch (e) {} });
         try { inputBus.dispose(); } catch (e) {}
         try { outputGain.dispose(); } catch (e) {}
       },
@@ -295,21 +336,29 @@
 
     const inputBus = new T.Gain();
     const outputGain = new T.Gain();
-    const effects = buildEffectChain(preset.efectos);
-    inputBus.chain.apply(inputBus, effects.concat([outputGain]));
+    const effects = buildLabeledEffectChain(preset.efectos);
+    const effectNodes = effects.map(e => e.node);
+    inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     let presetData = null;   // objeto del soundfont, una vez decodificado
     let voices = [];         // envolventes activas (devueltas por queueWaveTable)
 
     if (cfg.url && cfg.variable) {
-      try {
-        player.loader.startLoad(rawCtx, cfg.url, cfg.variable);
-        player.loader.waitLoad(function () {
-          presetData = W[cfg.variable] || null;
-        });
-      } catch (err) {
-        console.warn('[backing-track] WebAudioFont: no se pudo cargar "' +
-          (preset.id || '?') + '": ' + (err && err.message ? err.message : err));
+      // Cache hit: el soundfont ya está como global desde una carga
+      // anterior — disponible sincrónico, sin ventana muda al recrear el
+      // instrumento (p. ej. tras un toggle de efecto).
+      if (W[cfg.variable]) {
+        presetData = W[cfg.variable];
+      } else {
+        try {
+          player.loader.startLoad(rawCtx, cfg.url, cfg.variable);
+          player.loader.waitLoad(function () {
+            presetData = W[cfg.variable] || null;
+          });
+        } catch (err) {
+          console.warn('[backing-track] WebAudioFont: no se pudo cargar "' +
+            (preset.id || '?') + '": ' + (err && err.message ? err.message : err));
+        }
       }
     }
 
@@ -360,6 +409,10 @@
       },
       triggerHit: function () { /* no aplica */ },
       setConfig: function () { /* WAF no se edita con sliders en v1 */ },
+      setEffectAmount: function (tipo, amount) {
+        const entry = effects.find(e => e.tipo === tipo);
+        if (entry) setEffectAmountOn(entry, amount);
+      },
       voiceCount: function () { pruneVoices(); return voices.length; },
       silence: function () {
         try { player.cancelQueue(rawCtx); } catch (e) {}
@@ -368,7 +421,7 @@
       dispose: function () {
         try { player.cancelQueue(rawCtx); } catch (e) {}
         stopAllVoices();
-        effects.forEach(fx => { try { fx.dispose(); } catch (e) {} });
+        effects.forEach(fx => { try { fx.node.dispose(); } catch (e) {} });
         try { inputBus.dispose(); } catch (e) {}
         try { outputGain.dispose(); } catch (e) {}
       },
