@@ -564,9 +564,21 @@
 
     // setLoopRange — acota el loop a un rango de acordes [a,b].
     // setLoopRange(null) vuelve al loop completo.
+    //
+    // Idempotente: si el rango no cambia, no dispara refreshIfPlaying. Esto
+    // evita rebuilds espurios cuando el callback de model.onChange en app.js
+    // llama setLoopRange en cada cambio del modelo (incluso cuando solo
+    // cambió el activeChord — p. ej. al seguir el playback). Sin este check,
+    // cada cambio de acorde durante la reproducción marcaba pendingRebuild
+    // y al próximo bar boundary el rebuild se comía el primer evento (silenciaba
+    // el bajo y otros instrumentos en el beat 1 del nuevo acorde).
     function setLoopRange(a, b) {
-      if (a == null) loopRangeIdx = null;
-      else loopRangeIdx = [a, (b == null ? a : b)];
+      const next = (a == null) ? null : [a, (b == null ? a : b)];
+      const same = (loopRangeIdx === null && next === null) ||
+                   (loopRangeIdx !== null && next !== null &&
+                    loopRangeIdx[0] === next[0] && loopRangeIdx[1] === next[1]);
+      if (same) return;
+      loopRangeIdx = next;
       refreshIfPlaying();
       emit('state');
     }
