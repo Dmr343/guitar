@@ -274,7 +274,38 @@
     function disposeParts() {
       if (notePart) { try { notePart.dispose(); } catch (e) {} notePart = null; }
       if (chordPart) { try { chordPart.dispose(); } catch (e) {} chordPart = null; }
+      // tickLoop NO se disposea aquí — vive durante toda la sesión de
+      // reproducción para mantener el metrónomo en sync. Solo se libera
+      // en stop() y se recrea en setSubdivision() cuando cambia el intervalo.
+    }
+
+    function disposeTickLoop() {
       if (tickLoop) { try { tickLoop.dispose(); } catch (e) {} tickLoop = null; }
+    }
+
+    // ensureTickLoop — crea (o re-crea tras cambio de subdivisión) el loop
+    // del indicador de compás. Es INDEPENDIENTE del rebuild del scheduling:
+    // sigue corriendo a través de cambios de instrumento/groove/tonalidad
+    // para que el metrónomo no se desincronice con la posición real del
+    // transporte.
+    //
+    // Why: antes este loop se recreaba dentro de rebuildSchedule junto
+    // con notePart/chordPart, y tickCounter se reseteaba a -1. Al hacer
+    // cualquier cambio mid-loop, el counter empezaba a contar desde 0 a
+    // partir del próximo tick — el metrónomo mostraba "pulso 1" en un
+    // momento que no era pulso 1 real del compás.
+    function ensureTickLoop() {
+      const T = Tone();
+      const sub = SUBDIVISIONS[subdivision] || SUBDIVISIONS.negra;
+      disposeTickLoop();
+      tickLoop = new T.Loop(function (time) {
+        tickCounter++;
+        const idx = ((tickCounter % sub.count) + sub.count) % sub.count;
+        T.getDraw().schedule(function () {
+          emit('tick', { index: idx, count: sub.count });
+        }, time);
+      }, sub.interval);
+      tickLoop.start(0);
     }
 
     // silenceAll — corta las notas que estén sonando en todos los
@@ -356,18 +387,6 @@
       }, chordEvents);
       chordPart.start(0);
 
-      // Loop del indicador de compás, a la subdivisión elegida. Usa un
-      // contador (no lee la posición) → no se saltea pulsos.
-      const sub = SUBDIVISIONS[subdivision] || SUBDIVISIONS.negra;
-      tickLoop = new T.Loop(function (time) {
-        tickCounter++;
-        const idx = ((tickCounter % sub.count) + sub.count) % sub.count;
-        T.getDraw().schedule(function () {
-          emit('tick', { index: idx, count: sub.count });
-        }, time);
-      }, sub.interval);
-      tickLoop.start(0);
-
       // Ventana de loop: rango de acordes [a,b] o el loop completo.
       const totalBars = result.loopSteps / STEPS_PER_BAR;
       let startStep = 0, endStep = result.loopSteps;
@@ -383,8 +402,6 @@
       transport.loop = loopEnabled;
       transport.loopStart = loopStartBBS;
       transport.loopEnd = stepToBBS(endStep);
-
-      tickCounter = -1;            // el indicador reinicia en el pulso 1
       return totalBars;
     }
 
@@ -552,8 +569,15 @@
     // setSubdivision — subdivisión del indicador de compás
     // ('redonda' | 'blanca' | 'negra' | 'corchea' | 'tresillo' | 'semicorchea').
     function setSubdivision(id) {
-      if (SUBDIVISIONS[id]) subdivision = id;
-      refreshIfPlaying();
+      if (!SUBDIVISIONS[id] || subdivision === id) return;
+      subdivision = id;
+      // Cambia el intervalo del metrónomo: hay que recrearlo. El counter
+      // arranca de cero para el nuevo grano (no tiene sentido continuar
+      // un counter de negras como si fuera de corcheas).
+      if (playing) {
+        tickCounter = -1;
+        ensureTickLoop();
+      }
       emit('state');
     }
     function getSubdivision() { return subdivision; }
@@ -617,6 +641,7 @@
       applyTransport();
       transport.position = startBBSForPlay();   // acorde con foco o inicio del loop
       tickCounter = -1;                          // el indicador arranca en el pulso 1
+      ensureTickLoop();                          // metrónomo independiente del rebuild
       // Coalescer de ediciones por compás: consume pendingRebuild al
       // inicio de cada compás (en vez de esperar al final del loop entero).
       barRebuildId = transport.scheduleRepeat(function () {
@@ -632,6 +657,7 @@
       transport.stop();
       transport.position = loopStartBBS;
       disposeParts();
+      disposeTickLoop();
       if (barRebuildId !== null) {
         try { transport.clear(barRebuildId); } catch (e) {}
         barRebuildId = null;
