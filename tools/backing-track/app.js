@@ -183,11 +183,32 @@
     btnTonalidadReset.disabled = (factoryProgState.tonalidad === prog.tonalidad);
   }
 
-  // setActiveTonalidad — el usuario eligió una tonalidad distinta. Re-realiza
-  // la progresión activa contra la nueva tonalidad y la recarga.
+  // setActiveTonalidad — transponer in-place: re-realiza la progresión activa
+  // contra la nueva tonalidad, preservando activeIdx y loopRange. Mientras
+  // suena, el cambio entra en el próximo límite de compás (vía el coalescer
+  // pendingRebuild del engine — gratis). La UI de chips se actualiza al
+  // instante porque el model.onChange dispara renderChords sincrónico.
+  //
+  // Why no usamos loadFactoryProgression: éste resetea activeIdx=0 y limpia
+  // la loop range; al transponer queremos quedarnos sobre el mismo grado,
+  // solo con raíces nuevas. Usamos model.batch para que las 3 mutaciones
+  // (loadProgression + setActiveChord + setLoopRange) disparen un solo
+  // onChange.
   function setActiveTonalidad(t) {
     if (!factoryProgState.id) return;
-    loadFactoryProgression(factoryProgState.id, t);
+    const prog = BT.factoryProgressions.byId(factoryProgState.id);
+    if (!prog || prog.transponible === false) return;
+    const dest = t || prog.tonalidad;
+    factoryProgState.tonalidad = dest;
+    const chords = BT.transpose.realizeProgression(prog, dest);
+    const savedIdx = model.activeIdx;
+    const savedLoop = model.loopRange;
+    model.batch(m => {
+      m.loadProgression(chords);
+      if (savedIdx > 0 && savedIdx < chords.length) m.setActiveChord(savedIdx);
+      if (savedLoop) m.setLoopRange(savedLoop[0], savedLoop[1]);
+    });
+    syncTonalidadControls();
   }
 
   // ─── Modelo de progresión (reutilizado del Atlas) ───
