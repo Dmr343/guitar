@@ -439,11 +439,19 @@
   }
   // Indicador del acorde sonando (callback de engine.onChordChange) +
   // actualización del acorde actual/siguiente del panel de toque.
+  //
+  // Mientras suena, la "selección" (acorde activo del editor) sigue al
+  // acorde que está sonando — el chip seleccionado siempre coincide con
+  // el chip activo. Eso unifica el feedback visual y hace que el editor
+  // de abajo muestre el acorde que escuchás ahora.
   function highlightChord(idx) {
     Array.prototype.forEach.call(chordStrip.children, chip => {
       chip.classList.toggle('active', Number(chip.dataset.idx) === idx);
     });
     renderHeroChords(idx);
+    if (idx >= 0 && engine.isPlaying() && idx !== model.activeIdx) {
+      model.setActiveChord(idx);
+    }
   }
   // Acorde grande "actual" + "siguiente" del panel de toque.
   function renderHeroChords(idx) {

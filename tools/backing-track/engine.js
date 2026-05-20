@@ -430,9 +430,17 @@
 
     // ─── API: progresión / tempo ───
     function loadProgression(chords) {
-      progression = Array.isArray(chords)
+      const newProg = Array.isArray(chords)
         ? chords.map(c => ({ root: c.root, quality: c.quality, bars: c.bars }))
         : [];
+      // Idempotente: si los acordes no cambiaron, no reprogramar. Esto evita
+      // un rebuild espurio cuando el modelo dispara onChange solo porque
+      // cambió activeIdx (p. ej. al clickear un chip). Sin este check, un
+      // simple "seleccionar acorde" mientras suena provocaba un dispose +
+      // recreate del notePart al límite del compás siguiente — y el acorde
+      // justo en ese borde se perdía en la transición.
+      if (JSON.stringify(progression) === JSON.stringify(newProg)) return;
+      progression = newProg;
       activeChordIndex = -1;
       refreshIfPlaying();
       emit('state');
