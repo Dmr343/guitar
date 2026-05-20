@@ -385,6 +385,10 @@
         const vol = (typeof v.spec.vol === 'number') ? v.spec.vol : 1;
         const tune = (typeof v.spec.tune === 'number') ? Math.round(v.spec.tune) : 0;
         const finalVel = Math.max(0, Math.min(1, (velocity || 0) * vol));
+        // Pieza muteada: no disparar. Why: WAF.limitVolume() trata 0 como
+        // "no proporcionado" y lo reemplaza por 0.5 — sin este short-circuit,
+        // Vol=0 en una pieza WAF sonaba al 50% en vez de muteado.
+        if (finalVel <= 0.001) return;
         if (eng === 'membrane' || eng === 'sample' || eng === 'waf-drum') {
           // Pitched engines: desplazar la nota por tune. WAF drum acepta
           // midi number directo (repitcha el sample); membrane/sample

@@ -719,6 +719,45 @@
   let editing = null;   // { trackId, preset }
 
   function blankPreset(tipo) {
+    // Para percusión/batería el preset blank necesita `pieces`, no
+    // oscillator/envelope. Sin pieces el kit queda mudo y el editor
+    // pierde la sección de Piezas del kit.
+    if (tipo === 'bateria') {
+      return {
+        id: 'desde-cero', nombre: 'Nuevo kit', tipo: tipo, motor: 'synth',
+        config: {
+          pieces: {
+            kick:   { engine: 'membrane', note: 'C1',
+                      options: { pitchDecay: 0.05, octaves: 4 } },
+            snare:  { engine: 'noise', noise: 'white',
+                      options: { envelope: { attack: 0.001, decay: 0.2, sustain: 0 } } },
+            hat:    { engine: 'noise', noise: 'white',
+                      options: { envelope: { attack: 0.001, decay: 0.05, sustain: 0 } } },
+            cymbal: { engine: 'metal',
+                      options: { envelope: { attack: 0.001, decay: 0.6, release: 0.2 } } },
+          },
+        },
+        efectos: [],
+      };
+    }
+    if (tipo === 'percusion') {
+      return {
+        id: 'desde-cero', nombre: 'Nuevo kit', tipo: tipo, motor: 'synth',
+        config: {
+          pieces: {
+            bongo_hi: { engine: 'membrane', note: 'A3',
+                        options: { pitchDecay: 0.02, octaves: 2 } },
+            bongo_lo: { engine: 'membrane', note: 'E3',
+                        options: { pitchDecay: 0.02, octaves: 2 } },
+            conga:    { engine: 'membrane', note: 'C3',
+                        options: { pitchDecay: 0.03, octaves: 2 } },
+            shaker:   { engine: 'noise', noise: 'white',
+                        options: { envelope: { attack: 0.001, decay: 0.04, sustain: 0 } } },
+          },
+        },
+        efectos: [],
+      };
+    }
     return {
       id: 'desde-cero', nombre: 'Nuevo sonido', tipo: tipo, motor: 'synth',
       config: {
