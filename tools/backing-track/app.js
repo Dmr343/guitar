@@ -396,6 +396,7 @@
       del.addEventListener('click', (e) => {
         e.stopPropagation();         // no seleccionar al borrar
         model.removeChordAt(i);
+        unbindFromCatalog();         // edición manual: pierde link con el catálogo
       });
       del.addEventListener('mousedown', (e) => e.stopPropagation()); // no iniciar drag
       chip.appendChild(del);
@@ -430,6 +431,7 @@
         chip.classList.remove('drag-over');
         if (dragChordSrc !== null && dragChordSrc !== i) {
           model.moveChord(dragChordSrc, i);
+          unbindFromCatalog();
         }
       });
       chordStrip.appendChild(chip);
@@ -508,18 +510,25 @@
     lbl.textContent = 'Editar acorde ' + (idx + 1) + ':';
     chordEditor.appendChild(lbl);
 
+    // Helper: cualquier edición desde este editor (root, quality, compases,
+    // ✕) es manual y desvincula del catálogo.
+    function editFromEditor(fn) {
+      fn();
+      unbindFromCatalog();
+    }
+
     const rootSel = fld('select');
     fillSelect(rootSel, ROOTS, null, fmtNote);
     rootSel.value = chord.root;
     rootSel.addEventListener('change',
-      () => model.editChordAt(idx, { root: rootSel.value }));
+      () => editFromEditor(() => model.editChordAt(idx, { root: rootSel.value })));
     chordEditor.appendChild(rootSel);
 
     const qSel = fld('select');
     fillSelect(qSel, QUALITIES, 'v', qualityLabel);
     qSel.value = chord.quality;
     qSel.addEventListener('change',
-      () => model.editChordAt(idx, { quality: qSel.value }));
+      () => editFromEditor(() => model.editChordAt(idx, { quality: qSel.value })));
     chordEditor.appendChild(qSel);
 
     const barsLbl = document.createElement('span');
@@ -529,16 +538,19 @@
 
     const stepper = document.createElement('div');
     stepper.className = 'bars-stepper';
-    stepper.appendChild(mkBtn('track-btn', '−', () => model.changeActiveBars(-1)));
+    stepper.appendChild(mkBtn('track-btn', '−',
+      () => editFromEditor(() => model.changeActiveBars(-1))));
     const val = document.createElement('span');
     val.className = 'value';
     val.textContent = String(chord.bars);
     stepper.appendChild(val);
-    stepper.appendChild(mkBtn('track-btn', '+', () => model.changeActiveBars(1)));
+    stepper.appendChild(mkBtn('track-btn', '+',
+      () => editFromEditor(() => model.changeActiveBars(1))));
     chordEditor.appendChild(stepper);
 
     // El reordenamiento de acordes se hace arrastrando los chips.
-    const rm = mkBtn('track-btn danger', '✕', () => model.removeChordAt(idx));
+    const rm = mkBtn('track-btn danger', '✕',
+      () => editFromEditor(() => model.removeChordAt(idx)));
     rm.title = 'Quitar acorde';
     chordEditor.appendChild(rm);
   }
@@ -1323,8 +1335,8 @@
       case 'Escape': if (engine.isPlaying()) engine.stop(); break;
       case 'ArrowLeft':  navChord(-1); e.preventDefault(); break;
       case 'ArrowRight': navChord(1);  e.preventDefault(); break;
-      case 'ArrowUp':    model.changeActiveBars(1);  e.preventDefault(); break;
-      case 'ArrowDown':  model.changeActiveBars(-1); e.preventDefault(); break;
+      case 'ArrowUp':    model.changeActiveBars(1);  unbindFromCatalog(); e.preventDefault(); break;
+      case 'ArrowDown':  model.changeActiveBars(-1); unbindFromCatalog(); e.preventDefault(); break;
       case 'Delete':
       case 'Backspace': {
         // Borra el acorde seleccionado. Re-selecciona el anterior (o el
@@ -1333,6 +1345,7 @@
         const idx = model.activeIdx;
         if (n > 0 && idx >= 0 && idx < n) {
           model.removeChordAt(idx);
+          unbindFromCatalog();
           const after = model.progression.length;
           if (after > 0) model.setActiveChord(Math.min(idx, after - 1));
           e.preventDefault();
