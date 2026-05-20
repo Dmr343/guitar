@@ -186,6 +186,28 @@
     // Why: en motores sampler/WAF, reconstruir tras cada mover-slider
     // dejaba al instrumento mudo durante la (re)carga asíncrona de
     // samples/soundfont, sobre todo si se encadenaban movimientos.
+    // Comparación de la "estructura" de las piezas de un drumkit. Si
+    // engines/note/file/url/variable/options son iguales en cada lane,
+    // los voices ya construidos pueden reusarse y solo hay que actualizar
+    // vol/tune via setConfig — sin reconstruir el kit.
+    function piecesStructureSame(a, b) {
+      if (!a || !b) return false;
+      const aKeys = Object.keys(a).sort();
+      const bKeys = Object.keys(b).sort();
+      if (aKeys.length !== bKeys.length) return false;
+      if (aKeys.some((k, i) => k !== bKeys[i])) return false;
+      return aKeys.every(k => {
+        const pa = a[k] || {}, pb = b[k] || {};
+        return pa.engine === pb.engine &&
+               pa.note === pb.note &&
+               pa.file === pb.file &&
+               pa.baseUrl === pb.baseUrl &&
+               pa.url === pb.url &&
+               pa.variable === pb.variable &&
+               JSON.stringify(pa.options || {}) === JSON.stringify(pb.options || {});
+      });
+    }
+
     function applyTrackPreset(id, preset) {
       const track = tracks.find(t => t.id === id);
       if (!track || !preset) return;
@@ -202,8 +224,18 @@
         oldFx.every((e, i) => e.tipo === newFx[i].tipo);
       const amountOnly = sameTipos && !fxSame;
 
-      if (motorSame && (fxSame || amountOnly)) {
-        if (rt.instrument.kind === 'melodic') {
+      // Para drumkits: solo se puede actualizar in-place si la estructura
+      // de las piezas no cambió (engine/note/url/etc.). vol/tune sí
+      // pueden cambiar — eso es lo que el editor de kit hace en vivo.
+      const isDrumkit = rt.instrument.kind === 'drumkit';
+      const piecesSame = !isDrumkit || piecesStructureSame(
+        (rt.preset.config || {}).pieces || {},
+        (preset.config || {}).pieces || {});
+
+      if (motorSame && piecesSame && (fxSame || amountOnly)) {
+        // setConfig de melódico actualiza osc/env/filter; el de drumkit
+        // actualiza vol/tune por pieza. Ambos son no-ops si no aplica.
+        if (rt.instrument.setConfig) {
           rt.instrument.setConfig(preset.config);
         }
         if (amountOnly) {
