@@ -25,6 +25,8 @@
   const chordStrip = el('chord-strip');
   const chordEditor = el('chord-editor');
   const progSelect = el('prog-select');
+  const tonalidadSelect = el('tonalidad-select');
+  const btnTonalidadReset = el('btn-tonalidad-reset');
   const newRoot = el('new-root');
   const newQuality = el('new-quality');
   const btnAddChord = el('btn-add-chord');
@@ -122,6 +124,7 @@
     const chords = T.realizeProgression(prog, dest || prog.tonalidad);
     model.loadProgression(chords);
     engine.setTempo(prog.tempo || engine.getTempo());
+    syncTonalidadControls();
     return true;
   }
 
@@ -132,6 +135,59 @@
     factoryProgState.id = null;
     factoryProgState.tonalidad = null;
     progSelect.value = '';
+    syncTonalidadControls();
+  }
+
+  // ─── Selector de tonalidad ───
+  const TONALIDADES = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+
+  function initTonalidadSelect() {
+    tonalidadSelect.innerHTML = '';
+    TONALIDADES.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = fmtNote(t);   // muestra C♯, E♭, etc.
+      tonalidadSelect.appendChild(opt);
+    });
+  }
+
+  // syncTonalidadControls — refleja el estado actual en el selector y el ↻:
+  // - Sin progresión de fábrica cargada → ambos disabled.
+  // - Progresión transponible:false (ej. ii–V–I en 12 tonalidades) →
+  //   disabled, tooltip explicativo.
+  // - Cualquier otra → selector habilitado, ↻ habilitado solo si la
+  //   tonalidad activa difiere de la nativa.
+  function syncTonalidadControls() {
+    const id = factoryProgState.id;
+    if (!id) {
+      tonalidadSelect.disabled = true;
+      tonalidadSelect.title = 'Cargá una progresión del catálogo para transponerla';
+      btnTonalidadReset.disabled = true;
+      return;
+    }
+    const prog = BT.factoryProgressions.byId(id);
+    if (!prog) {
+      tonalidadSelect.disabled = true;
+      btnTonalidadReset.disabled = true;
+      return;
+    }
+    if (prog.transponible === false) {
+      tonalidadSelect.disabled = true;
+      tonalidadSelect.title = 'Esta progresión recorre las 12 tonalidades; no se transpone.';
+      btnTonalidadReset.disabled = true;
+      return;
+    }
+    tonalidadSelect.disabled = false;
+    tonalidadSelect.value = factoryProgState.tonalidad || prog.tonalidad;
+    tonalidadSelect.title = 'Transponer la progresión cargada';
+    btnTonalidadReset.disabled = (factoryProgState.tonalidad === prog.tonalidad);
+  }
+
+  // setActiveTonalidad — el usuario eligió una tonalidad distinta. Re-realiza
+  // la progresión activa contra la nueva tonalidad y la recarga.
+  function setActiveTonalidad(t) {
+    if (!factoryProgState.id) return;
+    loadFactoryProgression(factoryProgState.id, t);
   }
 
   // ─── Modelo de progresión (reutilizado del Atlas) ───
@@ -1239,12 +1295,20 @@
     const id = progSelect.value;
     if (!id) {
       // "(personalizada)" — desvincula del catálogo.
-      factoryProgState.id = null;
-      factoryProgState.tonalidad = null;
+      unbindFromCatalog();
       syncControls();
       return;
     }
     if (loadFactoryProgression(id)) syncControls();
+  });
+
+  tonalidadSelect.addEventListener('change', function () {
+    setActiveTonalidad(tonalidadSelect.value);
+  });
+  btnTonalidadReset.addEventListener('click', function () {
+    if (!factoryProgState.id) return;
+    const prog = BT.factoryProgressions.byId(factoryProgState.id);
+    if (prog) setActiveTonalidad(prog.tonalidad);
   });
 
   btnAddChord.addEventListener('click', function () {
@@ -1352,6 +1416,7 @@
   // El diagnóstico de voces solo se muestra en modo debug (?debug).
   if (/[?&]debug\b/.test(location.search)) diagVoices.hidden = false;
   initProgSelect();
+  initTonalidadSelect();
   fillSelect(newRoot, ROOTS, null, fmtNote);
   fillSelect(newQuality, QUALITIES, 'v', qualityLabel);
 

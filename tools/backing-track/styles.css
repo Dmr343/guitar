@@ -423,6 +423,22 @@ body.playing .beat-dot.sub    { width: 16px; height: 16px; }
 }
 .control-row.project-io { justify-content: flex-start; gap: 8px; }
 
+/* Selector de tonalidad: más compacto que "De fábrica" porque tiene
+   pocas opciones y el label "Tonalidad" es chico. */
+.control-row label[for="tonalidad-select"] { min-width: 0; }
+.control-row #tonalidad-select { flex: 0 0 70px; }
+.control-row #btn-tonalidad-reset {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  font-size: 14px;
+  line-height: 1;
+}
+.control-row #tonalidad-select:disabled,
+.control-row #btn-tonalidad-reset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ─── Botones ─── */
 .btn {
   font-family: var(--font);
