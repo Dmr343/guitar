@@ -295,15 +295,18 @@
 
     return {
       connect: function (target) { out.connect(target); },
-      // Firma compatible con membrane/sample (note, dur, time, velocity);
-      // _note y _dur se ignoran — el midi está baked en spec.note.
-      triggerAttackRelease: function (_note, _dur, time, velocity) {
+      // Firma compatible con membrane/sample (note, dur, time, velocity).
+      // Si `note` es un número, se interpreta como midi destino (permite
+      // pitch shift por tune — WAF repitcha el sample cargado). Si no,
+      // usa el midi baked de la spec.
+      triggerAttackRelease: function (note, _dur, time, velocity) {
         if (!presetData) return;
         const vol = Number.isFinite(velocity) ? velocity : 0.8;
         const t = (typeof time === 'number') ? time : rawCtx.currentTime;
+        const midi = (typeof note === 'number') ? note : midiNote;
         try {
           // Duración fija de 0.4s — los drums GM tienen sus propios envelopes.
-          player.queueWaveTable(rawCtx, out.input, presetData, t, midiNote, 0.4, vol);
+          player.queueWaveTable(rawCtx, out.input, presetData, t, midi, 0.4, vol);
         } catch (e) {}
       },
       dispose: function () {
@@ -311,6 +314,22 @@
         try { out.dispose(); } catch (e) {}
       },
     };
+  }
+
+  // Helper para pitch-shift de notas en formato string ('C3', 'A#4').
+  // Devuelve el nombre de nota desplazada `semitones` semitonos. Si
+  // semitones es 0 o falsy, devuelve el original sin tocar.
+  function shiftNoteSemitones(noteName, semitones) {
+    if (!semitones) return noteName;
+    const m = /^([A-G]#?)(-?\d+)$/.exec(String(noteName));
+    if (!m) return noteName;
+    const pc = NOTE_INDEX[m[1]];
+    if (pc === undefined) return noteName;
+    const midi = (parseInt(m[2], 10) + 1) * 12 + pc + Math.round(Number(semitones));
+    const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const oct = Math.floor(midi / 12) - 1;
+    const ni = ((midi % 12) + 12) % 12;
+    return NAMES[ni] + oct;
   }
 
   function createDrumkit(preset) {
@@ -325,19 +344,32 @@
     inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     // Un synth por lane; todos van al bus de entrada del kit.
+    // Guardamos una copia mutable de la spec para que setConfig pueda
+    // actualizar vol/tune in-place sin reconstruir los voices.
     const voices = {};
     Object.keys(pieces).forEach(lane => {
       const spec = pieces[lane] || {};
       const voice = buildPiece(spec);
       voice.connect(inputBus);
-      voices[lane] = { voice: voice, spec: spec };
+      voices[lane] = { voice: voice, spec: Object.assign({}, spec) };
     });
 
     return {
       kind: 'drumkit',
       output: outputGain,
       triggerNote: function () { /* no aplica a un kit de batería */ },
-      setConfig: function () { /* la edición de kit no aplica en v1 */ },
+      // setConfig — actualiza vol y tune por pieza en vivo. Los campos
+      // estructurales (engine/note/url/file/variable) se ignoran acá —
+      // si cambian, el engine reconstruye el kit.
+      setConfig: function (config) {
+        const newPieces = (config && config.pieces) || {};
+        Object.keys(voices).forEach(lane => {
+          const np = newPieces[lane];
+          if (!np) return;
+          if ('vol' in np) voices[lane].spec.vol = np.vol;
+          if ('tune' in np) voices[lane].spec.tune = np.tune;
+        });
+      },
       setEffectAmount: function (tipo, amount) {
         const entry = effects.find(e => e.tipo === tipo);
         if (entry) setEffectAmountOn(entry, amount);
@@ -348,13 +380,26 @@
         const v = voices[lane];
         if (!v) return;   // lane sin pieza registrada: se ignora
         const eng = v.spec.engine;
+        // vol: factor 0..1 que multiplica la velocity del hit (default 1).
+        // tune: semitonos (-12..+12) que desplaza la altura (default 0).
+        const vol = (typeof v.spec.vol === 'number') ? v.spec.vol : 1;
+        const tune = (typeof v.spec.tune === 'number') ? Math.round(v.spec.tune) : 0;
+        const finalVel = Math.max(0, Math.min(1, (velocity || 0) * vol));
         if (eng === 'membrane' || eng === 'sample' || eng === 'waf-drum') {
-          // MembraneSynth, Sampler y WAF drum disparan con altura (o midi
-          // baked en la spec). triggerAttackRelease ignora lo que no aplique.
-          v.voice.triggerAttackRelease(v.spec.note || 'C3', '16n', time, velocity);
+          // Pitched engines: desplazar la nota por tune. WAF drum acepta
+          // midi number directo (repitcha el sample); membrane/sample
+          // toman string ('A3') desplazada vía shiftNoteSemitones.
+          const base = v.spec.note;
+          let note;
+          if (typeof base === 'number') {
+            note = base + tune;
+          } else {
+            note = shiftNoteSemitones(base || 'C3', tune);
+          }
+          v.voice.triggerAttackRelease(note, '16n', time, finalVel);
         } else {
-          // NoiseSynth / MetalSynth: sin altura.
-          v.voice.triggerAttackRelease('16n', time, velocity);
+          // NoiseSynth / MetalSynth: sin altura — tune se ignora.
+          v.voice.triggerAttackRelease('16n', time, finalVel);
         }
       },
       dispose: function () {
