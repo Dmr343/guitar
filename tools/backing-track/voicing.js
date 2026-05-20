@@ -18,6 +18,14 @@
   const CHROMATIC = (theory && theory.CHROMATIC) ||
     ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
+  // pitchClass acepta ortografías con bemoles (Eb, Ab, Bb, Db, Gb) — el
+  // catálogo de progresiones emite estas según la tonalidad destino.
+  // Fallback al indexOf en CHROMATIC si theory no estuviera cargado.
+  function pc(name) {
+    if (theory && typeof theory.pitchClass === 'function') return theory.pitchClass(name);
+    return CHROMATIC.indexOf(name);
+  }
+
   // Voicings soportados (conjunto acotado, ver PRD #48).
   const VOICINGS = ['close', 'open'];
 
@@ -40,10 +48,10 @@
   function chordOffsets(root, quality) {
     if (!theory || !theory.buildChord) return [0, 4, 7];
     const built = theory.buildChord(root, quality);
-    const rootPc = CHROMATIC.indexOf(root);
+    const rootPc = pc(root);
     return built.notes.map(n => {
-      const pc = CHROMATIC.indexOf(n);
-      return (((pc - rootPc) % 12) + 12) % 12;
+      const npc = pc(n);
+      return (((npc - rootPc) % 12) + 12) % 12;
     });
   }
 
@@ -63,14 +71,14 @@
     chord = chord || {};
     opts = opts || {};
     const root = chord.root;
-    if (CHROMATIC.indexOf(root) < 0) return [];
+    if (pc(root) < 0) return [];
 
     const quality = chord.quality || 'major';
     const octave = Number.isFinite(opts.octave) ? opts.octave : 3;
     const voicing = VOICINGS.indexOf(opts.voicing) >= 0 ? opts.voicing : 'close';
 
     const offsets = chordOffsets(root, quality);
-    const rootPc = CHROMATIC.indexOf(root);
+    const rootPc = pc(root);
     const rootNum = pitchNumber(rootPc, octave);
 
     // Posición fundamental: notas en orden ascendente desde la fundamental.
@@ -95,7 +103,7 @@
   function resolveBass(chord, octave) {
     chord = chord || {};
     const root = chord.root;
-    if (CHROMATIC.indexOf(root) < 0) return null;
+    if (pc(root) < 0) return null;
     const oct = Number.isFinite(octave) ? octave : 2;
     return root + oct;
   }
