@@ -67,24 +67,28 @@
     function ensureAudioGraph() {
       if (masterGain) return;
       const T = Tone();
-      masterGain = new T.Gain(masterVol).toDestination();
-      // decay 8s + preDelay leve → cola largo, "espacio" obvio. Antes con
-      // 3s la cola se moría rápido y los usuarios decían que la reverb
-      // no se notaba. preDelay despega el reverb del attack para que
-      // se distinga.
-      sharedReverb = new T.Reverb({ decay: 8, preDelay: 0.03, wet: 1 });
+      // Limiter antes de la salida — evita clipping digital duro cuando
+      // varios instrumentos suenan con reverb/chorus encima. -1dB ceiling
+      // es transparente para audio normal y solo actúa en picos.
+      const limiter = new T.Limiter(-1);
+      masterGain = new T.Gain(masterVol);
+      masterGain.chain(limiter, T.getDestination());
+      // decay 5s + preDelay 30ms → cola con "espacio" pero no exagerada.
+      // Antes con 8s + send ×2.5 la suma dry+wet superaba 1.0 y saturaba
+      // el output → calidad audible degradada. Estos valores se quedan
+      // en rango sano con el limiter como red de seguridad.
+      sharedReverb = new T.Reverb({ decay: 5, preDelay: 0.03, wet: 1 });
       try { if (typeof sharedReverb.generate === 'function') sharedReverb.generate(); } catch (e) {}
       sharedReverb.connect(masterGain);
     }
 
-    // Nivel de envío al reverb que pide un preset (su efecto 'reverb').
-    // Escala ×2.5: el rango del slider 0–1 se mapea a 0–2.5 en el send,
-    // así el máximo realmente "ahoga" en reverb. Web Audio acepta gain
-    // > 1 (solo clipea al final en la salida, no internamente).
+    // Nivel de envío al reverb. El slider 0–1 se mapea directo a 0–1 en
+    // el send. La diferencia entre min/max es clara gracias a la cola
+    // larga (decay 5s) — no hace falta sobrepasar la unidad.
     function reverbAmountOf(preset) {
       const fx = (preset && preset.efectos) || [];
       const r = fx.filter(function (e) { return e && e.tipo === 'reverb'; })[0];
-      return (r && Number.isFinite(r.cantidad)) ? r.cantidad * 2.5 : 0;
+      return (r && Number.isFinite(r.cantidad)) ? r.cantidad : 0;
     }
 
     // ─── Estado (datos) ───

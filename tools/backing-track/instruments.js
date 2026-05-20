@@ -57,15 +57,15 @@
       case 'distortion':
         return new T.Distortion({ distortion: amt, wet: 1 });
       case 'chorus':
-        // wet: 1 explícito. feedback: 0.5 resonancia (sin feedback el
-        // chorus es muy sutil). frequency 4 Hz para modulación rápida
-        // que se nota — defaults pequeños (1.5 Hz, sin feedback) hacían
-        // el efecto casi inaudible.
+        // wet: 1 explícito (Tone.Effect defaultea 0.5 → la mitad de
+        // fuerza). feedback leve (0.2) y frequency 2 Hz dan un chorus
+        // perceptible pero limpio. Antes con feedback 0.5 y freq 4 Hz
+        // el efecto resonaba feo en sostenidos largos.
         return new T.Chorus({
-          frequency: spec.frequency || 4,
-          delayTime: spec.delayTime || 4,
+          frequency: spec.frequency || 2,
+          delayTime: spec.delayTime || 3.5,
           depth: amt,
-          feedback: 0.5,
+          feedback: 0.2,
           wet: 1,
         }).start();
       default:
