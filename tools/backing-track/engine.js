@@ -68,19 +68,23 @@
       if (masterGain) return;
       const T = Tone();
       masterGain = new T.Gain(masterVol).toDestination();
-      sharedReverb = new T.Reverb({ decay: 3, wet: 1 });
-      // Generar el impulse response del convolver. Sin esto el wet path
-      // pasa silencio hasta que termine la generación (fire-and-forget);
-      // con esto la reverb está lista en ~100ms tras el primer Play.
+      // decay 5s da una cola más perceptible que el 3s anterior — los
+      // usuarios reportaban que la reverb "no se notaba". Con 5s la
+      // diferencia entre slider min y max es claramente audible.
+      sharedReverb = new T.Reverb({ decay: 5, wet: 1 });
       try { if (typeof sharedReverb.generate === 'function') sharedReverb.generate(); } catch (e) {}
       sharedReverb.connect(masterGain);
     }
 
     // Nivel de envío al reverb que pide un preset (su efecto 'reverb').
+    // Escala ×1.5: el rango del slider de 0–1 se mapea a 0–1.5 en el send,
+    // así "al máximo" suena claramente más fuerte que la dry. Sin esto,
+    // 1.0 en el slider apenas igualaba la dry y la diferencia se sentía
+    // chica entre los extremos del slider.
     function reverbAmountOf(preset) {
       const fx = (preset && preset.efectos) || [];
       const r = fx.filter(function (e) { return e && e.tipo === 'reverb'; })[0];
-      return (r && Number.isFinite(r.cantidad)) ? r.cantidad : 0;
+      return (r && Number.isFinite(r.cantidad)) ? r.cantidad * 1.5 : 0;
     }
 
     // ─── Estado (datos) ───
@@ -256,9 +260,49 @@
       } else {
         disposeRuntime(id);
         const built = buildInstrument(track);
-        if (built) runtime[id] = built;
+        if (built) {
+          runtime[id] = built;
+          // Pad sostenido: el rebuild corta la nota sostenida y no se
+          // dispararía una nueva hasta el próximo acorde (puede ser
+          // varios compases después). Re-disparamos el acorde actual
+          // sobre el nuevo instrumento para que el cambio se escuche al
+          // instante.
+          refireCurrentPadIfNeeded(track, built);
+        }
       }
       emit('state');
+    }
+
+    // Re-dispara la nota sostenida del acorde actual sobre un instrumento
+    // recién reconstruido. Calcula la duración restante del acorde para
+    // que termine exacto cuando el scheduler dispare el próximo evento.
+    function refireCurrentPadIfNeeded(track, rt) {
+      if (!playing || activeChordIndex < 0 || !track || track.tipo !== 'pad') return;
+      if (!rt || !rt.instrument || !rt.instrument.triggerNote) return;
+      const chord = progression[activeChordIndex];
+      if (!chord) return;
+      const v = BT().voicing;
+      if (!v || !v.resolveChord) return;
+      const notes = v.resolveChord(chord, {
+        octave: Number.isFinite(track.octave) ? track.octave : 3,
+        voicing: track.voicing || 'close',
+        inversion: track.inversion || 0,
+      });
+      if (!notes || !notes.length) return;
+      // Tiempo restante del acorde actual = chordEndSec - posición actual.
+      const secsPerBar = (60 / tempo) * 4;
+      let chordStartBar = 0;
+      for (let i = 0; i < activeChordIndex; i++) {
+        chordStartBar += (progression[i] && progression[i].bars > 0
+                          ? progression[i].bars : 1);
+      }
+      const chordBars = (chord.bars > 0) ? chord.bars : 1;
+      const chordEndSec = (chordStartBar + chordBars) * secsPerBar;
+      const T = Tone();
+      const positionSec = T.getTransport().seconds;
+      const remaining = Math.max(0.1, chordEndSec - positionSec);
+      try { rt.instrument.triggerNote(notes, remaining, T.now(), 0.7); }
+      catch (e) {}
     }
 
     // getTrackPreset — copia del preset efectivo de una pista, como

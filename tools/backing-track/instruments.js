@@ -57,10 +57,15 @@
       case 'distortion':
         return new T.Distortion({ distortion: amt, wet: 1 });
       case 'chorus':
+        // wet: 1 explícito porque el Effect base de Tone defaultea a 0.5
+        // → el slider se sentía a la mitad de fuerza. frequency: 3 da
+        // una modulación más perceptible que el 1.5 default (la oreja
+        // detecta mejor el "shimmer" a velocidad medio-alta).
         return new T.Chorus({
-          frequency: spec.frequency || 1.5,
+          frequency: spec.frequency || 3,
           delayTime: spec.delayTime || 3.5,
           depth: amt,
+          wet: 1,
         }).start();
       default:
         return null;
