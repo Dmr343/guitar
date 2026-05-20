@@ -851,6 +851,20 @@
     presetEditorEl.appendChild(sub);
 
     const isPercusion = (track.tipo === 'percusion' || track.tipo === 'bateria');
+    const isSampled = (editing.preset.motor === 'webaudiofont' ||
+                       editing.preset.motor === 'sampler');
+
+    // Aviso para presets basados en muestras: forma de onda y envolvente
+    // no aplican (el sonido viene de una grabación, no de un oscilador).
+    // Los efectos sí aplican porque van AFTER el sample.
+    if (isSampled && !isPercusion) {
+      const note = document.createElement('div');
+      note.className = 'pe-notice';
+      note.textContent = 'Este preset usa samples reales — Forma de onda y ' +
+        'Envolvente no afectan al sonido (vienen "horneados" en la grabación). ' +
+        'Los efectos de abajo sí aplican.';
+      presetEditorEl.appendChild(note);
+    }
 
     if (isPercusion) {
       // Editor de piezas del kit: vol y tune por lane.
@@ -979,11 +993,27 @@
     const actions = document.createElement('div');
     actions.className = 'pe-actions';
 
+    // Restablecer — vuelve al preset de fábrica original (descarta
+    // todas las ediciones de esta sesión). Es lo que el usuario suele
+    // querer cuando piensa "resetear".
+    const restore = mkBtn('btn btn-secondary', 'Restablecer', () => {
+      const factory = BT.factoryPresets.byId(track.presetId);
+      if (!factory) return;
+      editing.preset = BT.factoryPresets.clone(factory);
+      applyEditing();
+      renderPresetEditor();
+    });
+    restore.title = 'Volver al preset de fábrica (descartar ediciones)';
+    actions.appendChild(restore);
+
+    // Desde cero — crea un preset vacío genérico (synth simple para
+    // melódicos, kit básico para percusión). No restaura el original.
     const scratch = mkBtn('btn btn-secondary', 'Desde cero', () => {
       editing.preset = blankPreset(track.tipo);
       applyEditing();
       renderPresetEditor();
     });
+    scratch.title = 'Crear un preset vacío (no es lo mismo que restablecer)';
     actions.appendChild(scratch);
 
     const nameInput = fld('input');

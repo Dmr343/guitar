@@ -69,6 +69,10 @@
       const T = Tone();
       masterGain = new T.Gain(masterVol).toDestination();
       sharedReverb = new T.Reverb({ decay: 3, wet: 1 });
+      // Generar el impulse response del convolver. Sin esto el wet path
+      // pasa silencio hasta que termine la generación (fire-and-forget);
+      // con esto la reverb está lista en ~100ms tras el primer Play.
+      try { if (typeof sharedReverb.generate === 'function') sharedReverb.generate(); } catch (e) {}
       sharedReverb.connect(masterGain);
     }
 
