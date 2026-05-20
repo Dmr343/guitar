@@ -889,22 +889,8 @@
     // ═══════════════════ PERCUSIÓN ═══════════════════
 
     // ── Sintetizada (kit Membrane/Noise/Metal) ──
-    {
-      id: 'percLatina', nombre: 'Percusión latina', tipo: 'percusion', motor: 'synth',
-      config: {
-        pieces: {
-          bongo_hi: { engine: 'membrane', note: 'A3',
-                      options: { pitchDecay: 0.02, octaves: 2 } },
-          bongo_lo: { engine: 'membrane', note: 'E3',
-                      options: { pitchDecay: 0.02, octaves: 2 } },
-          conga:    { engine: 'membrane', note: 'C3',
-                      options: { pitchDecay: 0.03, octaves: 2 } },
-          shaker:   { engine: 'noise', noise: 'white',
-                      options: { envelope: { attack: 0.001, decay: 0.04, sustain: 0 } } },
-        },
-      },
-      efectos: [{ tipo: 'reverb', cantidad: 0.12 }],
-    },
+    // (percLatina y percSalsa se movieron al final como kits sampleados
+    // del drum kit GM — mismo id, sonido real.)
     {
       id: 'percAfricana', nombre: 'Percusión africana', tipo: 'percusion', motor: 'synth',
       config: {
@@ -1006,23 +992,6 @@
       efectos: [{ tipo: 'reverb', cantidad: 0.12 }],
     },
     {
-      // Salsa: congas + bongó (membrana), clave (metal, clic) y güiro (shaker).
-      id: 'percSalsa', nombre: 'Percusión salsa', tipo: 'percusion', motor: 'synth',
-      config: {
-        pieces: {
-          bongo_hi: { engine: 'membrane', note: 'D4',
-                      options: { pitchDecay: 0.02, octaves: 2 } },
-          bongo_lo: { engine: 'metal',
-                      options: { envelope: { attack: 0.001, decay: 0.12, release: 0.05 } } },
-          conga:    { engine: 'membrane', note: 'E3',
-                      options: { pitchDecay: 0.035, octaves: 2 } },
-          shaker:   { engine: 'noise', noise: 'white',
-                      options: { envelope: { attack: 0.001, decay: 0.045, sustain: 0 } } },
-        },
-      },
-      efectos: [{ tipo: 'reverb', cantidad: 0.14 }],
-    },
-    {
       // Bachata: güira (shaker) + bongó (membrana, agudo y grave).
       id: 'percBachata', nombre: 'Percusión bachata', tipo: 'percusion', motor: 'synth',
       config: {
@@ -1062,13 +1031,15 @@
       efectos: [{ tipo: 'reverb', cantidad: 0.15 }],
     },
 
-    // ── Kits regionales reales (WAF GM drum kit) ──
-    // Cada lane carga su propio sample del drum kit GM FluidR3.
-    // Suenan a percusión acústica real, no a síntesis.
+    // ── Kits regionales (samples del drum kit GM FluidR3) ──
+    // Cada lane carga su propio sample del drum kit GM.
+    // percLatina y percSalsa reemplazan a los sintetizados del mismo
+    // nombre — mismos ids, sonido real (proyectos guardados siguen
+    // abriendo, ahora suenan mejor).
 
     // Cuba — son, salsa clásica. Claves como heartbeat.
     {
-      id: 'percCubaReal', nombre: 'Cuba real (claves + bongó + congas)',
+      id: 'percCuba', nombre: 'Percusión cubana (claves + bongó + congas)',
       tipo: 'percusion', motor: 'sampler',
       config: {
         pieces: {
@@ -1083,7 +1054,7 @@
 
     // Salsa — ensamble con cowbell y conga grave. Para tumbao denso.
     {
-      id: 'percSalsaReal', nombre: 'Salsa real (cowbell + congas + claves)',
+      id: 'percSalsa', nombre: 'Percusión salsa (cowbell + congas + claves)',
       tipo: 'percusion', motor: 'sampler',
       config: {
         pieces: {
@@ -1098,7 +1069,7 @@
 
     // Brasil — samba/bossa: agogos + cuica + maracas.
     {
-      id: 'percBrasilReal', nombre: 'Brasil real (agogos + cuica + maracas)',
+      id: 'percBrasil', nombre: 'Percusión brasileña (agogos + cuica + maracas)',
       tipo: 'percusion', motor: 'sampler',
       config: {
         pieces: {
@@ -1113,7 +1084,7 @@
 
     // Latín general — paquete amplio: congas + güiro + maracas + cowbell.
     {
-      id: 'percLatinaReal', nombre: 'Latina real (congas + güiro + maracas)',
+      id: 'percLatina', nombre: 'Percusión latina (congas + güiro + maracas)',
       tipo: 'percusion', motor: 'sampler',
       config: {
         pieces: {
@@ -1129,7 +1100,7 @@
     // Timbales latinos — para latin jazz. Timbales altos/bajos con
     // cowbell y claves para el clave del 3-2 / 2-3.
     {
-      id: 'percTimbalesReal', nombre: 'Timbales reales (latin jazz)',
+      id: 'percTimbales', nombre: 'Timbales latinos (latin jazz)',
       tipo: 'percusion', motor: 'sampler',
       config: {
         pieces: {
@@ -1147,7 +1118,7 @@
     // tek/dum (alto/bajo) y el triángulo aporta el brillo metálico
     // del riq.
     {
-      id: 'percMedioOrienteReal', nombre: 'Medio oriente real (dumbek + tambourine)',
+      id: 'percMedioOriente', nombre: 'Percusión medio oriente (dumbek + tambourine)',
       tipo: 'percusion', motor: 'sampler',
       config: {
         pieces: {
