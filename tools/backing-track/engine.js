@@ -68,23 +68,23 @@
       if (masterGain) return;
       const T = Tone();
       masterGain = new T.Gain(masterVol).toDestination();
-      // decay 5s da una cola más perceptible que el 3s anterior — los
-      // usuarios reportaban que la reverb "no se notaba". Con 5s la
-      // diferencia entre slider min y max es claramente audible.
-      sharedReverb = new T.Reverb({ decay: 5, wet: 1 });
+      // decay 8s + preDelay leve → cola largo, "espacio" obvio. Antes con
+      // 3s la cola se moría rápido y los usuarios decían que la reverb
+      // no se notaba. preDelay despega el reverb del attack para que
+      // se distinga.
+      sharedReverb = new T.Reverb({ decay: 8, preDelay: 0.03, wet: 1 });
       try { if (typeof sharedReverb.generate === 'function') sharedReverb.generate(); } catch (e) {}
       sharedReverb.connect(masterGain);
     }
 
     // Nivel de envío al reverb que pide un preset (su efecto 'reverb').
-    // Escala ×1.5: el rango del slider de 0–1 se mapea a 0–1.5 en el send,
-    // así "al máximo" suena claramente más fuerte que la dry. Sin esto,
-    // 1.0 en el slider apenas igualaba la dry y la diferencia se sentía
-    // chica entre los extremos del slider.
+    // Escala ×2.5: el rango del slider 0–1 se mapea a 0–2.5 en el send,
+    // así el máximo realmente "ahoga" en reverb. Web Audio acepta gain
+    // > 1 (solo clipea al final en la salida, no internamente).
     function reverbAmountOf(preset) {
       const fx = (preset && preset.efectos) || [];
       const r = fx.filter(function (e) { return e && e.tipo === 'reverb'; })[0];
-      return (r && Number.isFinite(r.cantidad)) ? r.cantidad * 1.5 : 0;
+      return (r && Number.isFinite(r.cantidad)) ? r.cantidad * 2.5 : 0;
     }
 
     // ─── Estado (datos) ───
