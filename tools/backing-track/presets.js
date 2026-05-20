@@ -342,6 +342,50 @@
       },
       efectos: [{ tipo: 'reverb', cantidad: 0.4 }],
     },
+    {
+      // Saxofón real — muestreo multi-velocidad. Carácter cálido, ideal
+      // para jazz, soul, city pop. Versión con muchas más capas que el
+      // wafSaxoAlto/Tenor (que son SoundFont más estandarizado).
+      id: 'saxofonReal', nombre: 'Saxofón real', tipo: 'lead', motor: 'sampler',
+      config: {
+        baseUrl: 'https://nbrosowsky.github.io/tonejs-instruments/samples/saxophone/',
+        urls: {
+          'D3':  'D3.mp3',  'G3':  'G3.mp3',  'C4':  'C4.mp3',
+          'F4':  'F4.mp3',  'A4':  'A4.mp3',  'C5':  'C5.mp3',
+          'F5':  'F5.mp3',  'A5':  'A5.mp3',
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.3 }],
+    },
+    {
+      // Trompeta real — muestreo más natural que wafTrompeta. Brillante,
+      // perfecta para salsa, funk, mariachi, fanfarria.
+      id: 'trompetaReal', nombre: 'Trompeta real', tipo: 'lead', motor: 'sampler',
+      config: {
+        baseUrl: 'https://nbrosowsky.github.io/tonejs-instruments/samples/trumpet/',
+        urls: {
+          'F3':  'F3.mp3',  'A3':  'A3.mp3',  'C4':  'C4.mp3',
+          'F4':  'F4.mp3',  'G4':  'G4.mp3',  'D5':  'D5.mp3',
+          'F5':  'F5.mp3',  'A5':  'A5.mp3',  'C6':  'C6.mp3',
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.28 }],
+    },
+    {
+      // Trombón real — muestreo multi-velocidad desde Bb1 hasta F4.
+      // Carácter de bronce grave; funciona como sección de bronces o
+      // como melódico solista.
+      id: 'trombonReal', nombre: 'Trombón real', tipo: 'lead', motor: 'sampler',
+      config: {
+        baseUrl: 'https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/',
+        urls: {
+          'A#1': 'As1.mp3', 'F2':  'F2.mp3',  'A#2': 'As2.mp3',
+          'C3':  'C3.mp3',  'F3':  'F3.mp3',  'A#3': 'As3.mp3',
+          'C4':  'C4.mp3',  'F4':  'F4.mp3',
+        },
+      },
+      efectos: [{ tipo: 'reverb', cantidad: 0.3 }],
+    },
 
     // ── WebAudioFont — guitarras ──
     {
