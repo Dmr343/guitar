@@ -80,15 +80,14 @@ body.playing .header { opacity: 0.4; margin-bottom: 8px; }
 }
 @media (min-width: 1040px) {
   .app { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  /* Al colapsar la configuración, el layout reflujye a una sola columna
-     pero ANCLADA AL BORDE IZQUIERDO (donde estaba la play-zone en modo
-     2-columnas). Así el botón Play/Detener no se mueve de posición física
-     cuando arranca/para — podés hacer click-click en el mismo lugar.
-     El zoom agrandado (fuentes, chips, beat dots) sigue funcionando vía
-     body.playing — solo cambia la columna, no el contenido. */
+  /* Al colapsar la configuración, la columna se expande a TODO el ancho
+     del .app (que sigue centrado a max 1240px). El borde izquierdo del
+     play-zone queda en el mismo lugar que tenía en modo 2-columnas
+     — el botón Play/Detener no cambia de posición física. Y el contenido
+     se expande naturalmente en vez de quedar a 840px con espacio vacío
+     al costado. */
   .app:has(.config.collapsed) {
-    grid-template-columns: minmax(0, 840px);
-    justify-content: start;
+    grid-template-columns: minmax(0, 1fr);
   }
   .play-zone { position: sticky; top: 14px; }
 }
