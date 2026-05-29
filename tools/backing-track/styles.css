@@ -1,0 +1,766 @@
+/* ─────────────────────────────────────────────────────────────
+   Backing Track — estilos (rediseño v2)
+   Zona de toque (héroe) + configuración colapsable. Al colapsar, el
+   layout reflujye a una columna centrada y el panel de toque crece.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --bg:        #0e0e0e;
+  --surface:   #141414;
+  --surface2:  #1a1a1a;
+  --surface3:  #202020;
+  --border:    #2a2a2a;
+  --border2:   #3a3a3a;
+  --text:      #e8d5b0;
+  --text-dim:  #6a6a6a;
+  --text-mid:  #9a9a9a;
+  --gold:      #d4a847;
+  --gold-dim:  #3a2e0a;
+  --accent:    #e07a5f;
+  --accent-dim:#3a201a;
+  --danger:    #c0564a;
+
+  --radius:    10px;
+  --radius-lg: 14px;
+  --font: 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(900px 500px at 50% -10%, #181410 0%, var(--bg) 60%);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  min-height: 100vh;
+  padding: 14px 20px 56px;
+}
+
+/* ─── Encabezado compacto ─── */
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  max-width: 1240px;
+  margin: 0 auto 16px;
+  transition: opacity 0.3s, margin 0.3s;
+}
+.back-link {
+  font-size: 18px;
+  color: var(--text-dim);
+  text-decoration: none;
+  line-height: 1;
+}
+.back-link:hover { color: var(--gold); }
+.header h1 {
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+.header-label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+/* Mientras suena, el header cede protagonismo. */
+body.playing .header { opacity: 0.4; margin-bottom: 8px; }
+
+/* ─── Layout ─── */
+.app {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (min-width: 1040px) {
+  .app { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* Al colapsar la configuración, la columna se expande a TODO el ancho
+     del .app (que sigue centrado a max 1240px). El borde izquierdo del
+     play-zone queda en el mismo lugar que tenía en modo 2-columnas
+     — el botón Play/Detener no cambia de posición física. Y el contenido
+     se expande naturalmente en vez de quedar a 840px con espacio vacío
+     al costado. */
+  .app:has(.config.collapsed) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .play-zone { position: sticky; top: 14px; }
+}
+
+/* ════════════ ZONA DE TOQUE (héroe) ════════════ */
+.play-zone {
+  background: linear-gradient(180deg, var(--surface) 0%, #121110 100%);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Transporte ─── */
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.btn-play {
+  font-size: 16px;
+  padding: 14px 26px;
+  flex-shrink: 0;
+  /* Ancho fijo para que el centro no se mueva entre "▶ Play" y
+     "■ Detener". Sin esto el botón cambia de ~80px a ~110px al
+     cambiar el texto, y el cursor queda corrido. */
+  min-width: 140px;
+  text-align: center;
+}
+.btn-play.is-playing {
+  background: var(--surface3);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.transport .status {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.transport .status.playing { color: var(--accent); }
+.transport .status.error   { color: #e74c3c; }
+.transport-ctls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;
+}
+.ctl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-mid);
+}
+.ctl label { min-width: 58px; letter-spacing: 0.04em; }
+.ctl input[type="range"] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+.ctl .value { min-width: 62px; text-align: right; color: var(--gold); font-weight: 700; }
+.ctl-loop {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; color: var(--text-mid); cursor: pointer;
+  letter-spacing: 0.04em;
+}
+.ctl-loop input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+/* ─── Acorde actual / siguiente + metrónomo ─── */
+.now-playing {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 18px 0 4px;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.chord-cap {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.chord-now-name {
+  display: block;
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold);
+  transition: font-size 0.3s ease;
+}
+.chord-next { opacity: 0.85; }
+.chord-next-name {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-mid);
+  transition: font-size 0.3s ease;
+}
+.metro {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.subdiv-select {
+  font-family: var(--font);
+  font-size: 11px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+/* ─── Metrónomo ─── */
+.beat-meter {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.beat-group { display: flex; gap: 4px; align-items: center; }
+.beat-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  transition: background 0.07s, transform 0.07s, color 0.07s, width 0.3s, height 0.3s;
+}
+.beat-dot.sub { width: 13px; height: 13px; }
+.beat-dot.downbeat { color: var(--gold); border-color: var(--gold-dim); }
+.beat-dot.on { background: var(--text); color: #000; transform: scale(1.16); }
+.beat-dot.downbeat.on { background: var(--gold); color: #000; }
+
+/* ─── Tira de progresión ─── */
+.chord-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+}
+.chord-strip.hidden-indicator { display: none; }
+.chord-chip {
+  padding: 6px 12px 4px;
+  border-radius: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-mid);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.12s, color 0.12s, background 0.12s, font-size 0.3s;
+}
+.chord-chip:hover { border-color: var(--border2); color: var(--text); }
+.chord-chip.selected { border-color: var(--gold); color: var(--text); }
+.chord-chip.in-loop { background: var(--accent-dim); }
+.chord-chip.active {
+  background: var(--gold-dim);
+  border-color: var(--accent);
+  color: var(--gold);
+  box-shadow: 0 0 14px rgba(224, 122, 95, 0.3);
+}
+.chord-chip.dragging { opacity: 0.4; }
+.chord-chip.drag-over { border-color: var(--accent); border-style: dashed; }
+.chip-bars {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.chord-chip.active .chip-bars { color: var(--accent); }
+.chord-chip { position: relative; }
+.chip-del {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 14px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.12s, color 0.12s, border-color 0.12s;
+  cursor: pointer;
+  user-select: none;
+}
+.chord-chip:hover .chip-del { opacity: 1; }
+.chip-del:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ─── Modo reproducción: el panel de toque crece ─── */
+body.playing .chord-now-name  { font-size: 76px; }
+body.playing .chord-next-name { font-size: 32px; }
+body.playing .chord-chip      { font-size: 17px; padding: 9px 15px 6px; }
+body.playing .beat-dot        { width: 28px; height: 28px; font-size: 12px; }
+body.playing .beat-dot.sub    { width: 16px; height: 16px; }
+
+/* ─── Mixer de pistas ─── */
+.mixer { margin-top: 18px; }
+
+/* ─── Estado / diagnóstico ─── */
+.status { font-size: 12px; color: var(--text-dim); }
+.diag {
+  margin-top: 10px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ════════════ CONFIGURACIÓN (colapsable) ════════════ */
+.config {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  align-self: start;
+}
+.config-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  cursor: pointer;
+  text-align: left;
+}
+.config-header:hover { background: var(--surface3); }
+.config:not(.collapsed) .config-header { border-bottom: 1px solid var(--border); }
+.config-title { display: flex; flex-direction: column; gap: 2px; }
+.config-title-main {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.config-title-sub {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.chevron {
+  font-size: 14px;
+  color: var(--accent);
+  transition: transform 0.25s ease;
+}
+.config.collapsed .chevron { transform: rotate(-90deg); }
+
+.config-body {
+  padding: 18px;
+  max-height: 6000px;
+  opacity: 1;
+  transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.35s ease;
+  overflow: hidden;
+}
+.config.collapsed .config-body {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.cfg-section { margin-top: 20px; }
+.cfg-section:first-of-type { margin-top: 14px; }
+.section-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Toggle de modo ─── */
+.mode-toggle { display: flex; justify-content: center; }
+.mode-btn {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 8px 22px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.mode-btn:first-child { border-radius: 8px 0 0 8px; }
+.mode-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+.mode-btn.active {
+  background: var(--gold-dim);
+  border-color: var(--accent);
+  color: var(--gold);
+}
+
+/* ─── Filas de control ─── */
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+.control-row label { min-width: 76px; letter-spacing: 0.04em; }
+.control-row input[type="text"],
+.control-row select {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font);
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 9px;
+}
+.control-row.project-io { justify-content: flex-start; gap: 8px; }
+
+/* Selector de tonalidad: más compacto que "De fábrica" porque tiene
+   pocas opciones y el label "Tonalidad" es chico. */
+.control-row label[for="tonalidad-select"] { min-width: 0; }
+.control-row #tonalidad-select { flex: 0 0 70px; }
+.control-row #btn-tonalidad-reset {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  font-size: 14px;
+  line-height: 1;
+}
+.control-row #tonalidad-select:disabled,
+.control-row #btn-tonalidad-reset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Botones ─── */
+.btn {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius);
+  padding: 9px 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.1s, box-shadow 0.18s, background 0.15s, border-color 0.15s;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn-primary { background: var(--accent); color: #1a0f0b; border-color: var(--accent); }
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(224, 122, 95, 0.35); }
+.btn-secondary { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.btn-secondary:hover { border-color: var(--text-dim); color: var(--gold); }
+.btn-danger { background: transparent; color: var(--danger); border-color: var(--border2); }
+.btn-danger:hover { border-color: var(--danger); background: rgba(192, 86, 74, 0.12); }
+.btn.secondary { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.icon-btn { padding: 8px 12px; }
+
+/* ─── Constructor de acordes ─── */
+.builder { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.builder select {
+  font-family: var(--font);
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 8px;
+  cursor: pointer;
+}
+.builder .btn { padding: 7px 14px; }
+
+.chord-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+.chord-editor select {
+  font-family: var(--font);
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 6px 7px;
+  cursor: pointer;
+}
+.editor-label { color: var(--text-dim); letter-spacing: 0.04em; font-size: 11px; }
+.bars-stepper { display: flex; align-items: center; gap: 6px; }
+.bars-stepper .value { min-width: 18px; text-align: center; color: var(--gold); font-weight: 700; }
+
+/* ─── Pistas ─── */
+.track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 9px 10px;
+  margin-bottom: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+.track.disabled { opacity: 0.5; }
+.track.dragging { opacity: 0.4; }
+.track.drag-over { border-color: var(--accent); border-style: dashed; }
+
+.track-drag {
+  flex-shrink: 0;
+  width: 22px;
+  text-align: center;
+  color: var(--text-dim);
+  cursor: grab;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+.track-drag:active { cursor: grabbing; }
+.track-mute {
+  width: 28px; height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+.track.enabled .track-mute { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.track-tipo {
+  min-width: 66px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+.track select {
+  font-family: var(--font);
+  font-size: 11px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 5px 6px;
+  cursor: pointer;
+}
+.track-preset  { flex: 1.3; min-width: 110px; }
+.track-pattern { flex: 1;   min-width: 90px; }
+.track-vol { width: 76px; accent-color: var(--accent); cursor: pointer; }
+.track-btn {
+  width: 28px; height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  color: var(--text-mid);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+.track-btn:hover { color: var(--accent); border-color: var(--accent); }
+.track-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.track-btn.danger { color: var(--danger); }
+.track-btn.danger:hover { color: var(--danger); border-color: var(--danger); }
+
+/* Variante compacta de "mixer en vivo": mientras suena se ocultan el
+   asa de arrastre y los botones de editar/quitar; quedan mute, nombre,
+   preset, patrón y volumen — lo que se ajusta tocando. */
+/* Mientras suena, ocultar el handle de drag y el botón de quitar pista
+   (.danger = el ✕). El ⚙ de editar sonido sigue visible: ajustar reverb,
+   chorus, distorsión, ADSR mientras suena es justamente lo que el motor
+   soporta in-place (ver applyTrackPreset en engine.js). */
+body.playing .track-drag,
+body.playing .track .track-btn.danger { display: none; }
+
+.add-track { display: flex; gap: 8px; flex-wrap: wrap; }
+.add-track select {
+  font-family: var(--font);
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+.empty-hint { font-size: 12px; color: var(--text-dim); padding: 10px 2px; }
+
+/* ─── Panel de edición de presets ─── */
+.preset-editor {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+}
+.pe-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 3px; }
+.pe-sub { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
+.pe-group-label {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 13px 0 4px;
+}
+/* Encabezado de cada pieza del kit en el editor — nombre del
+   instrumento (Claves, Maracas, Cencerro…) sobre sus sliders. */
+.pe-piece-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  margin: 10px 0 2px;
+  letter-spacing: 0.04em;
+}
+/* Aviso informativo en el editor — explica limitaciones de samplers. */
+.pe-notice {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--surface2);
+  border-left: 2px solid var(--gold);
+  padding: 8px 10px;
+  margin: 10px 0;
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+}
+.pe-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 11px;
+  color: var(--text-mid);
+}
+.pe-row label { min-width: 100px; letter-spacing: 0.03em; }
+.pe-row input[type="range"] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+.pe-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+.pe-row .pe-val { min-width: 48px; text-align: right; color: var(--gold); font-weight: 700; }
+.pe-row select {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 11px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 5px 6px;
+  cursor: pointer;
+}
+.pe-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.pe-actions input[type="text"] {
+  flex: 1;
+  min-width: 120px;
+  font-family: var(--font);
+  font-size: 11px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 7px 9px;
+}
+
+/* ─── Panel de modo arreglo ─── */
+.arrange-panel { margin-top: 16px; }
+.arrange-track {
+  margin-bottom: 10px;
+  padding: 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+}
+.arrange-track-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+  font-size: 11px;
+}
+.arrange-track-head .track-tipo { min-width: 0; }
+.arrange-track-head select {
+  font-family: var(--font);
+  font-size: 10px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.variant-toggle { display: flex; }
+.variant-btn {
+  width: 24px; height: 22px;
+  font-size: 10px; font-weight: 700;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.variant-btn:first-child { border-radius: 5px 0 0 5px; }
+.variant-btn:last-child { border-radius: 0 5px 5px 0; border-left: none; }
+.variant-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+/* ─── Step sequencer ─── */
+.seq-lane { display: flex; align-items: center; gap: 5px; margin: 4px 0; }
+.seq-lane-label {
+  min-width: 60px;
+  font-size: 9px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.seq-cells { display: flex; gap: 2px; flex: 1; }
+.seq-cell {
+  flex: 1;
+  height: 24px;
+  min-width: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+}
+.seq-cell.beat { border-left: 2px solid var(--text-dim); }
+.seq-cell.v1 { background: #5a3a30; }
+.seq-cell.v2 { background: #a85a42; }
+.seq-cell.v3 { background: var(--accent); }
+.seq-cell.playhead { outline: 1px solid var(--gold); }
+
+/* ─── Responsive ─── */
+@media (max-width: 560px) {
+  body { padding: 12px 12px 48px; }
+  .chord-now-name { font-size: 40px; }
+  body.playing .chord-now-name { font-size: 52px; }
+  .metro { margin-left: 0; }
+  .now-playing { gap: 14px; }
+}
