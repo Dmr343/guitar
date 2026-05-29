@@ -67,12 +67,24 @@
     function ensureAudioGraph() {
       if (masterGain) return;
       const T = Tone();
-      masterGain = new T.Gain(masterVol).toDestination();
-      sharedReverb = new T.Reverb({ decay: 3, wet: 1 });
+      // Limiter antes de la salida — evita clipping digital duro cuando
+      // varios instrumentos suenan con reverb/chorus encima. -1dB ceiling
+      // es transparente para audio normal y solo actúa en picos.
+      const limiter = new T.Limiter(-1);
+      masterGain = new T.Gain(masterVol);
+      masterGain.chain(limiter, T.getDestination());
+      // decay 5s + preDelay 30ms → cola con "espacio" pero no exagerada.
+      // Antes con 8s + send ×2.5 la suma dry+wet superaba 1.0 y saturaba
+      // el output → calidad audible degradada. Estos valores se quedan
+      // en rango sano con el limiter como red de seguridad.
+      sharedReverb = new T.Reverb({ decay: 5, preDelay: 0.03, wet: 1 });
+      try { if (typeof sharedReverb.generate === 'function') sharedReverb.generate(); } catch (e) {}
       sharedReverb.connect(masterGain);
     }
 
-    // Nivel de envío al reverb que pide un preset (su efecto 'reverb').
+    // Nivel de envío al reverb. El slider 0–1 se mapea directo a 0–1 en
+    // el send. La diferencia entre min/max es clara gracias a la cola
+    // larga (decay 5s) — no hace falta sobrepasar la unidad.
     function reverbAmountOf(preset) {
       const fx = (preset && preset.efectos) || [];
       const r = fx.filter(function (e) { return e && e.tipo === 'reverb'; })[0];
@@ -97,9 +109,11 @@
     let notePart = null;
     let chordPart = null;
     let tickLoop = null;           // Tone.Loop por pulso para el indicador
+    let barRebuildId = null;       // scheduleRepeat por compás para aplicar pendientes
     let playing = false;
     let activeChordIndex = -1;
     let loopStartBBS = '0:0:0';    // posición de inicio del loop (tiempo musical)
+    let pendingRebuild = false;    // hay una edición esperando el próximo límite de compás
 
     // ─── Listeners ───
     const listeners = { chord: [], state: [], transport: [], tick: [] };
@@ -124,21 +138,32 @@
       return track.customPreset || resolvePreset(track.presetId);
     }
 
+    // Ganancia efectiva de una pista: 0 si está muteada, su volumen si no.
+    function trackGainValue(track) {
+      if (track.enabled === false) return 0;
+      return Number.isFinite(track.volumen) ? track.volumen : 0.8;
+    }
+
     function buildInstrument(track) {
       const preset = effectivePreset(track);
       if (!preset) return null;
       const instrument = BT().instruments.createInstrument(preset);
-      const gain = new (Tone().Gain)(
-        Number.isFinite(track.volumen) ? track.volumen : 0.8);
+      const gain = new (Tone().Gain)(trackGainValue(track));
       instrument.output.connect(gain);
       gain.connect(masterGain);
       // Envío al bus de reverb compartido, con el nivel del preset.
       const reverbSend = new (Tone().Gain)(reverbAmountOf(preset));
       gain.connect(reverbSend);
       reverbSend.connect(sharedReverb);
+      // rt.preset es un SNAPSHOT — guarda una copia profunda del preset,
+      // NO la referencia. Sin esto, mutaciones a editing.preset (que es
+      // la misma referencia que track.customPreset) propagaban a
+      // rt.preset y los checks fxSame/piecesSame veían "nada cambió"
+      // — los sliders del editor no aplicaban hasta Ctrl+R.
+      const sig = JSON.stringify(preset);
       return {
         instrument: instrument, gain: gain, reverbSend: reverbSend,
-        preset: preset, sig: JSON.stringify(preset),
+        preset: JSON.parse(sig), sig: sig,
       };
     }
 
@@ -161,7 +186,7 @@
         const rt = runtime[track.id];
         const preset = effectivePreset(track);
         if (rt && preset && rt.sig === JSON.stringify(preset)) {
-          rt.gain.gain.value = Number.isFinite(track.volumen) ? track.volumen : 0.8;
+          rt.gain.gain.value = trackGainValue(track);
           return;
         }
         if (rt) disposeRuntime(track.id);
@@ -171,27 +196,127 @@
     }
 
     // applyTrackPreset — instala una copia de trabajo del preset en la
-    // pista. Si solo cambió la config de síntesis (mismo motor, mismos
-    // efectos) y el instrumento ya existe, lo actualiza en vivo sin
-    // reconstruir. Si cambió la estructura (efectos / motor), reconstruye.
+    // pista. Actualiza in-place si puede: config de síntesis, cantidades
+    // de efectos y nivel de reverb se cambian sin reconstruir el
+    // instrumento. Solo reconstruye si cambió el motor o el conjunto de
+    // efectos (agregar/quitar un tipo).
+    //
+    // Why: en motores sampler/WAF, reconstruir tras cada mover-slider
+    // dejaba al instrumento mudo durante la (re)carga asíncrona de
+    // samples/soundfont, sobre todo si se encadenaban movimientos.
+    // Comparación de la "estructura" de las piezas de un drumkit. Si
+    // engines/note/file/url/variable/options son iguales en cada lane,
+    // los voices ya construidos pueden reusarse y solo hay que actualizar
+    // vol/tune via setConfig — sin reconstruir el kit.
+    function piecesStructureSame(a, b) {
+      if (!a || !b) return false;
+      const aKeys = Object.keys(a).sort();
+      const bKeys = Object.keys(b).sort();
+      if (aKeys.length !== bKeys.length) return false;
+      if (aKeys.some((k, i) => k !== bKeys[i])) return false;
+      return aKeys.every(k => {
+        const pa = a[k] || {}, pb = b[k] || {};
+        return pa.engine === pb.engine &&
+               pa.note === pb.note &&
+               pa.file === pb.file &&
+               pa.baseUrl === pb.baseUrl &&
+               pa.url === pb.url &&
+               pa.variable === pb.variable &&
+               JSON.stringify(pa.options || {}) === JSON.stringify(pb.options || {});
+      });
+    }
+
     function applyTrackPreset(id, preset) {
       const track = tracks.find(t => t.id === id);
       if (!track || !preset) return;
       track.customPreset = preset;
       const rt = runtime[id];
-      const fxSame = rt &&
-        JSON.stringify(rt.preset.efectos || []) === JSON.stringify(preset.efectos || []);
-      if (rt && rt.instrument.kind === 'melodic' &&
-          rt.preset.motor === preset.motor && fxSame) {
-        rt.instrument.setConfig(preset.config);   // actualización en vivo
-        rt.preset = preset;
-        rt.sig = JSON.stringify(preset);
-      } else if (rt) {
+      if (!rt) { emit('state'); return; }
+
+      const motorSame = rt.preset.motor === preset.motor;
+      const oldFx = rt.preset.efectos || [];
+      const newFx = preset.efectos || [];
+      const fxSame = JSON.stringify(oldFx) === JSON.stringify(newFx);
+      // Mismo conjunto de tipos en el mismo orden → solo cambian cantidades.
+      const sameTipos = oldFx.length === newFx.length &&
+        oldFx.every((e, i) => e.tipo === newFx[i].tipo);
+      const amountOnly = sameTipos && !fxSame;
+
+      // Para drumkits: solo se puede actualizar in-place si la estructura
+      // de las piezas no cambió (engine/note/url/etc.). vol/tune sí
+      // pueden cambiar — eso es lo que el editor de kit hace en vivo.
+      const isDrumkit = rt.instrument.kind === 'drumkit';
+      const piecesSame = !isDrumkit || piecesStructureSame(
+        (rt.preset.config || {}).pieces || {},
+        (preset.config || {}).pieces || {});
+
+      if (motorSame && piecesSame && (fxSame || amountOnly)) {
+        // setConfig de melódico actualiza osc/env/filter; el de drumkit
+        // actualiza vol/tune por pieza. Ambos son no-ops si no aplica.
+        if (rt.instrument.setConfig) {
+          rt.instrument.setConfig(preset.config);
+        }
+        if (amountOnly) {
+          rt.reverbSend.gain.value = reverbAmountOf(preset);
+          newFx.forEach(spec => {
+            if (spec.tipo === 'reverb') return;
+            if (rt.instrument.setEffectAmount) {
+              rt.instrument.setEffectAmount(spec.tipo, Number(spec.cantidad));
+            }
+          });
+        }
+        // Deep-clone — ver buildInstrument para el por qué. Sin clone,
+        // las siguientes mutaciones a editing.preset propagan a rt.preset
+        // y los checks fxSame/piecesSame ven "no cambió nada".
+        const sig = JSON.stringify(preset);
+        rt.preset = JSON.parse(sig);
+        rt.sig = sig;
+      } else {
         disposeRuntime(id);
         const built = buildInstrument(track);
-        if (built) runtime[id] = built;
+        if (built) {
+          runtime[id] = built;
+          // Pad sostenido: el rebuild corta la nota sostenida y no se
+          // dispararía una nueva hasta el próximo acorde (puede ser
+          // varios compases después). Re-disparamos el acorde actual
+          // sobre el nuevo instrumento para que el cambio se escuche al
+          // instante.
+          refireCurrentPadIfNeeded(track, built);
+        }
       }
       emit('state');
+    }
+
+    // Re-dispara la nota sostenida del acorde actual sobre un instrumento
+    // recién reconstruido. Calcula la duración restante del acorde para
+    // que termine exacto cuando el scheduler dispare el próximo evento.
+    function refireCurrentPadIfNeeded(track, rt) {
+      if (!playing || activeChordIndex < 0 || !track || track.tipo !== 'pad') return;
+      if (!rt || !rt.instrument || !rt.instrument.triggerNote) return;
+      const chord = progression[activeChordIndex];
+      if (!chord) return;
+      const v = BT().voicing;
+      if (!v || !v.resolveChord) return;
+      const notes = v.resolveChord(chord, {
+        octave: Number.isFinite(track.octave) ? track.octave : 3,
+        voicing: track.voicing || 'close',
+        inversion: track.inversion || 0,
+      });
+      if (!notes || !notes.length) return;
+      // Tiempo restante del acorde actual = chordEndSec - posición actual.
+      const secsPerBar = (60 / tempo) * 4;
+      let chordStartBar = 0;
+      for (let i = 0; i < activeChordIndex; i++) {
+        chordStartBar += (progression[i] && progression[i].bars > 0
+                          ? progression[i].bars : 1);
+      }
+      const chordBars = (chord.bars > 0) ? chord.bars : 1;
+      const chordEndSec = (chordStartBar + chordBars) * secsPerBar;
+      const T = Tone();
+      const positionSec = T.getTransport().seconds;
+      const remaining = Math.max(0.1, chordEndSec - positionSec);
+      try { rt.instrument.triggerNote(notes, remaining, T.now(), 0.7); }
+      catch (e) {}
     }
 
     // getTrackPreset — copia del preset efectivo de una pista, como
@@ -222,12 +347,15 @@
     }
 
     // setTrackPattern — guarda una variante editada del patrón en la
-    // pista (variante A o B según track.variant).
+    // pista (variante A o B según track.variant). Idempotente: si el
+    // patrón guardado es idéntico al nuevo, no dispara rebuild.
     function setTrackPattern(id, pattern) {
       const track = tracks.find(t => t.id === id);
       if (!track || !pattern) return;
       if (!track.patterns) track.patterns = { A: null, B: null };
-      track.patterns[track.variant || 'A'] = pattern;
+      const v = track.variant || 'A';
+      if (JSON.stringify(track.patterns[v]) === JSON.stringify(pattern)) return;
+      track.patterns[v] = pattern;
       refreshIfPlaying();
       emit('state');
     }
@@ -235,7 +363,9 @@
     function setTrackVariant(id, variant) {
       const track = tracks.find(t => t.id === id);
       if (!track) return;
-      track.variant = (variant === 'B') ? 'B' : 'A';
+      const next = (variant === 'B') ? 'B' : 'A';
+      if (track.variant === next) return;
+      track.variant = next;
       refreshIfPlaying();
       emit('state');
     }
@@ -243,7 +373,38 @@
     function disposeParts() {
       if (notePart) { try { notePart.dispose(); } catch (e) {} notePart = null; }
       if (chordPart) { try { chordPart.dispose(); } catch (e) {} chordPart = null; }
+      // tickLoop NO se disposea aquí — vive durante toda la sesión de
+      // reproducción para mantener el metrónomo en sync. Solo se libera
+      // en stop() y se recrea en setSubdivision() cuando cambia el intervalo.
+    }
+
+    function disposeTickLoop() {
       if (tickLoop) { try { tickLoop.dispose(); } catch (e) {} tickLoop = null; }
+    }
+
+    // ensureTickLoop — crea (o re-crea tras cambio de subdivisión) el loop
+    // del indicador de compás. Es INDEPENDIENTE del rebuild del scheduling:
+    // sigue corriendo a través de cambios de instrumento/groove/tonalidad
+    // para que el metrónomo no se desincronice con la posición real del
+    // transporte.
+    //
+    // Why: antes este loop se recreaba dentro de rebuildSchedule junto
+    // con notePart/chordPart, y tickCounter se reseteaba a -1. Al hacer
+    // cualquier cambio mid-loop, el counter empezaba a contar desde 0 a
+    // partir del próximo tick — el metrónomo mostraba "pulso 1" en un
+    // momento que no era pulso 1 real del compás.
+    function ensureTickLoop() {
+      const T = Tone();
+      const sub = SUBDIVISIONS[subdivision] || SUBDIVISIONS.negra;
+      disposeTickLoop();
+      tickLoop = new T.Loop(function (time) {
+        tickCounter++;
+        const idx = ((tickCounter % sub.count) + sub.count) % sub.count;
+        T.getDraw().schedule(function () {
+          emit('tick', { index: idx, count: sub.count });
+        }, time);
+      }, sub.interval);
+      tickLoop.start(0);
     }
 
     // silenceAll — corta las notas que estén sonando en todos los
@@ -280,10 +441,12 @@
       const patterns = {};
       const schedTracks = tracks.map(t => {
         const pat = effectivePattern(t);
-        if (!pat) return t;
+        // enabled:true siempre — el mute se hace por ganancia (instantáneo),
+        // no quitando la pista del scheduling.
+        if (!pat) return Object.assign({}, t, { enabled: true });
         const pid = '__p_' + t.id;
         patterns[pid] = pat;
-        return Object.assign({}, t, { patternId: pid });
+        return Object.assign({}, t, { patternId: pid, enabled: true });
       });
 
       const result = BT().scheduler.schedule({
@@ -323,18 +486,6 @@
       }, chordEvents);
       chordPart.start(0);
 
-      // Loop del indicador de compás, a la subdivisión elegida. Usa un
-      // contador (no lee la posición) → no se saltea pulsos.
-      const sub = SUBDIVISIONS[subdivision] || SUBDIVISIONS.negra;
-      tickLoop = new T.Loop(function (time) {
-        tickCounter++;
-        const idx = ((tickCounter % sub.count) + sub.count) % sub.count;
-        T.getDraw().schedule(function () {
-          emit('tick', { index: idx, count: sub.count });
-        }, time);
-      }, sub.interval);
-      tickLoop.start(0);
-
       // Ventana de loop: rango de acordes [a,b] o el loop completo.
       const totalBars = result.loopSteps / STEPS_PER_BAR;
       let startStep = 0, endStep = result.loopSteps;
@@ -350,19 +501,6 @@
       transport.loop = loopEnabled;
       transport.loopStart = loopStartBBS;
       transport.loopEnd = stepToBBS(endStep);
-
-      // Si esto fue una reprogramación en vivo (una edición mientras
-      // sonaba), saltamos al inicio del acorde con foco: así el cambio
-      // entra desde el compás 1 de ESE acorde y no a mitad de otro.
-      if (playing) {
-        let restart = startStep;
-        if (focusChordIndex >= 0 && focusChordIndex < result.chords.length) {
-          const cs = result.chords[focusChordIndex].startStep;
-          if (cs >= startStep && cs < endStep) restart = cs;
-        }
-        transport.position = stepToBBS(restart);
-        tickCounter = -1;            // el indicador reinicia en el pulso 1
-      }
       return totalBars;
     }
 
@@ -370,18 +508,38 @@
       transport.bpm.value = tempo;
     }
 
-    // Si está sonando, reconstruye instrumentos y scheduling en vivo.
+    // Edición en vivo: en vez de reprogramar al instante (lo que cortaría
+    // el audio a mitad de compás), se marca un pedido pendiente; la
+    // reprogramación entra limpia en el próximo límite de compás. El flag
+    // booleano hace el coalescing: varios cambios dentro del mismo compás
+    // → una sola reconstrucción al inicio del siguiente.
     function refreshIfPlaying() {
-      if (!playing) return;
+      if (playing) pendingRebuild = true;
+    }
+
+    // Se dispara al inicio de cada compás (via scheduleRepeat '1m'): si
+    // hay una edición pendiente, reconstruye instrumentos y scheduling.
+    // Mucho más responsivo que esperar al final del loop entero.
+    function onBarBoundary() {
+      if (!pendingRebuild) return;
+      pendingRebuild = false;
       ensureInstruments();
       rebuildSchedule();
     }
 
     // ─── API: progresión / tempo ───
     function loadProgression(chords) {
-      progression = Array.isArray(chords)
+      const newProg = Array.isArray(chords)
         ? chords.map(c => ({ root: c.root, quality: c.quality, bars: c.bars }))
         : [];
+      // Idempotente: si los acordes no cambiaron, no reprogramar. Esto evita
+      // un rebuild espurio cuando el modelo dispara onChange solo porque
+      // cambió activeIdx (p. ej. al clickear un chip). Sin este check, un
+      // simple "seleccionar acorde" mientras suena provocaba un dispose +
+      // recreate del notePart al límite del compás siguiente — y el acorde
+      // justo en ese borde se perdía en la transición.
+      if (JSON.stringify(progression) === JSON.stringify(newProg)) return;
+      progression = newProg;
       activeChordIndex = -1;
       refreshIfPlaying();
       emit('state');
@@ -393,19 +551,23 @@
     function setTempo(bpm) {
       bpm = Math.round(Number(bpm));
       if (!Number.isFinite(bpm)) return;
-      tempo = Math.max(40, Math.min(240, bpm));
+      const next = Math.max(40, Math.min(240, bpm));
+      if (next === tempo) return;     // idempotente
+      tempo = next;
       applyTransport();           // cambio en vivo, sin reprogramar
       // Con humanización los eventos van en segundos: hay que
-      // reprogramarlos al cambiar el tempo.
-      if (playing && humanizeAmount > 0) rebuildSchedule();
+      // reprogramarlos al cambiar el tempo (cuantizado al loop).
+      if (playing && humanizeAmount > 0) refreshIfPlaying();
       emit('state');
     }
     function getTempo() { return tempo; }
 
     function setHumanize(amount) {
       amount = Number(amount);
-      humanizeAmount = Number.isFinite(amount)
+      const next = Number.isFinite(amount)
         ? Math.max(0, Math.min(1, amount)) : 0;
+      if (next === humanizeAmount) return;     // idempotente
+      humanizeAmount = next;
       refreshIfPlaying();
       emit('state');
     }
@@ -448,30 +610,47 @@
     }
 
     function removeTrack(id) {
+      const before = tracks.length;
       tracks = tracks.filter(t => t.id !== id);
+      if (tracks.length === before) return;   // id inexistente, nada que hacer
       disposeRuntime(id);
       refreshIfPlaying();
       emit('state');
     }
 
+    // updateTrack — aplica un patch parcial sobre la pista. Idempotente
+    // por campo: si el valor nuevo coincide con el actual, no se aplica
+    // la lógica de invalidación (preset/pattern wipe), no se marca instant
+    // ni structural, y al final si nada cambió no se dispara refresh ni
+    // se emite 'state'. Esto evita rebuilds espurios cuando la UI re-aplica
+    // un valor existente (p. ej. selects que disparan 'change' sin que el
+    // usuario haya cambiado nada).
     function updateTrack(id, patch) {
       const track = tracks.find(t => t.id === id);
       if (!track || !patch) return;
-      // Elegir un preset de fábrica descarta la copia de trabajo editada.
-      if ('presetId' in patch) delete track.customPreset;
-      // Elegir otro patrón de fábrica descarta las variantes editadas.
-      if ('patternId' in patch) { delete track.patterns; track.variant = 'A'; }
-      Object.keys(patch).forEach(k => { track[k] = patch[k]; });
-      // Cambio de volumen en vivo sin reprogramar.
+      let instantChanged = false;
+      let structuralChanged = false;
+      Object.keys(patch).forEach(k => {
+        if (track[k] === patch[k]) return;
+        // Side effects solo en cambios reales.
+        // Elegir un preset de fábrica distinto descarta la copia editada.
+        if (k === 'presetId') delete track.customPreset;
+        // Elegir otro patrón descarta las variantes editadas.
+        if (k === 'patternId') { delete track.patterns; track.variant = 'A'; }
+        track[k] = patch[k];
+        if (k === 'volumen' || k === 'enabled') instantChanged = true;
+        else structuralChanged = true;
+      });
+      if (!instantChanged && !structuralChanged) return;
+      // Volumen y mute → instantáneos sobre la ganancia de la pista,
+      // sin reprogramar (reconstruir en cada tick del slider traba el audio).
       const rt = runtime[id];
-      if (rt && 'volumen' in patch) {
-        rt.gain.gain.value = Number.isFinite(track.volumen) ? track.volumen : 0.8;
+      if (rt && instantChanged) {
+        rt.gain.gain.value = trackGainValue(track);
       }
-      // El volumen solo ajusta una ganancia: no hace falta reprogramar
-      // el scheduling (reconstruirlo en cada tick del slider traba el
-      // audio). El resto de los cambios sí requieren reprogramar.
-      const onlyVolume = Object.keys(patch).every(k => k === 'volumen');
-      if (!onlyVolume) refreshIfPlaying();
+      // Patrón, preset, voicing, etc. → cambian el scheduling: se
+      // reprograman cuantizados al próximo límite de compás.
+      if (structuralChanged) refreshIfPlaying();
       emit('state');
     }
 
@@ -504,9 +683,21 @@
 
     // setLoopRange — acota el loop a un rango de acordes [a,b].
     // setLoopRange(null) vuelve al loop completo.
+    //
+    // Idempotente: si el rango no cambia, no dispara refreshIfPlaying. Esto
+    // evita rebuilds espurios cuando el callback de model.onChange en app.js
+    // llama setLoopRange en cada cambio del modelo (incluso cuando solo
+    // cambió el activeChord — p. ej. al seguir el playback). Sin este check,
+    // cada cambio de acorde durante la reproducción marcaba pendingRebuild
+    // y al próximo bar boundary el rebuild se comía el primer evento (silenciaba
+    // el bajo y otros instrumentos en el beat 1 del nuevo acorde).
     function setLoopRange(a, b) {
-      if (a == null) loopRangeIdx = null;
-      else loopRangeIdx = [a, (b == null ? a : b)];
+      const next = (a == null) ? null : [a, (b == null ? a : b)];
+      const same = (loopRangeIdx === null && next === null) ||
+                   (loopRangeIdx !== null && next !== null &&
+                    loopRangeIdx[0] === next[0] && loopRangeIdx[1] === next[1]);
+      if (same) return;
+      loopRangeIdx = next;
       refreshIfPlaying();
       emit('state');
     }
@@ -517,17 +708,61 @@
     // setSubdivision — subdivisión del indicador de compás
     // ('redonda' | 'blanca' | 'negra' | 'corchea' | 'tresillo' | 'semicorchea').
     function setSubdivision(id) {
-      if (SUBDIVISIONS[id]) subdivision = id;
-      refreshIfPlaying();
+      if (!SUBDIVISIONS[id] || subdivision === id) return;
+      subdivision = id;
+      // Cambia el intervalo del metrónomo: hay que recrearlo. El counter
+      // arranca de cero para el nuevo grano (no tiene sentido continuar
+      // un counter de negras como si fuera de corcheas).
+      if (playing) {
+        tickCounter = -1;
+        ensureTickLoop();
+      }
       emit('state');
     }
     function getSubdivision() { return subdivision; }
 
-    // setFocusChord — índice del acorde con foco. Al editar en vivo, la
-    // reproducción reinicia desde este acorde. No reprograma por sí solo.
+    // setFocusChord — índice del acorde con foco. Lo usa play() como
+    // punto de arranque si está parado. No mueve el transporte por sí
+    // solo: para saltar en vivo, usar jumpToChord.
     function setFocusChord(idx) {
       idx = Math.round(Number(idx));
       focusChordIndex = Number.isFinite(idx) && idx >= 0 ? idx : 0;
+    }
+
+    // Step de inicio de un acorde dentro de la progresión.
+    function chordStartStep(idx) {
+      let step = 0;
+      for (let i = 0; i < idx; i++) {
+        step += (progression[i] && progression[i].bars > 0 ? progression[i].bars : 1)
+              * STEPS_PER_BAR;
+      }
+      return step;
+    }
+
+    // jumpToChord — salto explícito a un acorde de la progresión. Si está
+    // reproduciendo, mueve el transporte al instante y silencia notas
+    // sostenidas. Si está parado, queda como punto de arranque para Play.
+    //
+    // Why: la "selección" de acorde no servía para nada en reproducción
+    // — solo abría el editor. Ahora un clic en el chip salta de verdad.
+    function jumpToChord(idx) {
+      if (!progression.length) return;
+      if (!Number.isFinite(idx) || idx < 0 || idx >= progression.length) return;
+      focusChordIndex = idx;
+      if (!playing) return;
+      silenceAll();                             // corta pad/bajo sostenido
+      transport.position = stepToBBS(chordStartStep(idx));
+      activeChordIndex = idx;
+      emit('chord', idx);
+    }
+
+    // Posición BBS desde la que arranca play(): el acorde con foco si
+    // está dentro de la progresión, o el inicio del loop si no.
+    function startBBSForPlay() {
+      if (focusChordIndex > 0 && focusChordIndex < progression.length) {
+        return stepToBBS(chordStartStep(focusChordIndex));
+      }
+      return loopStartBBS;
     }
 
     function setMode(m) {
@@ -543,8 +778,14 @@
       ensureInstruments();
       rebuildSchedule();
       applyTransport();
-      transport.position = loopStartBBS;   // arranca al inicio del loop
-      tickCounter = -1;                    // el indicador arranca en el pulso 1
+      transport.position = startBBSForPlay();   // acorde con foco o inicio del loop
+      tickCounter = -1;                          // el indicador arranca en el pulso 1
+      ensureTickLoop();                          // metrónomo independiente del rebuild
+      // Coalescer de ediciones por compás: consume pendingRebuild al
+      // inicio de cada compás (en vez de esperar al final del loop entero).
+      barRebuildId = transport.scheduleRepeat(function () {
+        onBarBoundary();
+      }, '1m');
       transport.start();
       playing = true;
       emit('transport', 'play');
@@ -555,7 +796,13 @@
       transport.stop();
       transport.position = loopStartBBS;
       disposeParts();
+      disposeTickLoop();
+      if (barRebuildId !== null) {
+        try { transport.clear(barRebuildId); } catch (e) {}
+        barRebuildId = null;
+      }
       silenceAll();          // corta las notas que sigan sonando
+      pendingRebuild = false;
       playing = false;
       activeChordIndex = -1;
       emit('chord', -1);
@@ -637,7 +884,7 @@
       setLoop, getLoop,
       setLoopRange, getLoopRange,
       setSubdivision, getSubdivision,
-      setFocusChord,
+      setFocusChord, jumpToChord,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
       snapshot, restore, dispose,

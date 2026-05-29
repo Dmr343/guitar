@@ -25,6 +25,8 @@
   const chordStrip = el('chord-strip');
   const chordEditor = el('chord-editor');
   const progSelect = el('prog-select');
+  const tonalidadSelect = el('tonalidad-select');
+  const btnTonalidadReset = el('btn-tonalidad-reset');
   const newRoot = el('new-root');
   const newQuality = el('new-quality');
   const btnAddChord = el('btn-add-chord');
@@ -74,8 +76,14 @@
     { v: 'dom7',  label: 'Dominante 7' },
     { v: 'maj7',  label: 'Mayor 7' },
     { v: 'min7',  label: 'menor 7' },
-    { v: 'm7b5',  label: 'Semidisminuido (m7♭5)' },
+    { v: 'm7b5',  label: 'Semidisminuido' },
   ];
+  // Glifos del cifrado jazz (Real Book). Solo display: los datos
+  // internos siguen siendo 'maj7', 'm7b5', etc.
+  const QUALITY_GLYPH = {
+    major: '', minor: 'm', dom7: '7', maj7: '△', min7: 'm7',
+    m7b5: 'ø', dim: '°',
+  };
   const ROOTS = (theory && theory.CHROMATIC) ||
     ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const OSC_TYPES = ['sine', 'triangle', 'sawtooth', 'square',
@@ -94,6 +102,114 @@
 
   const engine = BT.createEngine();
   const storage = BT.createStorage();
+
+  // ─── Estado de progresión de fábrica activa ───
+  // Cuando el usuario carga una progresión del catálogo, registramos su id
+  // y la tonalidad activa (la nativa por defecto). Esto permite que el
+  // selector de tonalidad sepa contra qué progresión re-realizar al cambiar,
+  // y que el storage persista la tonalidad elegida (no la nativa).
+  // Si el usuario edita acordes manualmente (progSelect.value = ''), se
+  // pone factoryProgState.id = null y la sesión deja de ser transponible.
+  const factoryProgState = { id: null, tonalidad: null };
+
+  function loadFactoryProgression(id, tonalidad) {
+    const prog = BT.factoryProgressions.byId(id);
+    if (!prog) return false;
+    const T = BT.transpose;
+    const dest = (prog.transponible === false)
+      ? null                                          // root fijo: tonalidad no aplica
+      : (tonalidad || prog.tonalidad);
+    factoryProgState.id = id;
+    factoryProgState.tonalidad = dest;
+    const chords = T.realizeProgression(prog, dest || prog.tonalidad);
+    model.loadProgression(chords);
+    engine.setTempo(prog.tempo || engine.getTempo());
+    syncTonalidadControls();
+    return true;
+  }
+
+  // unbindFromCatalog — el usuario editó la progresión manualmente
+  // (add/clear/personalizar). Pierde el link con el catálogo y la
+  // sesión deja de ser transponible automáticamente.
+  function unbindFromCatalog() {
+    factoryProgState.id = null;
+    factoryProgState.tonalidad = null;
+    progSelect.value = '';
+    syncTonalidadControls();
+  }
+
+  // ─── Selector de tonalidad ───
+  const TONALIDADES = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+
+  function initTonalidadSelect() {
+    tonalidadSelect.innerHTML = '';
+    TONALIDADES.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = fmtNote(t);   // muestra C♯, E♭, etc.
+      tonalidadSelect.appendChild(opt);
+    });
+  }
+
+  // syncTonalidadControls — refleja el estado actual en el selector y el ↻:
+  // - Sin progresión de fábrica cargada → ambos disabled.
+  // - Progresión transponible:false (ej. ii–V–I en 12 tonalidades) →
+  //   disabled, tooltip explicativo.
+  // - Cualquier otra → selector habilitado, ↻ habilitado solo si la
+  //   tonalidad activa difiere de la nativa.
+  function syncTonalidadControls() {
+    const id = factoryProgState.id;
+    if (!id) {
+      tonalidadSelect.disabled = true;
+      tonalidadSelect.title = 'Cargá una progresión del catálogo para transponerla';
+      btnTonalidadReset.disabled = true;
+      return;
+    }
+    const prog = BT.factoryProgressions.byId(id);
+    if (!prog) {
+      tonalidadSelect.disabled = true;
+      btnTonalidadReset.disabled = true;
+      return;
+    }
+    if (prog.transponible === false) {
+      tonalidadSelect.disabled = true;
+      tonalidadSelect.title = 'Esta progresión recorre las 12 tonalidades; no se transpone.';
+      btnTonalidadReset.disabled = true;
+      return;
+    }
+    tonalidadSelect.disabled = false;
+    tonalidadSelect.value = factoryProgState.tonalidad || prog.tonalidad;
+    tonalidadSelect.title = 'Transponer la progresión cargada';
+    btnTonalidadReset.disabled = (factoryProgState.tonalidad === prog.tonalidad);
+  }
+
+  // setActiveTonalidad — transponer in-place: re-realiza la progresión activa
+  // contra la nueva tonalidad, preservando activeIdx y loopRange. Mientras
+  // suena, el cambio entra en el próximo límite de compás (vía el coalescer
+  // pendingRebuild del engine — gratis). La UI de chips se actualiza al
+  // instante porque el model.onChange dispara renderChords sincrónico.
+  //
+  // Why no usamos loadFactoryProgression: éste resetea activeIdx=0 y limpia
+  // la loop range; al transponer queremos quedarnos sobre el mismo grado,
+  // solo con raíces nuevas. Usamos model.batch para que las 3 mutaciones
+  // (loadProgression + setActiveChord + setLoopRange) disparen un solo
+  // onChange.
+  function setActiveTonalidad(t) {
+    if (!factoryProgState.id) return;
+    const prog = BT.factoryProgressions.byId(factoryProgState.id);
+    if (!prog || prog.transponible === false) return;
+    const dest = t || prog.tonalidad;
+    factoryProgState.tonalidad = dest;
+    const chords = BT.transpose.realizeProgression(prog, dest);
+    const savedIdx = model.activeIdx;
+    const savedLoop = model.loopRange;
+    model.batch(m => {
+      m.loadProgression(chords);
+      if (savedIdx > 0 && savedIdx < chords.length) m.setActiveChord(savedIdx);
+      if (savedLoop) m.setLoopRange(savedLoop[0], savedLoop[1]);
+    });
+    syncTonalidadControls();
+  }
 
   // ─── Modelo de progresión (reutilizado del Atlas) ───
   const model = new ProgressionModel({
@@ -174,17 +290,42 @@
     return sel;
   }
 
+  // Etiquetas visibles para cada categoría del desplegable.
+  const CATEGORIA_LABEL = {
+    estudio: 'Estudio',
+    improvisacion: 'Improvisación',
+    bailable: 'Bailables',
+    experimental: 'Experimental',
+  };
+  // Orden de aparición de los optgroups.
+  const CATEGORIA_ORDER = ['estudio', 'improvisacion', 'bailable', 'experimental'];
+
   function initProgSelect() {
     progSelect.innerHTML = '';
     const custom = document.createElement('option');
     custom.value = '';
     custom.textContent = '(personalizada)';
     progSelect.appendChild(custom);
+    // Agrupa por categoría preservando el orden interno del array.
+    const groups = {};
     BT.factoryProgressions.PROGRESSIONS.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.nombre;
-      progSelect.appendChild(opt);
+      const cat = p.categoria || 'otros';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    });
+    const ordered = CATEGORIA_ORDER
+      .filter(c => groups[c])
+      .concat(Object.keys(groups).filter(c => CATEGORIA_ORDER.indexOf(c) < 0));
+    ordered.forEach(cat => {
+      const og = document.createElement('optgroup');
+      og.label = CATEGORIA_LABEL[cat] || cat;
+      groups[cat].forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.nombre;
+        og.appendChild(opt);
+      });
+      progSelect.appendChild(og);
     });
   }
 
@@ -195,17 +336,26 @@
     engine.addTrack({ tipo: 'bateria' });
   }
   function loadDefaultProject() {
-    const prog = BT.factoryProgressions.byId('blues12A');
-    model.loadProgression(BT.factoryProgressions.chordsOf('blues12A'));
-    engine.setTempo(prog ? prog.tempo : 100);
+    loadFactoryProgression('blues12A');
     progSelect.value = 'blues12A';
     setupDefaultTracks();
   }
 
+  // ─── Glifos musicales (solo display) ───
+  // Nota con símbolos reales: C# → C♯, Bb → B♭.
+  function fmtNote(name) {
+    return String(name).replace(/#/g, '♯').replace(/([A-G])b/g, '$1♭');
+  }
+  // Etiqueta de una cualidad en el desplegable: glifo + nombre.
+  function qualityLabel(q) {
+    const g = QUALITY_GLYPH[q.v] || '';
+    return g ? g + '  ' + q.label : q.label;
+  }
+
   // ─── Tira de acordes ───
+  // Cifrado jazz: raíz con glifos + sufijo de cualidad (C△, Cø, C°…).
   function chordLabel(c) {
-    if (theory && theory.chordName) return theory.chordName(c.root, c.quality);
-    return c.root + (c.quality === 'major' ? '' : ' ' + c.quality);
+    return fmtNote(c.root) + (QUALITY_GLYPH[c.quality] || '');
   }
   // Shift+clic en un acorde marca / extiende / limpia el rango de loop
   // (mismo comportamiento que el Intervalic Atlas).
@@ -238,10 +388,25 @@
       bars.textContent = '●'.repeat(c.bars);
       chip.appendChild(name);
       chip.appendChild(bars);
-      chip.title = 'Clic: seleccionar · Shift+clic: marcar loop · arrastrar: reordenar';
+      // Botón de borrar visible al hover sobre el chip.
+      const del = document.createElement('span');
+      del.className = 'chip-del';
+      del.textContent = '×';
+      del.title = 'Quitar acorde';
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();         // no seleccionar al borrar
+        model.removeChordAt(i);
+        unbindFromCatalog();         // edición manual: pierde link con el catálogo
+      });
+      del.addEventListener('mousedown', (e) => e.stopPropagation()); // no iniciar drag
+      chip.appendChild(del);
+      chip.title = 'Clic: seleccionar · Shift+clic: marcar loop · arrastrar: reordenar · Supr/Backspace: borrar';
       chip.addEventListener('click', (e) => {
         if (e.shiftKey) handleLoopClick(i);
-        else model.setActiveChord(i);
+        else {
+          model.setActiveChord(i);
+          engine.jumpToChord(i);   // si está sonando, salta al instante
+        }
       });
       // Reordenar por arrastre → model.moveChord(origen, destino).
       chip.addEventListener('dragstart', (e) => {
@@ -266,6 +431,7 @@
         chip.classList.remove('drag-over');
         if (dragChordSrc !== null && dragChordSrc !== i) {
           model.moveChord(dragChordSrc, i);
+          unbindFromCatalog();
         }
       });
       chordStrip.appendChild(chip);
@@ -273,11 +439,19 @@
   }
   // Indicador del acorde sonando (callback de engine.onChordChange) +
   // actualización del acorde actual/siguiente del panel de toque.
+  //
+  // Mientras suena, la "selección" (acorde activo del editor) sigue al
+  // acorde que está sonando — el chip seleccionado siempre coincide con
+  // el chip activo. Eso unifica el feedback visual y hace que el editor
+  // de abajo muestre el acorde que escuchás ahora.
   function highlightChord(idx) {
     Array.prototype.forEach.call(chordStrip.children, chip => {
       chip.classList.toggle('active', Number(chip.dataset.idx) === idx);
     });
     renderHeroChords(idx);
+    if (idx >= 0 && engine.isPlaying() && idx !== model.activeIdx) {
+      model.setActiveChord(idx);
+    }
   }
   // Acorde grande "actual" + "siguiente" del panel de toque.
   function renderHeroChords(idx) {
@@ -344,18 +518,25 @@
     lbl.textContent = 'Editar acorde ' + (idx + 1) + ':';
     chordEditor.appendChild(lbl);
 
+    // Helper: cualquier edición desde este editor (root, quality, compases,
+    // ✕) es manual y desvincula del catálogo.
+    function editFromEditor(fn) {
+      fn();
+      unbindFromCatalog();
+    }
+
     const rootSel = fld('select');
-    fillSelect(rootSel, ROOTS);
+    fillSelect(rootSel, ROOTS, null, fmtNote);
     rootSel.value = chord.root;
     rootSel.addEventListener('change',
-      () => model.editChordAt(idx, { root: rootSel.value }));
+      () => editFromEditor(() => model.editChordAt(idx, { root: rootSel.value })));
     chordEditor.appendChild(rootSel);
 
     const qSel = fld('select');
-    fillSelect(qSel, QUALITIES, 'v', it => it.label);
+    fillSelect(qSel, QUALITIES, 'v', qualityLabel);
     qSel.value = chord.quality;
     qSel.addEventListener('change',
-      () => model.editChordAt(idx, { quality: qSel.value }));
+      () => editFromEditor(() => model.editChordAt(idx, { quality: qSel.value })));
     chordEditor.appendChild(qSel);
 
     const barsLbl = document.createElement('span');
@@ -365,16 +546,19 @@
 
     const stepper = document.createElement('div');
     stepper.className = 'bars-stepper';
-    stepper.appendChild(mkBtn('track-btn', '−', () => model.changeActiveBars(-1)));
+    stepper.appendChild(mkBtn('track-btn', '−',
+      () => editFromEditor(() => model.changeActiveBars(-1))));
     const val = document.createElement('span');
     val.className = 'value';
     val.textContent = String(chord.bars);
     stepper.appendChild(val);
-    stepper.appendChild(mkBtn('track-btn', '+', () => model.changeActiveBars(1)));
+    stepper.appendChild(mkBtn('track-btn', '+',
+      () => editFromEditor(() => model.changeActiveBars(1))));
     chordEditor.appendChild(stepper);
 
     // El reordenamiento de acordes se hace arrastrando los chips.
-    const rm = mkBtn('track-btn danger', '✕', () => model.removeChordAt(idx));
+    const rm = mkBtn('track-btn danger', '✕',
+      () => editFromEditor(() => model.removeChordAt(idx)));
     rm.title = 'Quitar acorde';
     chordEditor.appendChild(rm);
   }
@@ -475,7 +659,10 @@
 
     const ptipo = PATTERN_TIPO[track.tipo];
     if (ptipo) {
-      const pats = BT.factoryPatterns.byTipo(ptipo);
+      // Patrones ordenados de figura más lenta a más rápida (por
+      // cantidad de golpes: menos golpes = figura más larga).
+      const pats = BT.factoryPatterns.byTipo(ptipo)
+        .slice().sort((a, b) => a.hits.length - b.hits.length);
       const patSel = makeSelect('track-pattern', pats, track.patternId);
       patSel.addEventListener('change',
         () => engine.updateTrack(track.id, { patternId: patSel.value }));
@@ -498,12 +685,11 @@
       () => engine.updateTrack(track.id, { volumen: Number(vol.value) / 100 }));
     row.appendChild(vol);
 
-    // Editar sonido (solo pistas melódicas).
-    if (MELODIC_TIPOS.indexOf(track.tipo) >= 0) {
-      const gear = mkBtn('track-btn', '⚙', () => openEditor(track.id));
-      gear.title = 'Editar sonido';
-      row.appendChild(gear);
-    }
+    // Editar sonido — melódicos editan osc/env/filter; percusión/batería
+    // editan vol/tune por pieza del kit. Ambos comparten efectos.
+    const gear = mkBtn('track-btn', '⚙', () => openEditor(track.id));
+    gear.title = 'Editar sonido';
+    row.appendChild(gear);
 
     const rm = mkBtn('track-btn danger', '✕', () => {
       engine.removeTrack(track.id);
@@ -533,6 +719,45 @@
   let editing = null;   // { trackId, preset }
 
   function blankPreset(tipo) {
+    // Para percusión/batería el preset blank necesita `pieces`, no
+    // oscillator/envelope. Sin pieces el kit queda mudo y el editor
+    // pierde la sección de Piezas del kit.
+    if (tipo === 'bateria') {
+      return {
+        id: 'desde-cero', nombre: 'Nuevo kit', tipo: tipo, motor: 'synth',
+        config: {
+          pieces: {
+            kick:   { engine: 'membrane', note: 'C1',
+                      options: { pitchDecay: 0.05, octaves: 4 } },
+            snare:  { engine: 'noise', noise: 'white',
+                      options: { envelope: { attack: 0.001, decay: 0.2, sustain: 0 } } },
+            hat:    { engine: 'noise', noise: 'white',
+                      options: { envelope: { attack: 0.001, decay: 0.05, sustain: 0 } } },
+            cymbal: { engine: 'metal',
+                      options: { envelope: { attack: 0.001, decay: 0.6, release: 0.2 } } },
+          },
+        },
+        efectos: [],
+      };
+    }
+    if (tipo === 'percusion') {
+      return {
+        id: 'desde-cero', nombre: 'Nuevo kit', tipo: tipo, motor: 'synth',
+        config: {
+          pieces: {
+            bongo_hi: { engine: 'membrane', note: 'A3',
+                        options: { pitchDecay: 0.02, octaves: 2 } },
+            bongo_lo: { engine: 'membrane', note: 'E3',
+                        options: { pitchDecay: 0.02, octaves: 2 } },
+            conga:    { engine: 'membrane', note: 'C3',
+                        options: { pitchDecay: 0.03, octaves: 2 } },
+            shaker:   { engine: 'noise', noise: 'white',
+                        options: { envelope: { attack: 0.001, decay: 0.04, sustain: 0 } } },
+          },
+        },
+        efectos: [],
+      };
+    }
     return {
       id: 'desde-cero', nombre: 'Nuevo sonido', tipo: tipo, motor: 'synth',
       config: {
@@ -625,41 +850,89 @@
       '. Los cambios afectan solo a esta pista hasta que guardes.';
     presetEditorEl.appendChild(sub);
 
-    // Oscilador
-    presetEditorEl.appendChild(peGroupLabel('Oscilador'));
-    presetEditorEl.appendChild(peSelectRow('Forma de onda', OSC_TYPES,
-      (cfg.oscillator && cfg.oscillator.type) || 'sine', v => {
-        cfg.oscillator = { type: v };
-      }));
+    const isPercusion = (track.tipo === 'percusion' || track.tipo === 'bateria');
+    const isSampled = (editing.preset.motor === 'webaudiofont' ||
+                       editing.preset.motor === 'sampler');
 
-    // Envolvente ADSR
-    presetEditorEl.appendChild(peGroupLabel('Envolvente (ADSR)'));
-    const secs = v => v.toFixed(2) + ' s';
-    presetEditorEl.appendChild(peParamRow('Attack', 0, 2, 0.01,
-      env.attack != null ? env.attack : 0.01, secs, v => { env.attack = v; }));
-    presetEditorEl.appendChild(peParamRow('Decay', 0, 2, 0.01,
-      env.decay != null ? env.decay : 0.2, secs, v => { env.decay = v; }));
-    presetEditorEl.appendChild(peParamRow('Sustain', 0, 1, 0.01,
-      env.sustain != null ? env.sustain : 0.5,
-      v => Math.round(v * 100) + '%', v => { env.sustain = v; }));
-    presetEditorEl.appendChild(peParamRow('Release', 0, 4, 0.01,
-      env.release != null ? env.release : 0.3, secs, v => { env.release = v; }));
+    // Aviso para presets basados en muestras: forma de onda y envolvente
+    // no aplican (el sonido viene de una grabación, no de un oscilador).
+    // Los efectos sí aplican porque van AFTER el sample.
+    if (isSampled && !isPercusion) {
+      const note = document.createElement('div');
+      note.className = 'pe-notice';
+      note.textContent = 'Este preset usa samples reales — Forma de onda y ' +
+        'Envolvente no afectan al sonido (vienen "horneados" en la grabación). ' +
+        'Los efectos de abajo sí aplican.';
+      presetEditorEl.appendChild(note);
+    }
 
-    // Filtro (solo el bajo es MonoSynth con filtro propio)
-    if (track.tipo === 'bajo') {
-      const filt = cfg.filter || (cfg.filter = { type: 'lowpass', Q: 1 });
-      const fenv = cfg.filterEnvelope || (cfg.filterEnvelope = {});
-      presetEditorEl.appendChild(peGroupLabel('Filtro'));
-      presetEditorEl.appendChild(peSelectRow('Tipo', FILTER_TYPES,
-        filt.type || 'lowpass', v => { filt.type = v; }));
-      presetEditorEl.appendChild(peParamRow('Resonancia (Q)', 0, 12, 0.1,
-        filt.Q != null ? filt.Q : 1, v => v.toFixed(1), v => { filt.Q = v; }));
-      presetEditorEl.appendChild(peParamRow('Frecuencia base', 40, 1200, 10,
-        fenv.baseFrequency != null ? fenv.baseFrequency : 200,
-        v => Math.round(v) + ' Hz', v => { fenv.baseFrequency = v; }));
-      presetEditorEl.appendChild(peParamRow('Octavas', 0, 6, 0.1,
-        fenv.octaves != null ? fenv.octaves : 3, v => v.toFixed(1),
-        v => { fenv.octaves = v; }));
+    if (isPercusion) {
+      // Editor de piezas del kit: vol y tune por lane.
+      const pieces = cfg.pieces || (cfg.pieces = {});
+      presetEditorEl.appendChild(peGroupLabel('Piezas del kit'));
+      Object.keys(pieces).forEach(lane => {
+        const piece = pieces[lane];
+        if (!piece) return;
+        // Asegurar defaults numéricos para evitar undefined en UI.
+        if (typeof piece.vol !== 'number') piece.vol = 1;
+        if (typeof piece.tune !== 'number') piece.tune = 0;
+
+        const header = document.createElement('div');
+        header.className = 'pe-piece-name';
+        header.textContent = pieceLabel(lane, piece);
+        presetEditorEl.appendChild(header);
+
+        // Volumen 0..100%
+        presetEditorEl.appendChild(peParamRow('Volumen', 0, 1, 0.01,
+          piece.vol, v => Math.round(v * 100) + '%',
+          v => { piece.vol = v; }));
+
+        // Tune solo para engines con pitch.
+        if (piece.engine === 'membrane' || piece.engine === 'sample' ||
+            piece.engine === 'waf-drum') {
+          presetEditorEl.appendChild(peParamRow('Tono', -12, 12, 1,
+            piece.tune,
+            v => (v > 0 ? '+' : '') + Math.round(v) + ' st',
+            v => { piece.tune = Math.round(v); }));
+        }
+      });
+    } else {
+      // Oscilador (solo para melódicos synth — WAF y sampler lo ignoran).
+      presetEditorEl.appendChild(peGroupLabel('Oscilador'));
+      presetEditorEl.appendChild(peSelectRow('Forma de onda', OSC_TYPES,
+        (cfg.oscillator && cfg.oscillator.type) || 'sine', v => {
+          cfg.oscillator = { type: v };
+        }));
+
+      // Envolvente ADSR
+      presetEditorEl.appendChild(peGroupLabel('Envolvente (ADSR)'));
+      const secs = v => v.toFixed(2) + ' s';
+      presetEditorEl.appendChild(peParamRow('Attack', 0, 2, 0.01,
+        env.attack != null ? env.attack : 0.01, secs, v => { env.attack = v; }));
+      presetEditorEl.appendChild(peParamRow('Decay', 0, 2, 0.01,
+        env.decay != null ? env.decay : 0.2, secs, v => { env.decay = v; }));
+      presetEditorEl.appendChild(peParamRow('Sustain', 0, 1, 0.01,
+        env.sustain != null ? env.sustain : 0.5,
+        v => Math.round(v * 100) + '%', v => { env.sustain = v; }));
+      presetEditorEl.appendChild(peParamRow('Release', 0, 4, 0.01,
+        env.release != null ? env.release : 0.3, secs, v => { env.release = v; }));
+
+      // Filtro (solo el bajo es MonoSynth con filtro propio)
+      if (track.tipo === 'bajo') {
+        const filt = cfg.filter || (cfg.filter = { type: 'lowpass', Q: 1 });
+        const fenv = cfg.filterEnvelope || (cfg.filterEnvelope = {});
+        presetEditorEl.appendChild(peGroupLabel('Filtro'));
+        presetEditorEl.appendChild(peSelectRow('Tipo', FILTER_TYPES,
+          filt.type || 'lowpass', v => { filt.type = v; }));
+        presetEditorEl.appendChild(peParamRow('Resonancia (Q)', 0, 12, 0.1,
+          filt.Q != null ? filt.Q : 1, v => v.toFixed(1), v => { filt.Q = v; }));
+        presetEditorEl.appendChild(peParamRow('Frecuencia base', 40, 1200, 10,
+          fenv.baseFrequency != null ? fenv.baseFrequency : 200,
+          v => Math.round(v) + ' Hz', v => { fenv.baseFrequency = v; }));
+        presetEditorEl.appendChild(peParamRow('Octavas', 0, 6, 0.1,
+          fenv.octaves != null ? fenv.octaves : 3, v => v.toFixed(1),
+          v => { fenv.octaves = v; }));
+      }
     }
 
     // Efectos
@@ -720,11 +993,27 @@
     const actions = document.createElement('div');
     actions.className = 'pe-actions';
 
+    // Restablecer — vuelve al preset de fábrica original (descarta
+    // todas las ediciones de esta sesión). Es lo que el usuario suele
+    // querer cuando piensa "resetear".
+    const restore = mkBtn('btn btn-secondary', 'Restablecer', () => {
+      const factory = BT.factoryPresets.byId(track.presetId);
+      if (!factory) return;
+      editing.preset = BT.factoryPresets.clone(factory);
+      applyEditing();
+      renderPresetEditor();
+    });
+    restore.title = 'Volver al preset de fábrica (descartar ediciones)';
+    actions.appendChild(restore);
+
+    // Desde cero — crea un preset vacío genérico (synth simple para
+    // melódicos, kit básico para percusión). No restaura el original.
     const scratch = mkBtn('btn btn-secondary', 'Desde cero', () => {
       editing.preset = blankPreset(track.tipo);
       applyEditing();
       renderPresetEditor();
     });
+    scratch.title = 'Crear un preset vacío (no es lo mismo que restablecer)';
     actions.appendChild(scratch);
 
     const nameInput = fld('input');
@@ -756,6 +1045,32 @@
     cymbal: 'Platillo', bongo_hi: 'Bongó ↑', bongo_lo: 'Bongó ↓',
     conga: 'Conga', shaker: 'Shaker',
   };
+
+  // Etiquetas de instrumentos del GM drum kit por midi note. Permite que
+  // el editor de kit muestre "Claves" en lugar de "Shaker" cuando la lane
+  // está cargada con un waf-drum específico.
+  const WAF_DRUM_LABEL = {
+    35: 'Bombo acústico', 36: 'Bombo', 37: 'Sidestick', 38: 'Caja',
+    39: 'Palmas', 40: 'Caja eléctrica', 41: 'Tom piso', 42: 'Hi-hat cerrado',
+    43: 'Tom piso alto', 44: 'Hi-hat pedal', 45: 'Tom bajo', 46: 'Hi-hat abierto',
+    47: 'Tom medio bajo', 48: 'Tom medio alto', 49: 'Crash 1', 50: 'Tom alto',
+    51: 'Ride 1', 52: 'Chinese', 53: 'Ride bell', 54: 'Pandereta',
+    55: 'Splash', 56: 'Cencerro', 57: 'Crash 2', 58: 'Vibraslap',
+    59: 'Ride 2', 60: 'Bongó ↑', 61: 'Bongó ↓',
+    62: 'Conga muda', 63: 'Conga ↑', 64: 'Conga ↓',
+    65: 'Timbal ↑', 66: 'Timbal ↓', 67: 'Agogo ↑', 68: 'Agogo ↓',
+    69: 'Cabasa', 70: 'Maracas', 71: 'Silbato ↑', 72: 'Silbato ↓',
+    73: 'Güiro corto', 74: 'Güiro largo', 75: 'Claves',
+    76: 'Wood block ↑', 77: 'Wood block ↓',
+    78: 'Cuica muda', 79: 'Cuica abierta',
+    80: 'Triángulo mudo', 81: 'Triángulo abierto',
+  };
+  function pieceLabel(lane, piece) {
+    if (piece && piece.engine === 'waf-drum' && WAF_DRUM_LABEL[piece.note]) {
+      return WAF_DRUM_LABEL[piece.note];
+    }
+    return LANE_LABEL[lane] || lane;
+  }
   const VOICING_OPTS = [
     { id: 'close', nombre: 'Cerrado' },
     { id: 'open', nombre: 'Abierto (drop-2)' },
@@ -1007,11 +1322,41 @@
   }
 
   // ─── Proyectos y persistencia ───
+  //
+  // takeSnapshot — extiende engine.snapshot() con el estado de la
+  // progresión de fábrica activa (id + tonalidad) si lo hay. Permite
+  // restaurar la sesión preservando los grados como fuente de verdad:
+  // si el catálogo cambia, las progresiones se re-realizan correctamente.
+  function takeSnapshot() {
+    const s = engine.snapshot();
+    if (factoryProgState.id) {
+      s.factoryProg = {
+        id: factoryProgState.id,
+        tonalidad: factoryProgState.tonalidad,
+      };
+    }
+    return s;
+  }
+
   function restoreSnapshot(snap) {
     if (!snap) return;
     if (editing) closeEditor();
     engine.restore(snap);
-    model.loadProgression(snap.progression || []);
+    // Si el snapshot trae factoryProg (formato nuevo), re-realiza la
+    // progresión desde el catálogo. Esto mantiene los grados como fuente
+    // de verdad — si el catálogo se editó, la próxima carga aplica los
+    // cambios. Si el id ya no existe en el catálogo, cae al fallback.
+    let loaded = false;
+    if (snap.factoryProg && snap.factoryProg.id &&
+        BT.factoryProgressions.byId(snap.factoryProg.id)) {
+      loaded = loadFactoryProgression(snap.factoryProg.id, snap.factoryProg.tonalidad);
+      if (loaded) progSelect.value = snap.factoryProg.id;
+    }
+    if (!loaded) {
+      // Formato viejo o progresión personalizada: cargar acordes inline.
+      model.loadProgression(snap.progression || []);
+      unbindFromCatalog();
+    }
     // loadProgression resetea el loop; reponemos el rango guardado.
     if (Array.isArray(snap.loopRange)) {
       model.setLoopRange(snap.loopRange[0], snap.loopRange[1]);
@@ -1069,19 +1414,25 @@
   function setPlayUI(playing) {
     btnPlay.textContent = playing ? '■  Detener' : '▶  Play';
     btnPlay.classList.toggle('is-playing', playing);
+    document.body.classList.toggle('playing', playing);   // agranda el panel
     setConfigCollapsed(playing);   // la configuración se pliega al tocar
-    if (playing) setStatus('Sonando — modo ' + engine.getMode(), 'playing');
+    if (playing) setStatus('Sonando — ' + engine.getMode(), 'playing');
     else setStatus('Detenido');
   }
 
-  btnPlay.addEventListener('click', async function () {
+  // Alterna reproducción / parada. Disparado por el botón y por la
+  // tecla P (ambos cuentan como gesto de usuario → Tone.start() puede
+  // reanudar el AudioContext).
+  async function togglePlay() {
     if (engine.isPlaying()) { engine.stop(); return; }
     try {
       await engine.play();
     } catch (err) {
       setStatus('Error al iniciar el audio: ' + err.message, 'error');
     }
-  });
+  }
+
+  btnPlay.addEventListener('click', togglePlay);
 
   configToggle.addEventListener('click', function () {
     setConfigCollapsed(!configEl.classList.contains('collapsed'));
@@ -1105,7 +1456,8 @@
     buildBeatMeter(SUBDIV_COUNT[subdivSelect.value] || 4);
   });
 
-  // Teclado: navegar acordes con ←→, ajustar compases con ↑↓, Esc detiene.
+  // Teclado: P alterna play/pausa, navegar acordes con ←→, ajustar
+  // compases con ↑↓, Esc detiene.
   function navChord(dir) {
     const n = model.progression.length;
     if (!n) return;
@@ -1115,32 +1467,58 @@
     const tag = e.target && e.target.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
     switch (e.key) {
+      case 'p': case 'P': togglePlay(); e.preventDefault(); break;
       case 'Escape': if (engine.isPlaying()) engine.stop(); break;
       case 'ArrowLeft':  navChord(-1); e.preventDefault(); break;
       case 'ArrowRight': navChord(1);  e.preventDefault(); break;
-      case 'ArrowUp':    model.changeActiveBars(1);  e.preventDefault(); break;
-      case 'ArrowDown':  model.changeActiveBars(-1); e.preventDefault(); break;
+      case 'ArrowUp':    model.changeActiveBars(1);  unbindFromCatalog(); e.preventDefault(); break;
+      case 'ArrowDown':  model.changeActiveBars(-1); unbindFromCatalog(); e.preventDefault(); break;
+      case 'Delete':
+      case 'Backspace': {
+        // Borra el acorde seleccionado. Re-selecciona el anterior (o el
+        // primero) para no perder el foco del editor.
+        const n = model.progression.length;
+        const idx = model.activeIdx;
+        if (n > 0 && idx >= 0 && idx < n) {
+          model.removeChordAt(idx);
+          unbindFromCatalog();
+          const after = model.progression.length;
+          if (after > 0) model.setActiveChord(Math.min(idx, after - 1));
+          e.preventDefault();
+        }
+        break;
+      }
     }
   });
 
   progSelect.addEventListener('change', function () {
     const id = progSelect.value;
-    if (!id) return;
-    const prog = BT.factoryProgressions.byId(id);
-    if (!prog) return;
-    model.loadProgression(BT.factoryProgressions.chordsOf(id));
-    engine.setTempo(prog.tempo || engine.getTempo());
-    syncControls();
+    if (!id) {
+      // "(personalizada)" — desvincula del catálogo.
+      unbindFromCatalog();
+      syncControls();
+      return;
+    }
+    if (loadFactoryProgression(id)) syncControls();
+  });
+
+  tonalidadSelect.addEventListener('change', function () {
+    setActiveTonalidad(tonalidadSelect.value);
+  });
+  btnTonalidadReset.addEventListener('click', function () {
+    if (!factoryProgState.id) return;
+    const prog = BT.factoryProgressions.byId(factoryProgState.id);
+    if (prog) setActiveTonalidad(prog.tonalidad);
   });
 
   btnAddChord.addEventListener('click', function () {
     model.addChord({ root: newRoot.value, quality: newQuality.value, bars: 1 });
     model.setActiveChord(model.progression.length - 1);
-    progSelect.value = '';
+    unbindFromCatalog();
   });
   btnClearProg.addEventListener('click', function () {
     model.clear();
-    progSelect.value = '';
+    unbindFromCatalog();
   });
 
   btnAdd.addEventListener('click', function () {
@@ -1161,7 +1539,7 @@
   // Proyectos
   btnSaveProj.addEventListener('click', function () {
     const nombre = projName.value.trim() || 'Proyecto';
-    storage.saveProject(nombre, engine.snapshot());
+    storage.saveProject(nombre, takeSnapshot());
     refreshProjects();
     projSelect.value = '';
     setStatus('Proyecto "' + nombre + '" guardado');
@@ -1221,7 +1599,7 @@
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
-      storage.saveSession(engine.snapshot());
+      storage.saveSession(takeSnapshot());
     }, 400);
   });
   engine.onTransport(function (ev) {
@@ -1235,9 +1613,12 @@
   });
 
   // ─── Arranque ───
+  // El diagnóstico de voces solo se muestra en modo debug (?debug).
+  if (/[?&]debug\b/.test(location.search)) diagVoices.hidden = false;
   initProgSelect();
-  fillSelect(newRoot, ROOTS);
-  fillSelect(newQuality, QUALITIES, 'v', it => it.label);
+  initTonalidadSelect();
+  fillSelect(newRoot, ROOTS, null, fmtNote);
+  fillSelect(newQuality, QUALITIES, 'v', qualityLabel);
 
   storage.loadLibrary();              // librería de presets del usuario
   const handoff = BT.integration && BT.integration.readHandoff();
@@ -1247,7 +1628,7 @@
     // defecto + la progresión recibida.
     setupDefaultTracks();
     model.loadProgression(handoff);
-    progSelect.value = '';
+    unbindFromCatalog();
   } else if (session && Array.isArray(session.tracks) && session.tracks.length) {
     restoreSnapshot(session);         // reabrir donde se dejó
   } else {

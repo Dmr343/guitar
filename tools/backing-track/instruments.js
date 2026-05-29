@@ -57,10 +57,16 @@
       case 'distortion':
         return new T.Distortion({ distortion: amt, wet: 1 });
       case 'chorus':
+        // wet: 1 explícito (Tone.Effect defaultea 0.5 → la mitad de
+        // fuerza). feedback leve (0.2) y frequency 2 Hz dan un chorus
+        // perceptible pero limpio. Antes con feedback 0.5 y freq 4 Hz
+        // el efecto resonaba feo en sostenidos largos.
         return new T.Chorus({
-          frequency: spec.frequency || 1.5,
+          frequency: spec.frequency || 2,
           delayTime: spec.delayTime || 3.5,
           depth: amt,
+          feedback: 0.2,
+          wet: 1,
         }).start();
       default:
         return null;
@@ -70,6 +76,34 @@
   function buildEffectChain(efectos) {
     if (!Array.isArray(efectos)) return [];
     return efectos.map(buildEffect).filter(Boolean);
+  }
+
+  // Como buildEffectChain pero conserva el `tipo` de cada efecto, para
+  // poder actualizar su cantidad en vivo sin reconstruirlo.
+  function buildLabeledEffectChain(efectos) {
+    if (!Array.isArray(efectos)) return [];
+    return efectos.map(function (spec) {
+      const node = buildEffect(spec);
+      return node ? { tipo: spec.tipo, node: node } : null;
+    }).filter(Boolean);
+  }
+
+  // Actualiza la cantidad de un efecto in-place. Devuelve true si lo
+  // pudo aplicar. El reverb es bus compartido — se maneja fuera.
+  function setEffectAmountOn(entry, amount) {
+    const v = Number.isFinite(amount) ? amount : 0.3;
+    try {
+      if (entry.tipo === 'distortion') {
+        entry.node.distortion = v;
+        return true;
+      }
+      if (entry.tipo === 'chorus') {
+        // Chorus.depth controla la profundidad; wet queda fijo en 1.
+        entry.node.depth = v;
+        return true;
+      }
+    } catch (e) {}
+    return false;
   }
 
   // ─── Construcción de instrumentos melódicos ───
@@ -139,8 +173,9 @@
     const inputBus = new T.Gain();
     const outputGain = new T.Gain();
     instrument.connect(inputBus);
-    const effects = buildEffectChain(preset.efectos);
-    inputBus.chain.apply(inputBus, effects.concat([outputGain]));
+    const effects = buildLabeledEffectChain(preset.efectos);
+    const effectNodes = effects.map(e => e.node);
+    inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     const isSampler = (preset.motor === 'sampler');
 
@@ -178,9 +213,16 @@
         if (isMono && config.filterEnvelope) opts.filterEnvelope = config.filterEnvelope;
         try { instrument.set(opts); } catch (e) {}
       },
+      // setEffectAmount — actualiza la cantidad de un efecto in-place.
+      // Evita disponer y reconstruir todo el instrumento al mover sliders
+      // (que en sampler/WAF dejaba al instrumento mudo mientras recargaba).
+      setEffectAmount: function (tipo, amount) {
+        const entry = effects.find(e => e.tipo === tipo);
+        if (entry) setEffectAmountOn(entry, amount);
+      },
       dispose: function () {
         try { instrument.dispose(); } catch (e) {}
-        effects.forEach(fx => { try { fx.dispose(); } catch (e) {} });
+        effects.forEach(fx => { try { fx.node.dispose(); } catch (e) {} });
         try { inputBus.dispose(); } catch (e) {}
         try { outputGain.dispose(); } catch (e) {}
       },
@@ -206,11 +248,94 @@
               (err && err.message ? err.message : err));
           },
         });
+      case 'waf-drum':
+        return buildWafDrumPiece(spec);
       case 'noise':
       default:
         return new T.NoiseSynth(Object.assign(
           { noise: { type: spec.noise || 'white' } }, spec.options || {}));
     }
+  }
+
+  // buildWafDrumPiece — una pieza de kit que reproduce un sample
+  // individual del drum kit GM de FluidR3 (program 128, midi 35-81).
+  // Permite armar kits regionales reales (claves, maracas, güiro,
+  // cencerro, congas, timbales, bongó, agogo, etc.) usando samples
+  // de un instrumento acústico, no síntesis.
+  //
+  // spec: { engine: 'waf-drum', url, variable, note }
+  //   url      — URL del soundfont del drum (un archivo por midi note).
+  //   variable — nombre de la variable global que el soundfont declara
+  //              (ej. _drum_75_0_FluidR3_GM_sf2_file).
+  //   note     — número midi 35-81 que dispara este sonido.
+  //
+  // Implementa la interfaz mínima que espera createDrumkit:
+  //   .connect(target), .triggerAttackRelease(_note, _dur, time, vel), .dispose()
+  function buildWafDrumPiece(spec) {
+    const T = Tone();
+    const rawCtx = T.getContext().rawContext;
+    if (typeof W.WebAudioFontPlayer === 'undefined') {
+      console.warn('[backing-track] WebAudioFontPlayer no cargado — pieza muda');
+      // Fallback silencioso: noise piece corto para no romper el kit.
+      return new T.NoiseSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0 } });
+    }
+    const player = new W.WebAudioFontPlayer();
+    const out = new T.Gain();
+    const midiNote = Math.round(Number(spec.note));
+    let presetData = null;
+
+    // Cache check: si el soundfont ya está como global, usar al toque.
+    if (spec.variable && W[spec.variable]) {
+      presetData = W[spec.variable];
+    } else if (spec.url && spec.variable) {
+      try {
+        player.loader.startLoad(rawCtx, spec.url, spec.variable);
+        player.loader.waitLoad(function () {
+          presetData = W[spec.variable] || null;
+        });
+      } catch (err) {
+        console.warn('[backing-track] WAF drum: no cargó "' +
+          spec.variable + '": ' + (err && err.message ? err.message : err));
+      }
+    }
+
+    return {
+      connect: function (target) { out.connect(target); },
+      // Firma compatible con membrane/sample (note, dur, time, velocity).
+      // Si `note` es un número, se interpreta como midi destino (permite
+      // pitch shift por tune — WAF repitcha el sample cargado). Si no,
+      // usa el midi baked de la spec.
+      triggerAttackRelease: function (note, _dur, time, velocity) {
+        if (!presetData) return;
+        const vol = Number.isFinite(velocity) ? velocity : 0.8;
+        const t = (typeof time === 'number') ? time : rawCtx.currentTime;
+        const midi = (typeof note === 'number') ? note : midiNote;
+        try {
+          // Duración fija de 0.4s — los drums GM tienen sus propios envelopes.
+          player.queueWaveTable(rawCtx, out.input, presetData, t, midi, 0.4, vol);
+        } catch (e) {}
+      },
+      dispose: function () {
+        try { player.cancelQueue(rawCtx); } catch (e) {}
+        try { out.dispose(); } catch (e) {}
+      },
+    };
+  }
+
+  // Helper para pitch-shift de notas en formato string ('C3', 'A#4').
+  // Devuelve el nombre de nota desplazada `semitones` semitonos. Si
+  // semitones es 0 o falsy, devuelve el original sin tocar.
+  function shiftNoteSemitones(noteName, semitones) {
+    if (!semitones) return noteName;
+    const m = /^([A-G]#?)(-?\d+)$/.exec(String(noteName));
+    if (!m) return noteName;
+    const pc = NOTE_INDEX[m[1]];
+    if (pc === undefined) return noteName;
+    const midi = (parseInt(m[2], 10) + 1) * 12 + pc + Math.round(Number(semitones));
+    const NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const oct = Math.floor(midi / 12) - 1;
+    const ni = ((midi % 12) + 12) % 12;
+    return NAMES[ni] + oct;
   }
 
   function createDrumkit(preset) {
@@ -220,41 +345,78 @@
 
     const inputBus = new T.Gain();
     const outputGain = new T.Gain();
-    const effects = buildEffectChain(preset.efectos);
-    inputBus.chain.apply(inputBus, effects.concat([outputGain]));
+    const effects = buildLabeledEffectChain(preset.efectos);
+    const effectNodes = effects.map(e => e.node);
+    inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     // Un synth por lane; todos van al bus de entrada del kit.
+    // Guardamos una copia mutable de la spec para que setConfig pueda
+    // actualizar vol/tune in-place sin reconstruir los voices.
     const voices = {};
     Object.keys(pieces).forEach(lane => {
       const spec = pieces[lane] || {};
       const voice = buildPiece(spec);
       voice.connect(inputBus);
-      voices[lane] = { voice: voice, spec: spec };
+      voices[lane] = { voice: voice, spec: Object.assign({}, spec) };
     });
 
     return {
       kind: 'drumkit',
       output: outputGain,
       triggerNote: function () { /* no aplica a un kit de batería */ },
-      setConfig: function () { /* la edición de kit no aplica en v1 */ },
+      // setConfig — actualiza vol y tune por pieza en vivo. Los campos
+      // estructurales (engine/note/url/file/variable) se ignoran acá —
+      // si cambian, el engine reconstruye el kit.
+      setConfig: function (config) {
+        const newPieces = (config && config.pieces) || {};
+        Object.keys(voices).forEach(lane => {
+          const np = newPieces[lane];
+          if (!np) return;
+          if ('vol' in np) voices[lane].spec.vol = np.vol;
+          if ('tune' in np) voices[lane].spec.tune = np.tune;
+        });
+      },
+      setEffectAmount: function (tipo, amount) {
+        const entry = effects.find(e => e.tipo === tipo);
+        if (entry) setEffectAmountOn(entry, amount);
+      },
       voiceCount: function () { return 0; },   // golpes one-shot cortos
       silence: function () { /* los golpes de batería son one-shots cortos */ },
       triggerHit: function (lane, time, velocity) {
         const v = voices[lane];
         if (!v) return;   // lane sin pieza registrada: se ignora
-        if (v.spec.engine === 'membrane' || v.spec.engine === 'sample') {
-          // MembraneSynth y Sampler disparan con altura (nota fija).
-          v.voice.triggerAttackRelease(v.spec.note || 'C3', '16n', time, velocity);
+        const eng = v.spec.engine;
+        // vol: factor 0..1 que multiplica la velocity del hit (default 1).
+        // tune: semitonos (-12..+12) que desplaza la altura (default 0).
+        const vol = (typeof v.spec.vol === 'number') ? v.spec.vol : 1;
+        const tune = (typeof v.spec.tune === 'number') ? Math.round(v.spec.tune) : 0;
+        const finalVel = Math.max(0, Math.min(1, (velocity || 0) * vol));
+        // Pieza muteada: no disparar. Why: WAF.limitVolume() trata 0 como
+        // "no proporcionado" y lo reemplaza por 0.5 — sin este short-circuit,
+        // Vol=0 en una pieza WAF sonaba al 50% en vez de muteado.
+        if (finalVel <= 0.001) return;
+        if (eng === 'membrane' || eng === 'sample' || eng === 'waf-drum') {
+          // Pitched engines: desplazar la nota por tune. WAF drum acepta
+          // midi number directo (repitcha el sample); membrane/sample
+          // toman string ('A3') desplazada vía shiftNoteSemitones.
+          const base = v.spec.note;
+          let note;
+          if (typeof base === 'number') {
+            note = base + tune;
+          } else {
+            note = shiftNoteSemitones(base || 'C3', tune);
+          }
+          v.voice.triggerAttackRelease(note, '16n', time, finalVel);
         } else {
-          // NoiseSynth / MetalSynth: sin altura.
-          v.voice.triggerAttackRelease('16n', time, velocity);
+          // NoiseSynth / MetalSynth: sin altura — tune se ignora.
+          v.voice.triggerAttackRelease('16n', time, finalVel);
         }
       },
       dispose: function () {
         Object.keys(voices).forEach(lane => {
           try { voices[lane].voice.dispose(); } catch (e) {}
         });
-        effects.forEach(fx => { try { fx.dispose(); } catch (e) {} });
+        effects.forEach(fx => { try { fx.node.dispose(); } catch (e) {} });
         try { inputBus.dispose(); } catch (e) {}
         try { outputGain.dispose(); } catch (e) {}
       },
@@ -295,21 +457,29 @@
 
     const inputBus = new T.Gain();
     const outputGain = new T.Gain();
-    const effects = buildEffectChain(preset.efectos);
-    inputBus.chain.apply(inputBus, effects.concat([outputGain]));
+    const effects = buildLabeledEffectChain(preset.efectos);
+    const effectNodes = effects.map(e => e.node);
+    inputBus.chain.apply(inputBus, effectNodes.concat([outputGain]));
 
     let presetData = null;   // objeto del soundfont, una vez decodificado
     let voices = [];         // envolventes activas (devueltas por queueWaveTable)
 
     if (cfg.url && cfg.variable) {
-      try {
-        player.loader.startLoad(rawCtx, cfg.url, cfg.variable);
-        player.loader.waitLoad(function () {
-          presetData = W[cfg.variable] || null;
-        });
-      } catch (err) {
-        console.warn('[backing-track] WebAudioFont: no se pudo cargar "' +
-          (preset.id || '?') + '": ' + (err && err.message ? err.message : err));
+      // Cache hit: el soundfont ya está como global desde una carga
+      // anterior — disponible sincrónico, sin ventana muda al recrear el
+      // instrumento (p. ej. tras un toggle de efecto).
+      if (W[cfg.variable]) {
+        presetData = W[cfg.variable];
+      } else {
+        try {
+          player.loader.startLoad(rawCtx, cfg.url, cfg.variable);
+          player.loader.waitLoad(function () {
+            presetData = W[cfg.variable] || null;
+          });
+        } catch (err) {
+          console.warn('[backing-track] WebAudioFont: no se pudo cargar "' +
+            (preset.id || '?') + '": ' + (err && err.message ? err.message : err));
+        }
       }
     }
 
@@ -360,6 +530,10 @@
       },
       triggerHit: function () { /* no aplica */ },
       setConfig: function () { /* WAF no se edita con sliders en v1 */ },
+      setEffectAmount: function (tipo, amount) {
+        const entry = effects.find(e => e.tipo === tipo);
+        if (entry) setEffectAmountOn(entry, amount);
+      },
       voiceCount: function () { pruneVoices(); return voices.length; },
       silence: function () {
         try { player.cancelQueue(rawCtx); } catch (e) {}
@@ -368,7 +542,7 @@
       dispose: function () {
         try { player.cancelQueue(rawCtx); } catch (e) {}
         stopAllVoices();
-        effects.forEach(fx => { try { fx.dispose(); } catch (e) {} });
+        effects.forEach(fx => { try { fx.node.dispose(); } catch (e) {} });
         try { inputBus.dispose(); } catch (e) {}
         try { outputGain.dispose(); } catch (e) {}
       },

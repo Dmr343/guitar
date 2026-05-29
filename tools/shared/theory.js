@@ -3,6 +3,29 @@
 // To consume: const { CHROMATIC, buildScale, ... } = window.GuitarShared.theory;
 (function (G) {
   const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+  // Mapa nombre→pitch class aceptando ortografías con sostenidos y bemoles.
+  // Why: el catálogo de progresiones transponibles emite Eb/Ab/Bb/Db cuando
+  // la tonalidad destino es de bemoles. Sin este mapa CHROMATIC.indexOf('Eb')
+  // devolvía -1 y el voicing fallaba silenciosamente.
+  const PITCH_CLASS = {
+    'C': 0,  'B#': 0,
+    'C#': 1, 'Db': 1,
+    'D': 2,
+    'D#': 3, 'Eb': 3,
+    'E': 4,  'Fb': 4,
+    'F': 5,  'E#': 5,
+    'F#': 6, 'Gb': 6,
+    'G': 7,
+    'G#': 8, 'Ab': 8,
+    'A': 9,
+    'A#': 10, 'Bb': 10,
+    'B': 11, 'Cb': 11,
+  };
+  function pitchClass(name) {
+    const pc = PITCH_CLASS[name];
+    return (pc === undefined) ? -1 : pc;
+  }
   const MAJOR_STEPS           = [2,2,1,2,2,2,1];
   const MINOR_STEPS           = [2,1,2,2,1,2,2];
   const PENTATONIC_MAJOR_STEPS = [2,2,3,2,3];
@@ -34,7 +57,8 @@
     };
     const steps = stepsMap[scaleType];
     if (!steps) return [];
-    let cur = CHROMATIC.indexOf(root);
+    let cur = pitchClass(root);
+    if (cur < 0) return [];
     const notes = [root];
     steps.slice(0, steps.length - 1).forEach(s => {
       cur = (cur + s) % 12;
@@ -62,10 +86,12 @@
   };
 
   function buildChord(root, quality) {
-    const ri = CHROMATIC.indexOf(root);
+    const ri = pitchClass(root);
     const semitones = CHORD_SEMITONES[quality] || CHORD_SEMITONES.major;
     const intervals = CHORD_INTERVALS[quality] || CHORD_INTERVALS.major;
-    const notes = semitones.map(s => CHROMATIC[(ri + s) % 12]);
+    // Las notas internas siempre se escriben con sharps (la ortografía del
+    // root se preserva tal cual venga, sharp o flat).
+    const notes = ri < 0 ? [] : semitones.map(s => CHROMATIC[(ri + s) % 12]);
     return { root, quality, notes, intervals };
   }
 
@@ -73,8 +99,8 @@
   // Devuelve '1','b2','2','b3','3','4','b5','5','b6','6','b7','7'.
   const INTERVAL_NAMES = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
   function intervalFromRoot(rootNote, targetNote) {
-    const ri = CHROMATIC.indexOf(rootNote);
-    const ti = CHROMATIC.indexOf(targetNote);
+    const ri = pitchClass(rootNote);
+    const ti = pitchClass(targetNote);
     if (ri < 0 || ti < 0) return null;
     return INTERVAL_NAMES[(ti - ri + 12) % 12];
   }
@@ -101,7 +127,7 @@
   };
 
   function cagedShapeFor(root) {
-    const ri = CHROMATIC.indexOf(root);
+    const ri = pitchClass(root);
     return ['C', 'A', 'G', 'E', 'D'].map(shape => {
       const oi = CAGED_OPEN[shape];
       let barre = (ri - oi + 12) % 12;
@@ -112,7 +138,7 @@
   }
 
   function fretsForCagedShape(shape, root) {
-    const ri = CHROMATIC.indexOf(root);
+    const ri = pitchClass(root);
     const oi = CAGED_OPEN[shape];
     let barre = (ri - oi + 12) % 12;
     if (barre === 0) barre = 12;
@@ -172,6 +198,7 @@
     MIXOLYDIAN_STEPS, DORIAN_STEPS,
     CAGED_COLORS, FUNC_COLORS, QUALITY_LABELS, QUALITY_SUFFIX,
     INTERVAL_NAMES,
+    pitchClass,
     chordColor, buildScale, buildChord, intervalToFunction, intervalFromRoot,
     cagedShapeFor, fretsForCagedShape, chordName,
     commonChordTones, pickScaleForChord, advanceChord,

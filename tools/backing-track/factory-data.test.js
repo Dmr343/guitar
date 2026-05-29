@@ -42,7 +42,7 @@
       presets.byTipo('bateria').concat(presets.byTipo('percusion')).forEach(p => {
         const pieces = p.config.pieces || {};
         Object.keys(pieces).forEach(lane => {
-          T.assert(['membrane', 'noise', 'metal', 'sample'].indexOf(pieces[lane].engine) >= 0,
+          T.assert(['membrane', 'noise', 'metal', 'sample', 'waf-drum'].indexOf(pieces[lane].engine) >= 0,
             'engine inválido en ' + p.id + '/' + lane);
         });
       });
@@ -85,14 +85,91 @@
         p.chords.forEach(c => {
           T.assert(QUALITIES.indexOf(c.quality) >= 0, 'calidad inválida en ' + p.id);
           T.assert(c.bars >= 1, 'bars inválido en ' + p.id);
+          // Forma nueva: las progresiones transponibles usan `grado`; las
+          // marcadas transponible:false usan `root`. Una de las dos debe estar.
+          T.assert(!!c.grado || !!c.root, 'falta grado/root en ' + p.id);
         });
       });
     });
-    T.it('chordsOf devuelve una copia de los acordes', () => {
+    T.it('progresiones transponibles declaran tonalidad y modo', () => {
+      progressions.PROGRESSIONS.forEach(p => {
+        if (p.transponible === false) return;
+        T.assert(!!p.tonalidad, 'falta tonalidad en ' + p.id);
+        T.assert(p.modo === 'major' || p.modo === 'minor', 'modo inválido en ' + p.id);
+      });
+    });
+    T.it('chordsOf devuelve raíces concretas realizando la tonalidad nativa', () => {
+      // jazzIIVI: Dm7 — G7 — Cmaj7 (×2) en C mayor.
       const ch = progressions.chordsOf('jazzIIVI');
-      T.assert(ch.length > 0);
+      T.assertEq(ch.length, 3);
+      T.assertEq(ch[0].root, 'D');
+      T.assertEq(ch[0].quality, 'min7');
+      T.assertEq(ch[2].root, 'C');
+    });
+    T.it('chordsOf — mutar el resultado no toca los datos fuente', () => {
+      const ch = progressions.chordsOf('jazzIIVI');
       ch[0].root = 'X';
-      T.assertEq(progressions.byId('jazzIIVI').chords[0].root, 'D');
+      T.assertEq(progressions.chordsOf('jazzIIVI')[0].root, 'D');
+      // El dato fuente sigue siendo el grado, no el root.
+      T.assertEq(progressions.byId('jazzIIVI').chords[0].grado, 'ii');
+    });
+  });
+
+  T.describe('factoryProgressions — realización con transpose', () => {
+    // Why: el catálogo de progresiones es 34 entradas con grados escritos
+    // a mano. Un grado mal escrito (typo, mayúscula/minúscula confundida)
+    // no se detecta hasta runtime cuando alguien lo carga. Estos tests
+    // ejercen realizeProgression sobre TODOS los IDs contra varias
+    // tonalidades para cazar errores en el catálogo o regresiones en
+    // transpose.js antes de que lleguen al usuario.
+    const transpose = BT.transpose;
+    const VALID_ROOTS = new Set([
+      'C','C#','Db','D','D#','Eb','E','F','F#','Gb',
+      'G','G#','Ab','A','A#','Bb','B',
+    ]);
+
+    T.it('cada progresión se realiza en su tonalidad nativa sin huecos', () => {
+      progressions.PROGRESSIONS.forEach(p => {
+        const out = transpose.realizeProgression(p, p.tonalidad);
+        T.assertEq(out.length, p.chords.length,
+          p.id + ': realización dejó acordes fuera');
+        out.forEach((c, i) => {
+          T.assert(VALID_ROOTS.has(c.root),
+            p.id + '[' + i + ']: root inválido "' + c.root + '"');
+          T.assert(QUALITIES.indexOf(c.quality) >= 0,
+            p.id + '[' + i + ']: calidad inválida "' + c.quality + '"');
+          T.assert(c.bars >= 1,
+            p.id + '[' + i + ']: bars inválido');
+        });
+      });
+    });
+
+    T.it('cada progresión transponible se realiza contra C, G y Eb', () => {
+      const targets = ['C', 'G', 'Eb'];
+      progressions.PROGRESSIONS.forEach(p => {
+        if (p.transponible === false) return;
+        targets.forEach(t => {
+          const out = transpose.realizeProgression(p, t);
+          T.assertEq(out.length, p.chords.length,
+            p.id + ' en ' + t + ': realización dejó acordes fuera');
+          out.forEach((c, i) => {
+            T.assert(VALID_ROOTS.has(c.root),
+              p.id + ' en ' + t + '[' + i + ']: root inválido "' + c.root + '"');
+          });
+        });
+      });
+    });
+
+    T.it('progresiones no transponibles devuelven sus root fijos', () => {
+      progressions.PROGRESSIONS.forEach(p => {
+        if (p.transponible !== false) return;
+        // realizeProgression debe ignorar la tonalidad destino y devolver
+        // exactamente los root del archivo.
+        const out1 = transpose.realizeProgression(p, p.tonalidad);
+        const out2 = transpose.realizeProgression(p, 'F#');
+        T.assertEq(JSON.stringify(out1), JSON.stringify(out2),
+          p.id + ': la tonalidad destino afectó el resultado de un no-transponible');
+      });
     });
   });
 
