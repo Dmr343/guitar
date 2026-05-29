@@ -72,6 +72,8 @@
     loopRange: null, // [startIdx, endIdx] inclusivo o null
     hiddenIntervals: [], // chord tones ocultados del mástil ej ['5','b5']
     extraIntervals: [],  // intervalos NO-acorde encendidos a mano ej ['b6','2']
+    legendExpanded: false, // false = leyenda colapsada (solo acorde). Los
+                           // extras se recuerdan pero no se pintan hasta expandir.
     metroMuted: false,
   };
 
@@ -84,6 +86,17 @@
       if (o.parentKey && !o.diatonicKey)  o.diatonicKey  = o.parentKey;
       if (o.parentMode && !o.diatonicMode) o.diatonicMode = o.parentMode;
       delete o.parentKey; delete o.parentMode;
+      return o;
+    },
+    // v1 → v2: legendExpanded nace en false (leyenda colapsada). Pero quien ya
+    // tenía notas ajenas encendidas las veía en el mástil; arrancar colapsado
+    // se las haría desaparecer sin aviso. Si el estado guardado trae extras,
+    // arrancamos expandido para preservar lo que el usuario ya veía.
+    (s) => {
+      const o = Object.assign({}, s);
+      if (Array.isArray(o.extraIntervals) && o.extraIntervals.length > 0) {
+        o.legendExpanded = true;
+      }
       return o;
     },
   ];
@@ -154,7 +167,7 @@
         nextChord: nextChord(),
         layers: state.layers,
         hiddenIntervals: state.hiddenIntervals,
-        extraIntervals: state.extraIntervals,
+        extraIntervals: effectiveExtras(state.legendExpanded, state.extraIntervals),
         hiddenCells: activeHiddenCells(),
         filter: state.filter,
         showNoteNames: state.showNoteNames,
@@ -699,21 +712,57 @@
   // pura ayuda visual para ubicar, por ej, la b6 en el mástil.
   const LEGEND_INTERVALS = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
 
+  // ── Helpers puros de la leyenda (colapsar / expandir) ──
+  // Colapsada (default): la leyenda muestra solo los tonos del acorde y el
+  // mástil pinta solo el acorde. Expandida: aparecen las 12 posiciones
+  // cromáticas y los intervalos ajenos encendidos (extraIntervals) se pintan.
+  function legendIntervalsToShow(expanded, chordIntervals) {
+    if (expanded) return LEGEND_INTERVALS.slice();
+    const tones = new Set(chordIntervals || []);
+    return LEGEND_INTERVALS.filter(i => tones.has(i));
+  }
+  // Extras efectivos sobre el mástil. Colapsada → ninguno (se recuerdan en
+  // state.extraIntervals pero no se pintan); expandida → los encendidos.
+  function effectiveExtras(expanded, extraIntervals) {
+    return expanded ? (extraIntervals || []).slice() : [];
+  }
+
   function drawLegend() {
     const lg = $('atlas-legend');
     if (!lg) return;
     lg.innerHTML = '';
     const c = activeChord();
-    const chordTones = new Set(c ? c.intervals : []);
-    const hidden = new Set(state.hiddenIntervals || []);
-    const extra  = new Set(state.extraIntervals || []);
 
     const hint = document.createElement('span');
     hint.style.cssText = 'color:var(--text-dim);font-size:10px;margin-right:2px';
-    hint.textContent = 'Leyenda — click para mostrar/ocultar:';
     lg.appendChild(hint);
 
-    LEGEND_INTERVALS.forEach(i => {
+    // Sin acorde activo (progresión vacía) no hay intervalos que mostrar.
+    if (!c) {
+      hint.textContent = 'Leyenda — agregá un acorde para ver sus intervalos.';
+      return;
+    }
+    hint.textContent = 'Leyenda — click para mostrar/ocultar:';
+
+    const chordTones = new Set(c.intervals);
+    const hidden = new Set(state.hiddenIntervals || []);
+    const extra  = new Set(state.extraIntervals || []);
+    const expanded = !!state.legendExpanded;
+
+    // Toggle colapsar/expandir de la leyenda. Colapsada lista solo las notas
+    // del acorde; expandida, las 12 posiciones para sumar notas ajenas (6, 2,
+    // b6…) al mástil. No afecta las capas (escala, tensiones, etc.).
+    const expander = document.createElement('button');
+    expander.className = 'legend-toggle expander' + (expanded ? ' is-expanded' : '');
+    expander.textContent = expanded ? '▾ Todas' : '▸ Solo acorde';
+    expander.title = expanded
+      ? 'Mostrando las 12 notas de la leyenda — click para ver solo el acorde'
+      : 'Mostrando solo el acorde — click para sumar las demás (6, 2, b6…)';
+    expander.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    expander.addEventListener('click', toggleLegendExpanded);
+    lg.appendChild(expander);
+
+    legendIntervalsToShow(expanded, c.intervals).forEach(i => {
       const isChord = chordTones.has(i);
       // "on" = visible en el mástil. Nota del acorde: visible salvo que se
       // oculte. Nota ajena: oculta salvo que se encienda a mano.
@@ -730,8 +779,11 @@
 
     // Reset: vuelve al acorde puro (sin ocultos ni extras encendidos).
     // También limpia las posiciones ocultas a mano del acorde activo.
+    // Usa los extras EFECTIVOS: en modo colapsado los extras recordados no se
+    // pintan, así que no deben hacer aparecer un Reset sin nada visible.
+    const effExtras = effectiveExtras(expanded, state.extraIntervals);
     const hasHiddenCells = activeHiddenCells().length > 0;
-    if (hidden.size > 0 || extra.size > 0 || hasHiddenCells) {
+    if (hidden.size > 0 || effExtras.length > 0 || hasHiddenCells) {
       const reset = document.createElement('button');
       reset.className = 'legend-toggle reset';
       reset.textContent = 'Reset';
@@ -761,6 +813,14 @@
       extra.has(interval) ? extra.delete(interval) : extra.add(interval);
       state.extraIntervals = Array.from(extra);
     }
+    saveState(); render();
+  }
+
+  // Colapsa/expande la leyenda. Colapsada: solo el acorde (los extras se
+  // recuerdan en state.extraIntervals pero no se pintan en el mástil).
+  // Expandida: las 12 posiciones + los extras encendidos.
+  function toggleLegendExpanded() {
+    state.legendExpanded = !state.legendExpanded;
     saveState(); render();
   }
 
@@ -1369,6 +1429,10 @@
     _applyHiddenIntervals: W.FretboardRenderer && W.FretboardRenderer.applyHiddenIntervals,
     _toggleHiddenInterval: toggleHiddenInterval,
     _toggleLegendInterval: toggleLegendInterval,
+    _toggleLegendExpanded: toggleLegendExpanded,
+    _legendIntervalsToShow: legendIntervalsToShow,
+    _effectiveExtras: effectiveExtras,
+    _ATLAS_MIGRATIONS: ATLAS_MIGRATIONS,
     _toggleHiddenCell: toggleHiddenCellAt,
     _handleBoardClick: handleBoardClick,
     _addChordFromBoard: addChordFromBoard,

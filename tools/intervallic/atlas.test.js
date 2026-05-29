@@ -395,6 +395,51 @@
     });
   });
 
+  T.describe('leyenda — colapsar / expandir (solo acorde)', () => {
+    T.it('legendExpanded arranca en false (colapsada)', () => {
+      A.setProgression([{ root: 'C', quality: 'major', bars: 1 }]);
+      T.assertEq(A.getState().legendExpanded, false);
+    });
+    T.it('colapsada: la leyenda muestra solo los tonos del acorde', () => {
+      T.assertArrayEq(A._legendIntervalsToShow(false, ['1', '3', '5']), ['1', '3', '5']);
+    });
+    T.it('expandida: la leyenda muestra las 12 posiciones cromáticas', () => {
+      const all = A._legendIntervalsToShow(true, ['1', '3', '5']);
+      T.assertEq(all.length, 12);
+      T.assert(all.includes('b2') && all.includes('6') && all.includes('b6'));
+    });
+    T.it('colapsada: los extras NO se pintan en el mástil', () => {
+      T.assertArrayEq(A._effectiveExtras(false, ['6', '2']), []);
+    });
+    T.it('expandida: los extras encendidos sí se pintan', () => {
+      T.assertArrayEq(A._effectiveExtras(true, ['6', '2']), ['6', '2']);
+    });
+    T.it('toggle alterna el flag y los extras se recuerdan al colapsar', () => {
+      A.setProgression([{ root: 'C', quality: 'maj7', bars: 1 }]);
+      A.getState().extraIntervals = [];
+      A.getState().legendExpanded = true;     // partir de expandida
+      A._toggleLegendInterval('6');            // encender la 6 (ajena al acorde)
+      T.assert(A.getState().extraIntervals.includes('6'));
+      A._toggleLegendExpanded();               // colapsar
+      T.assertEq(A.getState().legendExpanded, false);
+      const st = A.getState();
+      // colapsada: la 6 no se pinta en el mástil...
+      T.assertArrayEq(A._effectiveExtras(st.legendExpanded, st.extraIntervals), []);
+      // ...pero sigue recordada en el estado
+      T.assert(st.extraIntervals.includes('6'));
+      A._toggleLegendExpanded();               // re-expandir → reaparece
+      T.assert(A._effectiveExtras(A.getState().legendExpanded, A.getState().extraIntervals).includes('6'));
+    });
+    T.it('migración v1→v2: estado guardado con extras arranca expandido', () => {
+      const migs = A._ATLAS_MIGRATIONS;
+      const v1tov2 = migs[migs.length - 1];
+      T.assertEq(v1tov2({ extraIntervals: ['6'] }).legendExpanded, true);
+      // sin extras (o sin la clave) queda colapsado (false/undefined)
+      T.assert(!v1tov2({ extraIntervals: [] }).legendExpanded);
+      T.assert(!v1tov2({}).legendExpanded);
+    });
+  });
+
   T.describe('hiddenCells — ocultar notas por acorde', () => {
     T.it('toggle afecta solo al acorde activo', () => {
       A.setProgression([
