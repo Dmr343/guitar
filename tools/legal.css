@@ -1,93 +1,101 @@
 /* Estilos compartidos para páginas legales (créditos, privacidad, aviso legal).
-   file:// safe — CSS plano, sin imports externos. Hereda la paleta de index.html. */
-:root {
-  --bg:       #0e0e0e;
-  --surface:  #141414;
-  --surface2: #1a1a1a;
-  --border:   #222;
-  --text:     #e8d5b0;
-  --text-dim: #666;
-  --text-mid: #999;
-  --gold:     #d4a847;
-  --radius:   12px;
-  --font: 'Trebuchet MS', 'Segoe UI', sans-serif;
-}
+   file:// safe. Consume los tokens de theme.css (enlazado antes que este archivo). */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font);
-  line-height: 1.7;
-  padding: 40px 20px 64px;
+  line-height: 1.75;
+  padding: clamp(36px, 7vh, 64px) 20px 72px;
 }
 .wrap { max-width: 760px; margin: 0 auto; }
 .back-link {
   display: inline-block;
   color: var(--text-mid);
   text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 28px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  margin-bottom: 32px;
   letter-spacing: 0.04em;
+  transition: color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
 }
-.back-link:hover { color: var(--gold); }
+.back-link:hover { color: var(--accent); transform: translateX(-2px); }
 h1 {
-  font-size: clamp(26px, 4vw, 34px);
-  font-weight: 300;
-  color: var(--gold);
-  letter-spacing: 0.03em;
-  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+  background: linear-gradient(165deg, #fff 8%, var(--gold) 60%, #b88a2e 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
 }
 .subtitle {
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  margin-bottom: 36px;
+  letter-spacing: 0.24em;
+  margin-bottom: 40px;
 }
 h2 {
-  font-size: 19px;
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
   color: var(--text);
   font-weight: 700;
-  margin: 34px 0 12px;
-  letter-spacing: 0.01em;
+  margin: 38px 0 12px;
+  letter-spacing: -0.005em;
 }
-p, li { font-size: 15px; color: var(--text-mid); margin-bottom: 12px; }
-strong { color: var(--text); }
-a { color: var(--gold); text-decoration: none; }
+p, li { font-size: var(--fs-body); color: var(--text-mid); margin-bottom: 12px; }
+strong { color: var(--text); font-weight: 700; }
+a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 ul { padding-left: 22px; margin-bottom: 12px; }
 li { margin-bottom: 8px; }
-.updated { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+.updated {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--text-dim);
+  margin-top: 12px;
+}
 table {
   width: 100%;
   border-collapse: collapse;
   margin: 16px 0 24px;
-  font-size: 14px;
+  font-size: var(--fs-small);
 }
 th, td {
   text-align: left;
-  padding: 10px 12px;
+  padding: 11px 13px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
-th { color: var(--gold); font-weight: 700; letter-spacing: 0.04em; }
+th {
+  font-family: var(--font-mono);
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: var(--fs-micro);
+}
 td { color: var(--text-mid); }
+tr:hover td { color: var(--text); }
 .card {
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface2), var(--surface));
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 20px;
-  margin: 18px 0;
+  box-shadow: var(--shadow-1);
+  padding: 20px 22px;
+  margin: 20px 0;
 }
 .card p:last-child { margin-bottom: 0; }
 footer {
   max-width: 760px;
-  margin: 56px auto 0;
-  padding-top: 24px;
+  margin: 64px auto 0;
+  padding-top: 26px;
   border-top: 1px solid var(--border);
   text-align: center;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
   color: var(--text-dim);
 }
-footer a { color: var(--text-mid); margin: 0 8px; }
-footer a:hover { color: var(--gold); }
+footer a { color: var(--text-mid); margin: 0 8px; transition: color var(--dur) var(--ease); }
+footer a:hover { color: var(--accent); }

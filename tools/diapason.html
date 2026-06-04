@@ -4,111 +4,179 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Diapasón — Memorizar Notas</title>
+  <link rel="stylesheet" href="theme.css">
   <style>
+    /* Dark estudio — diapasón. Tokens base provistos por theme.css.
+       Solo tokens propios de esta tool + acento dorado. */
     :root {
-      --bg: #0e0e0e; --surface: #141414; --surface2: #1a1a1a;
-      --border: #222; --text: #e8d5b0; --text-dim: #555; --text-mid: #888;
-      --gold: #d4a847; --accent: #d4a847;
-      --radius: 10px; --font: 'Trebuchet MS', 'Segoe UI', sans-serif;
+      --accent: var(--c-diapason);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { zoom: 1.4; }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 16px 12px 40px; min-height: 100vh; }
+    body { padding: clamp(20px, 4vh, 32px) 14px 48px; min-height: 100vh; }
 
-    .back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--text-dim); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; transition: color 0.15s; }
-    .back:hover { color: var(--gold); }
+    .back {
+      display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+      color: var(--text-mid); font-family: var(--font-mono); font-size: var(--fs-micro);
+      letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: var(--sp-5);
+      transition: color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+    }
+    .back:hover { color: var(--accent); transform: translateX(-2px); }
 
-    .header { text-align: center; margin-bottom: 20px; }
-    .header-label { font-size: 10px; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
-    .header h1 { font-size: clamp(16px,4vw,24px); font-weight: 300; color: var(--gold); letter-spacing: 0.08em; }
+    .header { text-align: center; margin-bottom: var(--sp-6); }
+    .header-label {
+      font-family: var(--font-mono); font-size: var(--fs-micro);
+      letter-spacing: 0.34em; color: var(--text-dim); text-transform: uppercase; margin-bottom: var(--sp-2);
+    }
+    .header h1 {
+      font-family: var(--font-display); font-size: clamp(22px, 5vw, 34px); font-weight: 700;
+      letter-spacing: -0.01em; line-height: 1.04;
+      background: linear-gradient(165deg, #fff 8%, var(--accent) 62%, #b88a2e 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+    }
 
     /* Note selector */
-    .selector-section { max-width: 720px; margin: 0 auto 14px; }
-    .selector-label { font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
-    .note-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .selector-section { max-width: 720px; margin: 0 auto var(--sp-4); }
+    .selector-label {
+      font-family: var(--font-mono); font-size: var(--fs-micro); letter-spacing: 0.2em;
+      color: var(--text-dim); text-transform: uppercase; margin-bottom: var(--sp-2);
+    }
+    .note-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-2); }
     .note-btn {
-      padding: 10px 16px; border-radius: 8px; border: 2px solid #2a2a2a;
-      background: #1a1a1a; color: #666; font-size: 14px; font-weight: 700;
-      cursor: pointer; transition: all 0.15s; line-height: 1.2; text-align: center;
-      min-width: 44px;
+      padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+      background: var(--surface2); color: var(--text-mid);
+      font-family: var(--font-mono); font-size: 15px; font-weight: 700;
+      cursor: pointer; line-height: 1.2; text-align: center; min-width: 44px;
+      transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+                  background var(--dur) var(--ease), transform var(--dur-fast) var(--ease),
+                  box-shadow var(--dur) var(--ease);
     }
-    .note-btn:hover { border-color: #444; color: #aaa; }
+    .note-btn:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border2)); color: var(--text); transform: translateY(-2px); }
     .note-btn.active { color: #fff; }
-    .note-btn .enharmonic { font-size: 10px; opacity: 0.75; display: block; }
+    .note-btn .enharmonic { font-family: var(--font-mono); font-size: 10px; opacity: 0.75; display: block; }
     .toggle-altered {
-      padding: 10px 12px; border-radius: 8px; border: 2px solid #2a2a2a;
-      background: #111; color: #444; font-size: 12px; cursor: pointer; transition: all 0.15s;
+      padding: 10px 13px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+      background: var(--surface2); color: var(--text-mid);
+      font-family: var(--font-mono); font-size: var(--fs-small); cursor: pointer;
+      transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+                  background var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
     }
-    .toggle-altered.open { border-color: var(--gold); color: var(--gold); background: #1a1400; }
-    .clear-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid #2a2a2a; background: #111; color: #555; font-size: 11px; cursor: pointer; transition: all 0.15s; margin-top: 6px; }
-    .clear-btn:hover { color: #888; }
+    .toggle-altered:hover { transform: translateY(-2px); color: var(--text); }
+    .toggle-altered.open {
+      border-color: color-mix(in srgb, var(--accent) 60%, var(--border2));
+      color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface3));
+    }
+    .clear-btn {
+      padding: 6px 13px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-dim);
+      font-family: var(--font-mono); font-size: var(--fs-micro); cursor: pointer; margin-top: var(--sp-2);
+      transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    }
+    .clear-btn:hover { color: var(--text-mid); border-color: var(--border2); }
 
     /* Toggles */
-    .controls { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; max-width: 720px; margin: 0 auto 16px; }
-    .toggle-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-dim); user-select: none; }
+    .controls { display: flex; flex-wrap: wrap; gap: var(--sp-5); justify-content: center; max-width: 720px; margin: 0 auto var(--sp-4); }
+    .toggle-label { display: flex; align-items: center; gap: var(--sp-2); cursor: pointer; font-size: var(--fs-small); color: var(--text-mid); user-select: none; }
     .toggle-track {
-      width: 36px; height: 20px; border-radius: 10px; background: #222; border: 1px solid #333;
-      position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+      width: 38px; height: 21px; border-radius: 11px; background: var(--surface3); border: 1px solid var(--border2);
+      position: relative; cursor: pointer; flex-shrink: 0;
+      transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
     }
-    .toggle-track.on { background: var(--accent); border-color: var(--accent); }
+    .toggle-track.on {
+      background: var(--accent); border-color: var(--accent);
+      box-shadow: 0 0 14px var(--glow);
+    }
     .toggle-thumb {
-      position: absolute; width: 14px; height: 14px; border-radius: 50%;
-      background: #fff; top: 2px; left: 3px; transition: left 0.2s;
+      position: absolute; width: 15px; height: 15px; border-radius: 50%;
+      background: #fff; top: 2px; left: 3px; transition: left var(--dur) var(--ease);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
-    .toggle-track.on .toggle-thumb { left: 19px; }
+    .toggle-track.on .toggle-thumb { left: 20px; }
 
     /* Exercise panel */
     .exercise-panel {
-      max-width: 720px; margin: 0 auto 16px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px;
+      max-width: 720px; margin: 0 auto var(--sp-4);
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-1); padding: var(--sp-4) var(--sp-5);
+      transition: border-color var(--dur) var(--ease);
     }
-    .ex-hint { text-align: center; font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
-    .ex-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; }
-    .bpm-control { display: flex; align-items: center; gap: 8px; }
-    .bpm-btn { padding: 7px 11px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #777; font-size: 13px; cursor: pointer; transition: all 0.15s; }
-    .bpm-btn:hover { color: #bbb; border-color: #555; }
+    .ex-hint { text-align: center; font-size: var(--fs-small); color: var(--text-mid); margin-bottom: var(--sp-4); }
+    .ex-controls { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; justify-content: center; }
+    .bpm-control { display: flex; align-items: center; gap: var(--sp-2); }
+    .bpm-btn {
+      padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+      background: var(--surface3); color: var(--text-mid);
+      font-family: var(--font-mono); font-size: var(--fs-small); cursor: pointer;
+      transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+    }
+    .bpm-btn:hover { color: var(--text); border-color: color-mix(in srgb, var(--accent) 45%, var(--border2)); transform: translateY(-1px); }
     .bpm-display { text-align: center; min-width: 56px; }
-    .bpm-val { font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1; }
-    .bpm-unit { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; }
-    .dir-btn { padding: 7px 10px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #555; font-size: 11px; cursor: pointer; transition: all 0.15s; }
-    .dir-btn.active { border-color: var(--gold); color: var(--gold); background: #1a1200; }
-    .start-btn {
-      padding: 10px 22px; border-radius: 8px; border: none; font-size: 13px; font-weight: 700;
-      cursor: pointer; transition: all 0.2s;
+    .bpm-val { font-family: var(--font-mono); font-size: 24px; font-weight: 700; color: var(--accent); line-height: 1; }
+    .bpm-unit { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.16em; }
+    .dir-btn {
+      padding: 8px 11px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+      background: var(--surface3); color: var(--text-mid);
+      font-family: var(--font-mono); font-size: var(--fs-micro); cursor: pointer;
+      transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
+                  background var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
     }
-    .start-btn.stopped { background: #1e8449; color: #fff; box-shadow: 0 0 12px #27ae6033; }
-    .start-btn.running { background: #922b21; color: #fff; box-shadow: 0 0 12px #c0392b33; }
-    .metro-dot { width: 14px; height: 14px; border-radius: 50%; background: #222; transition: background 0.05s, box-shadow 0.05s; }
-    .metro-dot.beat { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+    .dir-btn:hover { transform: translateY(-1px); color: var(--text); }
+    .dir-btn.active {
+      border-color: color-mix(in srgb, var(--accent) 60%, var(--border2));
+      color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface3));
+    }
+    .start-btn {
+      padding: 10px 24px; border-radius: var(--radius-sm); border: none;
+      font-family: var(--font-display); font-size: var(--fs-small); font-weight: 700;
+      cursor: pointer; letter-spacing: 0.02em;
+      transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
+    }
+    .start-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .start-btn.stopped { background: #1e8449; color: #fff; box-shadow: 0 6px 20px rgba(39,174,96,0.3); }
+    .start-btn.running { background: #922b21; color: #fff; box-shadow: 0 6px 20px rgba(192,57,43,0.3); }
+    .metro-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); transition: background 0.05s, box-shadow 0.05s; }
+    .metro-dot.beat { background: var(--accent); box-shadow: 0 0 12px var(--accent); border-color: var(--accent); }
 
     /* String indicators */
-    .string-indicators { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .string-indicators { display: flex; gap: var(--sp-2); justify-content: center; margin-top: var(--sp-4); flex-wrap: wrap; }
     .string-ind {
-      text-align: center; padding: 8px 6px; border-radius: 8px; background: #1a1a1a;
-      border: 2px solid #2a2a2a; min-width: 44px; transition: all 0.12s;
+      text-align: center; padding: var(--sp-2) 6px; border-radius: var(--radius-sm); background: var(--surface2);
+      border: 1px solid var(--border2); min-width: 44px;
+      transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
     }
     .string-ind.active { transform: scale(1.15); }
-    .string-ind-name { font-size: 12px; font-weight: 700; }
-    .string-ind-fret { font-size: 10px; margin-top: 2px; }
+    .string-ind-name { font-family: var(--font-mono); font-size: var(--fs-small); font-weight: 700; }
+    .string-ind-fret { font-family: var(--font-mono); font-size: 10px; margin-top: 2px; }
 
     /* Fretboard */
-    .fretboard-wrap { overflow-x: auto; padding-bottom: 8px; }
-    .fretboard-inner { min-width: 640px; max-width: 900px; margin: 0 auto; }
+    .fretboard-wrap { overflow-x: auto; padding-bottom: var(--sp-2); }
+    .fretboard-inner {
+      min-width: 640px; max-width: 900px; margin: 0 auto;
+      filter: drop-shadow(0 12px 30px rgba(0,0,0,0.45));
+    }
     svg#fretboard { width: 100%; display: block; }
 
     /* Info panel */
     .info-panel {
-      max-width: 480px; margin: 16px auto 0; background: var(--surface);
-      border-radius: var(--radius); padding: 14px 18px; border: 1px solid var(--border);
+      max-width: 480px; margin: var(--sp-4) auto 0;
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border-radius: var(--radius); padding: var(--sp-4) var(--sp-5);
+      border: 1px solid var(--border); box-shadow: var(--shadow-1);
     }
-    .info-title { text-align: center; font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-    .info-row { display: flex; gap: 10px; align-items: baseline; margin-bottom: 4px; font-size: 12px; }
-    .info-row-str { color: var(--gold); font-weight: 700; min-width: 16px; }
-    .info-row-arrow { color: #444; }
-    .info-row-frets { color: var(--text-mid); }
+    .info-title { text-align: center; font-family: var(--font-display); font-size: 19px; font-weight: 700; margin-bottom: var(--sp-3); }
+    .info-row { display: flex; gap: var(--sp-3); align-items: baseline; margin-bottom: var(--sp-1); font-size: var(--fs-small); }
+    .info-row-str { font-family: var(--font-mono); color: var(--accent); font-weight: 700; min-width: 16px; }
+    .info-row-arrow { color: var(--text-dim); }
+    .info-row-frets { font-family: var(--font-mono); color: var(--text-mid); }
 
-    footer { text-align: center; margin-top: 28px; font-size: 10px; color: #333; letter-spacing: 0.08em; }
-    footer a { color: var(--gold); text-decoration: none; opacity: 0.5; }
+    footer {
+      text-align: center; margin-top: var(--sp-7);
+      font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--text-dim); letter-spacing: 0.12em;
+    }
+    footer a { color: var(--accent); text-decoration: none; opacity: 0.7; transition: opacity var(--dur) var(--ease); }
+    footer a:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -122,11 +190,11 @@
 
 <!-- Note selector -->
 <div class="selector-section">
-  <div class="selector-label" data-i18n="natural_label">Notas naturales — empezá aquí</div>
+  <div class="selector-label" data-i18n="natural_label">Notas naturales — empiece aquí</div>
   <div class="note-row" id="natural-row"></div>
   <button class="toggle-altered" id="toggle-altered-btn" data-i18n="altered_toggle_closed">▼ Alteradas</button>
   <div id="altered-section" style="display:none; margin-top:8px;">
-    <div class="selector-label" style="margin-top:8px;" data-i18n="altered_label">Notas alteradas — cuando domines las naturales</div>
+    <div class="selector-label" style="margin-top:8px;" data-i18n="altered_label">Notas alteradas — cuando domine las naturales</div>
     <div class="note-row" id="altered-row"></div>
   </div>
   <div><button class="clear-btn" id="clear-btn" style="display:none;" data-i18n="clear_btn">✕ Limpiar selección</button></div>
@@ -150,7 +218,7 @@
 
 <!-- Exercise panel -->
 <div class="exercise-panel" id="exercise-panel" style="display:none;">
-  <div class="ex-hint" id="ex-hint" data-i18n="ex_hint_default">Seleccioná una nota para comenzar el ejercicio</div>
+  <div class="ex-hint" id="ex-hint" data-i18n="ex_hint_default">Seleccione una nota para comenzar el ejercicio</div>
   <div class="ex-controls">
     <div class="bpm-control">
       <button class="bpm-btn" id="bpm-down">−5</button>
@@ -193,21 +261,21 @@ I18N.register({
     back_link: '← Herramientas',
     header_label: 'Mástil',
     header_title: 'Memorizar el Diapasón',
-    natural_label: 'Notas naturales — empezá aquí',
+    natural_label: 'Notas naturales — empiece aquí',
     altered_toggle_closed: '▼ Alteradas',
     altered_toggle_open: '▲ Alteradas',
-    altered_label: 'Notas alteradas — cuando domines las naturales',
+    altered_label: 'Notas alteradas — cuando domine las naturales',
     clear_btn: '✕ Limpiar selección',
     tog_all: 'Mostrar todas las notas',
     tog_labels: 'Nombres en los puntos',
     tog_exercise: 'Modo Ejercicio 🎸',
-    ex_hint_default: 'Seleccioná una nota para comenzar el ejercicio',
+    ex_hint_default: 'Seleccione una nota para comenzar el ejercicio',
     dir_asc: '↑ Asc',
     dir_desc: '↓ Desc',
     dir_ambos: '↕ Ambos',
     start_btn: '▶ Iniciar',
     stop_btn: '⏹ Parar',
-    ex_hint_play: 'Tocá',
+    ex_hint_play: 'Toque',
     ex_hint_each_string: 'en cada cuerda — de 6 (E) a 1 (e)',
     open_string: 'al aire (○)',
     fret_label: 'traste',
@@ -330,7 +398,7 @@ function initFretboard() {
     t.setAttribute('x', x); t.setAttribute('y', 14);
     t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','10');
     t.setAttribute('fill', FRET_MARKERS.includes(f) ? '#d4a847' : '#2a2a2a');
-    t.setAttribute('font-family','Trebuchet MS, sans-serif');
+    t.setAttribute('font-family','JetBrains Mono, monospace');
     t.textContent = f === 0 ? '○' : f;
     g.appendChild(t);
   }
@@ -352,7 +420,7 @@ function initFretboard() {
     t.setAttribute('x', 22); t.setAttribute('y', y + 4);
     t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','11');
     t.setAttribute('font-style','italic'); t.setAttribute('font-weight','700');
-    t.setAttribute('fill','#444'); t.setAttribute('font-family','Trebuchet MS, sans-serif');
+    t.setAttribute('fill','#444'); t.setAttribute('font-family','JetBrains Mono, monospace');
     t.textContent = STRING_LABELS[si];
     g.appendChild(t);
   });
@@ -440,7 +508,7 @@ function renderDots() {
         t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','9');
         t.setAttribute('font-weight','800');
         t.setAttribute('fill', isSelected ? '#fff' : '#444');
-        t.setAttribute('font-family','Trebuchet MS, sans-serif');
+        t.setAttribute('font-family','JetBrains Mono, monospace');
         t.textContent = n;
         dotsG.appendChild(t);
       }

@@ -1671,6 +1671,7 @@
     renderEditor();
     renderHeroChords(engine.getActiveChordIndex());
     refreshTracks();
+    refreshProjects();
     setPlayUI(engine.isPlaying());
   });
 })(typeof window !== 'undefined' ? window : globalThis);

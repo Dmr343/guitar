@@ -120,6 +120,11 @@
   function init() {
     injectButton();
     apply();
+    // Re-render de contenido generado dinámicamente: las herramientas registran
+    // el diccionario al final del body, después de que su JS ya construyó la UI
+    // con I18N.t(). Disparar este evento hace que sus listeners 'i18n:changed'
+    // re-rendericen ya con el diccionario cargado (sin esto se ven claves crudas).
+    try { W.dispatchEvent(new Event('i18n:changed')); } catch (e) {}
   }
 
   // API pública

@@ -1,0 +1,173 @@
+/* ============================================================
+   theme.css — Sistema de diseño "Dark estudio" (compartido)
+   Vanilla CSS, file:// safe. Enlazado por todas las páginas.
+   Fuentes vendorizadas en ./assets/fonts (rutas relativas a ESTE css,
+   así resuelven igual desde tools/ y desde tools/backing-track/).
+   ============================================================ */
+
+/* ── Fuentes vendorizadas (OFL) ── */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url('./assets/fonts/SpaceGrotesk-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url('./assets/fonts/SpaceGrotesk-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url('./assets/fonts/JetBrainsMono-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url('./assets/fonts/JetBrainsMono-Bold.woff2') format('woff2');
+}
+
+/* ── Tokens (única fuente de verdad) ── */
+:root {
+  /* Superficies dark-studio con elevación */
+  --bg:        #0a0a0b;
+  --bg-2:      #0d0d0f;
+  --surface:   #121215;
+  --surface2:  #17171b;
+  --surface3:  #1e1e23;
+  --border:    #26262d;
+  --border2:   #34343d;
+
+  /* Texto cálido (identidad conservada) */
+  --text:      #ece3cf;
+  --text-mid:  #a39d90;
+  --text-dim:  #6a655c;
+
+  /* Dorado de marca + acento por defecto */
+  --gold:      #e0b24a;
+  --accent:    var(--gold);
+
+  /* Acentos por herramienta (sin oído) */
+  --c-diapason: #e0b24a;
+  --c-escalas:  #34d399;
+  --c-acordes:  #4aa3f0;
+  --c-atlas:    #f0c45f;
+  --c-improv:   #2dd4bf;
+  --c-backing:  #f0865f;
+
+  /* Tipografía */
+  --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font:         'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace;
+
+  /* Escala tipográfica */
+  --fs-display: clamp(34px, 6vw, 58px);
+  --fs-h1:      clamp(26px, 4.5vw, 40px);
+  --fs-h2:      clamp(18px, 2.4vw, 22px);
+  --fs-body:    15px;
+  --fs-small:   13px;
+  --fs-micro:   11px;
+
+  /* Espaciado */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius:    14px;
+  --radius-lg: 20px;
+
+  /* Sombras y glow */
+  --shadow-1: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.45);
+  --shadow-2: 0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 50px rgba(0,0,0,0.6);
+  --glow:     color-mix(in srgb, var(--accent) 32%, transparent);
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur:      220ms;
+  --ease:     cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ── Base ── */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 620px at 50% -8%,
+      color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(255,255,255,0.018), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); color: #fff; }
+
+a { color: var(--accent); text-decoration: none; }
+
+/* ── Header / back-link compartidos ── */
+.header { text-align: center; }
+.header-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.header h1,
+.header h1.header { /* algunas tools ponen h1 con clase */
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.back, .back-link {
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  color: var(--text-mid);
+  letter-spacing: 0.04em;
+  transition: color var(--dur) var(--ease), transform var(--dur-fast) var(--ease);
+  display: inline-block;
+}
+.back:hover, .back-link:hover { color: var(--accent); transform: translateX(-2px); }
+
+/* ── Footer / botones fantasma (portada + legales) ── */
+footer { color: var(--text-dim); }
+.footer-links a { color: var(--text-mid); transition: color var(--dur) var(--ease); }
+.footer-links a:hover { color: var(--accent); }
+.ghost-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 17px;
+  background: var(--surface2);
+  color: var(--text-mid);
+  font-family: var(--font); font-size: var(--fs-small); font-weight: 500;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease),
+              transform var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.ghost-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  color: var(--text);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.4);
+}
+
+/* ── Toggle EN/ES (la posición/tamaño base lo fija i18n.js) ── */
+.i18n-toggle { font-family: var(--font-mono) !important; }
+
+/* ── Reduce motion global ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
