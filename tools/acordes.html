@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAGED — 5 Formas</title>
+  <title data-i18n="page_title">CAGED — 5 Formas</title>
   <style>
     :root{
       --bg:#0e0e0e;--surface:#141414;--surface2:#1a1a1a;--border:#222;
@@ -97,34 +97,34 @@
 </head>
 <body>
 
-<a href="index.html" class="back">← Herramientas</a>
+<a href="index.html" class="back" data-i18n="back_tools">← Herramientas</a>
 <div class="header">
-  <h1>CAGED — 5 Formas</h1>
-  <div class="header-sub">Sistema de navegación del mástil</div>
+  <h1 data-i18n="header_title">CAGED — 5 Formas</h1>
+  <div class="header-sub" data-i18n="header_sub">Sistema de navegación del mástil</div>
 </div>
 
 <div class="tabs">
-  <button class="tab" data-mode="forma">1 · Forma</button>
-  <button class="tab" data-mode="mapa">2 · Mapa</button>
-  <button class="tab" data-mode="zona">3 · Zona</button>
-  <button class="tab" data-mode="prog">4 · Progresión</button>
+  <button class="tab" data-mode="forma" data-i18n="tab_forma">1 · Forma</button>
+  <button class="tab" data-mode="mapa" data-i18n="tab_mapa">2 · Mapa</button>
+  <button class="tab" data-mode="zona" data-i18n="tab_zona">3 · Zona</button>
+  <button class="tab" data-mode="prog" data-i18n="tab_prog">4 · Progresión</button>
 </div>
 
 <!-- ── Modo 1 ── -->
 <div id="pane-forma" class="mode-pane">
   <div class="ctrl-wrap">
-    <div class="mode-help">
+    <div class="mode-help" data-i18n-html="m1_help">
       <strong>Forma movible.</strong> Las 5 formas CAGED son digitaciones que vienen de los acordes abiertos C, A, G, E, D.
       Al moverlas con cejilla, suenan distinto: <strong>Forma E en traste 0 = E mayor; en traste 3 = G mayor; en traste 5 = A mayor</strong>.
       Acá: tocá una forma → arranca en posición abierta (acorde igual al nombre de la forma) → usá <code>←</code>/<code>→</code> para deslizarla y ver qué acorde produce en cada traste.
     </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
-        <span class="ctrl-label">Forma</span>
+        <span class="ctrl-label" data-i18n="lbl_forma">Forma</span>
         <div class="ctrl-btns" id="m1-shapes"></div>
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Calidad</span>
+        <span class="ctrl-label" data-i18n="lbl_calidad">Calidad</span>
         <div class="ctrl-btns" id="m1-quals"></div>
       </div>
     </div>
@@ -135,8 +135,8 @@
     </div>
     <div class="ctrl-info" id="m1-info"></div>
     <div class="m1-mapa" id="m1-mapa">
-      ↳ mapa
-      <span class="m1-mapa-tip">Esta forma es útil para ver chord tones en esta zona del mástil; como acorde full es impráctica fuera de esta posición.</span>
+      <span data-i18n="m1_mapa_badge">↳ mapa</span>
+      <span class="m1-mapa-tip" data-i18n="m1_mapa_tip">Esta forma es útil para ver chord tones en esta zona del mástil; como acorde full es impráctica fuera de esta posición.</span>
     </div>
     <div class="fb-wrap">
       <svg id="m1-svg" viewBox="0 0 920 220" preserveAspectRatio="xMidYMid meet"></svg>
@@ -147,26 +147,26 @@
 <!-- ── Modo 2 ── -->
 <div id="pane-mapa" class="mode-pane">
   <div class="ctrl-wrap">
-    <div class="mode-help">
+    <div class="mode-help" data-i18n-html="m2_help">
       <strong>Mapa del acorde.</strong> Elegís un acorde (ej: G mayor) y ves <strong>las 5 formas que producen ese acorde</strong> superpuestas en el mástil completo.
       Cada forma está pintada en su color (C verde, A azul, G amarillo, E rojo, D violeta) y todas las tónicas en dorado.
       Sirve como mapa visual: "¿dónde está G en todo el diapasón?". Toggleá las formas individuales con los botones, o "Solo tónicas" para ver solo las anclas.
     </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
-        <span class="ctrl-label">Raíz</span>
+        <span class="ctrl-label" data-i18n="lbl_raiz">Raíz</span>
         <div class="ctrl-btns" id="m2-root"></div>
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Calidad</span>
+        <span class="ctrl-label" data-i18n="lbl_calidad">Calidad</span>
         <div class="ctrl-btns" id="m2-qual"></div>
       </div>
     </div>
     <div class="ctrl-row" style="gap:8px;">
-      <span class="ctrl-label">Formas</span>
+      <span class="ctrl-label" data-i18n="lbl_formas">Formas</span>
       <div class="ctrl-btns" id="m2-shapes"></div>
       <div class="ctrl-sep"></div>
-      <button class="btn" id="m2-solo" style="--c:var(--gold)">Solo tónicas</button>
+      <button class="btn" id="m2-solo" style="--c:var(--gold)" data-i18n="m2_solo">Solo tónicas</button>
     </div>
     <div class="ctrl-name" id="m2-chord-name">G</div>
     <div class="fb-wrap">
@@ -178,46 +178,46 @@
 <!-- ── Modo 3 ── -->
 <div id="pane-zona" class="mode-pane">
   <div class="ctrl-wrap">
-    <div class="mode-help">
+    <div class="mode-help" data-i18n-html="m3_help">
       <strong>Zona de improvisación.</strong> Para practicar improvisación sobre <strong>un acorde estático</strong>. Elegís un acorde + una zona del mástil + una escala.
       Los chord tones (notas del acorde) aparecen coloreados por <strong>función</strong>: tónica dorada, 3ra naranja, 5ta azul, 7ma verde. La escala alrededor en gris tenue.
       La forma CAGED define la zona por defecto, pero podés ajustar con el slider.
     </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
-        <span class="ctrl-label">Raíz</span>
+        <span class="ctrl-label" data-i18n="lbl_raiz">Raíz</span>
         <div class="ctrl-btns" id="m3-root"></div>
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Calidad</span>
+        <span class="ctrl-label" data-i18n="lbl_calidad">Calidad</span>
         <div class="ctrl-btns" id="m3-qual"></div>
       </div>
     </div>
     <div class="ctrl-row">
       <div class="ctrl-group">
-        <span class="ctrl-label">Forma</span>
+        <span class="ctrl-label" data-i18n="lbl_forma">Forma</span>
         <div class="ctrl-btns" id="m3-shapes"></div>
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Escala</span>
+        <span class="ctrl-label" data-i18n="lbl_escala">Escala</span>
         <div class="ctrl-btns" id="m3-scales"></div>
       </div>
     </div>
     <div class="range-row">
-      <span class="ctrl-label">Zona</span>
+      <span class="ctrl-label" data-i18n="lbl_zona">Zona</span>
       <input type="range" id="m3-fmin" class="range-input" min="0" max="15" value="3">
       <span class="range-val" id="m3-fmin-val">3</span>
-      <span style="color:var(--text-dim);font-size:11px;">a</span>
+      <span style="color:var(--text-dim);font-size:11px;" data-i18n="range_a">a</span>
       <input type="range" id="m3-fmax" class="range-input" min="0" max="15" value="8">
       <span class="range-val" id="m3-fmax-val">8</span>
     </div>
     <div class="ctrl-name" id="m3-chord-name">G</div>
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:#d4a847"></span>R</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#e67e22"></span>3ra</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span>5ta</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span>7ma</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#888;opacity:.5"></span>escala</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#d4a847"></span><span data-i18n="leg_R">R</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#e67e22"></span><span data-i18n="leg_3rd">3ra</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span><span data-i18n="leg_5th">5ta</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span><span data-i18n="leg_7th">7ma</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#888;opacity:.5"></span><span data-i18n="leg_scale">escala</span></span>
     </div>
     <div class="fb-wrap">
       <svg id="m3-svg" viewBox="0 0 920 220" preserveAspectRatio="xMidYMid meet"></svg>
@@ -228,7 +228,7 @@
 <!-- ── Modo 4 ── -->
 <div id="pane-prog" class="mode-pane">
   <div class="ctrl-wrap">
-    <div class="mode-help">
+    <div class="mode-help" data-i18n-html="m4_help">
       <strong>Progresión con cambios.</strong> Para practicar <strong>navegar progresiones</strong> sin mover mucho la mano. Armás una progresión (manual o cargada de Improvisar), elegís una zona fija del mástil + escala.
       Apretás <code>Play</code> y el metrónomo cicla los acordes — el mástil va mostrando los chord tones del acorde activo en la misma zona.
       Las notas con halo blanco son <strong>común con el acorde anterior</strong>: tus puntos de anclaje al cambiar.
@@ -238,38 +238,38 @@
     <div class="picker-card">
       <div class="ctrl-row">
         <div class="ctrl-group">
-          <span class="ctrl-label">Raíz</span>
+          <span class="ctrl-label" data-i18n="lbl_raiz">Raíz</span>
           <div class="ctrl-btns" id="m4-pick-root"></div>
         </div>
       </div>
       <div class="ctrl-row">
         <div class="ctrl-group">
-          <span class="ctrl-label">Calidad</span>
+          <span class="ctrl-label" data-i18n="lbl_calidad">Calidad</span>
           <div class="ctrl-btns" id="m4-pick-qual"></div>
         </div>
         <div class="ctrl-group">
-          <button class="btn add-btn" id="m4-add" disabled>+ Agregar</button>
-          <button class="btn" id="m4-load">Cargar de Improvisar</button>
-          <button class="btn" id="m4-clear">Borrar</button>
+          <button class="btn add-btn" id="m4-add" disabled data-i18n="m4_add">+ Agregar</button>
+          <button class="btn" id="m4-load" data-i18n="m4_load">Cargar de Improvisar</button>
+          <button class="btn" id="m4-clear" data-i18n="m4_clear">Borrar</button>
         </div>
       </div>
     </div>
 
     <div class="ctrl-row">
       <div class="ctrl-group">
-        <span class="ctrl-label">Forma</span>
+        <span class="ctrl-label" data-i18n="lbl_forma">Forma</span>
         <div class="ctrl-btns" id="m4-shapes"></div>
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Escala</span>
+        <span class="ctrl-label" data-i18n="lbl_escala">Escala</span>
         <div class="ctrl-btns" id="m4-scales"></div>
       </div>
     </div>
     <div class="range-row">
-      <span class="ctrl-label">Zona</span>
+      <span class="ctrl-label" data-i18n="lbl_zona">Zona</span>
       <input type="range" id="m4-fmin" class="range-input" min="0" max="15" value="3">
       <span class="range-val" id="m4-fmin-val">3</span>
-      <span style="color:var(--text-dim);font-size:11px;">a</span>
+      <span style="color:var(--text-dim);font-size:11px;" data-i18n="range_a">a</span>
       <input type="range" id="m4-fmax" class="range-input" min="0" max="15" value="8">
       <span class="range-val" id="m4-fmax-val">8</span>
     </div>
@@ -280,22 +280,22 @@
         <input type="number" class="bpm-input" id="m4-bpm" min="40" max="220" value="80">
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Compases</span>
+        <span class="ctrl-label" data-i18n="lbl_compases">Compases</span>
         <div class="ctrl-btns" id="m4-beats"></div>
       </div>
       <div class="ctrl-group">
-        <span class="ctrl-label">Modo</span>
+        <span class="ctrl-label" data-i18n="lbl_modo">Modo</span>
         <div class="ctrl-btns" id="m4-metro-mode"></div>
       </div>
     </div>
     <div class="ctrl-name" id="m4-chord-name">—</div>
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:#d4a847"></span>R</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#e67e22"></span>3ra</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span>5ta</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span>7ma</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#888;opacity:.5"></span>escala</span>
-      <span class="legend-item"><span class="legend-dot" style="background:transparent;border:1.5px dashed #fff;width:12px;height:12px"></span>común</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#d4a847"></span><span data-i18n="leg_R">R</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#e67e22"></span><span data-i18n="leg_3rd">3ra</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span><span data-i18n="leg_5th">5ta</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span><span data-i18n="leg_7th">7ma</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#888;opacity:.5"></span><span data-i18n="leg_scale">escala</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:transparent;border:1.5px dashed #fff;width:12px;height:12px"></span><span data-i18n="leg_common">común</span></span>
     </div>
     <div class="fb-wrap">
       <svg id="m4-svg" viewBox="0 0 920 220" preserveAspectRatio="xMidYMid meet"></svg>
@@ -304,9 +304,9 @@
 </div>
 
 <footer>
-  Afinación estándar · E A D G B e ·
-  <a href="index.html">← Herramientas</a> ·
-  <a href="atajos.md">Atajos</a>
+  <span data-i18n="footer_tuning">Afinación estándar</span> · E A D G B e ·
+  <a href="index.html" data-i18n="footer_tools">← Herramientas</a> ·
+  <a href="atajos.md" data-i18n="footer_shortcuts">Atajos</a>
 </footer>
 
 <!-- Shared modules (plain script tags — work with file:// and HTTP). -->
@@ -314,6 +314,7 @@
 <script src="./shared/fretboard.js"></script>
 <script src="./shared/storage.js"></script>
 <script src="./shared/metronome.js"></script>
+<script src="i18n.js"></script>
 <script>
 const { loadCAGED, saveCAGED, loadImprovState } = window.GuitarShared.storage;
 const {
@@ -343,6 +344,13 @@ const SCALES = [
   { id:'dorian',     label:'Dórico' },
 ];
 const SCALE_IDS = SCALES.map(s => s.id);
+
+// ─── i18n display helpers ──────────────────────────────────────────────────
+// Resolve user-facing labels by stable key at render time, so they re-translate
+// when the language changes. Musical symbols (m, 7, maj7, m7) are identical in
+// both languages and live in the dictionary too for uniformity.
+function qLabel(q)  { return I18N.t('qual_' + q); }
+function scLabel(id){ return I18N.t('scale_' + id); }
 
 const DEFAULT_STATE = {
   mode:'mapa', root:'G', quality:'major', shape:'E', barre:3,
@@ -464,7 +472,7 @@ function renderModo1() {
 
   document.getElementById('m1-chord-name').textContent = chordName(root, quality);
   document.getElementById('m1-info').textContent =
-    `Traste ${barre}  ·  Forma ${shape}  ·  ${QUALITY_LABELS[quality]}`;
+    `${I18N.t('info_fret')} ${barre}  ·  ${I18N.t('info_shape')} ${shape}  ·  ${qLabel(quality)}`;
   document.getElementById('m1-mapa').classList.toggle('show', isMapa(shape, barre));
   document.querySelectorAll('#m1-shapes .btn').forEach(b =>
     b.classList.toggle('active', b.dataset.shape === shape));
@@ -508,7 +516,7 @@ SHAPES.forEach(s => {
 
 QUALITIES.forEach(q => {
   const b = document.createElement('button');
-  b.className = 'btn'; b.dataset.q = q; b.textContent = Q_LABEL[q];
+  b.className = 'btn'; b.dataset.q = q; b.textContent = qLabel(q);
   b.addEventListener('click', () => { st.quality = q; saveCAGED(st); renderModo1(); });
   document.getElementById('m1-quals').appendChild(b);
 });
@@ -597,7 +605,7 @@ CHROMATIC.forEach(note => {
 
 QUALITIES.forEach(q => {
   const b = document.createElement('button');
-  b.className = 'btn'; b.dataset.q = q; b.textContent = Q_LABEL[q];
+  b.className = 'btn'; b.dataset.q = q; b.textContent = qLabel(q);
   b.addEventListener('click', () => { st.quality = q; saveCAGED(st); renderModo2(); });
   document.getElementById('m2-qual').appendChild(b);
 });
@@ -728,7 +736,7 @@ CHROMATIC.forEach(note => {
 
 QUALITIES.forEach(q => {
   const b = document.createElement('button');
-  b.className = 'btn'; b.dataset.q = q; b.textContent = Q_LABEL[q];
+  b.className = 'btn'; b.dataset.q = q; b.textContent = qLabel(q);
   b.addEventListener('click', () => { st.quality = q; saveCAGED(st); renderModo3(); });
   document.getElementById('m3-qual').appendChild(b);
 });
@@ -749,14 +757,14 @@ SHAPES.forEach(s => {
 {
   const row = document.getElementById('m3-scales');
   const ab = document.createElement('button');
-  ab.className = 'btn'; ab.dataset.scale = 'auto'; ab.textContent = 'Auto';
+  ab.className = 'btn'; ab.dataset.scale = 'auto'; ab.textContent = I18N.t('scale_auto');
   ab.addEventListener('click', () => {
     st.m3.scaleAuto = true; saveCAGED(st); renderModo3();
   });
   row.appendChild(ab);
   SCALES.forEach(s => {
     const b = document.createElement('button');
-    b.className = 'btn'; b.dataset.scale = s.id; b.textContent = s.label;
+    b.className = 'btn'; b.dataset.scale = s.id; b.textContent = scLabel(s.id);
     b.addEventListener('click', () => {
       st.m3.scaleAuto = false; st.m3.scale = s.id;
       saveCAGED(st); renderModo3();
@@ -800,7 +808,7 @@ function renderModo4() {
   if (!m.progression.length) {
     const empty = document.createElement('div');
     empty.className = 'slots-empty';
-    empty.textContent = 'Sin acordes — agrega manual o cargá de Improvisar';
+    empty.textContent = I18N.t('slots_empty');
     slots.appendChild(empty);
   } else {
     m.progression.forEach((c, i) => {
@@ -810,7 +818,7 @@ function renderModo4() {
       lab.textContent = chordName(c.root, c.quality);
       slot.appendChild(lab);
       const x = document.createElement('button');
-      x.className = 'slot-x'; x.textContent = '×'; x.title = 'Eliminar';
+      x.className = 'slot-x'; x.textContent = '×'; x.title = I18N.t('slot_remove');
       x.addEventListener('click', e => {
         e.stopPropagation();
         m.progression.splice(i, 1);
@@ -883,7 +891,7 @@ CHROMATIC.forEach(note => {
 });
 QUALITIES.forEach(q => {
   const b = document.createElement('button');
-  b.className = 'btn'; b.dataset.q = q; b.textContent = Q_LABEL[q];
+  b.className = 'btn'; b.dataset.q = q; b.textContent = qLabel(q);
   b.addEventListener('click', () => {
     st.m4.pick.quality = q; saveCAGED(st); renderModo4();
   });
@@ -894,7 +902,7 @@ document.getElementById('m4-add').addEventListener('click', () => {
   const { root, quality } = st.m4.pick;
   if (!root) return;
   if (st.m4.progression.length >= 8) {
-    alert('Máximo 8 acordes por progresión.');
+    alert(I18N.t('alert_max'));
     return;
   }
   st.m4.progression.push({ root, quality });
@@ -903,7 +911,7 @@ document.getElementById('m4-add').addEventListener('click', () => {
 
 document.getElementById('m4-clear').addEventListener('click', () => {
   if (!st.m4.progression.length) return;
-  if (!confirm('Borrar toda la progresión?')) return;
+  if (!confirm(I18N.t('confirm_clear'))) return;
   m4StopMetro();
   st.m4.progression = [];
   st.m4.chordIdx    = 0;
@@ -913,7 +921,7 @@ document.getElementById('m4-clear').addEventListener('click', () => {
 document.getElementById('m4-load').addEventListener('click', () => {
   const s = loadImprovState();
   if (!s || !Array.isArray(s.progression) || !s.progression.length) {
-    alert('No hay progresión guardada en Improvisar.');
+    alert(I18N.t('alert_no_saved'));
     return;
   }
   // Build diatonic chords from improvisar state (root + isMinor)
@@ -937,7 +945,7 @@ document.getElementById('m4-load').addEventListener('click', () => {
   });
   const imported = s.progression.map(di => chords[di]).filter(Boolean);
   if (!imported.length) {
-    alert('La progresión no tiene acordes compatibles (CAGED v1 soporta mayor/menor/7/maj7/m7).');
+    alert(I18N.t('alert_incompatible'));
     return;
   }
   m4StopMetro();
@@ -964,14 +972,14 @@ SHAPES.forEach(s => {
 {
   const row = document.getElementById('m4-scales');
   const ab = document.createElement('button');
-  ab.className = 'btn'; ab.dataset.scale = 'auto'; ab.textContent = 'Auto';
+  ab.className = 'btn'; ab.dataset.scale = 'auto'; ab.textContent = I18N.t('scale_auto');
   ab.addEventListener('click', () => {
     st.m4.scaleAuto = true; saveCAGED(st); renderModo4();
   });
   row.appendChild(ab);
   SCALES.forEach(s => {
     const b = document.createElement('button');
-    b.className = 'btn'; b.dataset.scale = s.id; b.textContent = s.label;
+    b.className = 'btn'; b.dataset.scale = s.id; b.textContent = scLabel(s.id);
     b.addEventListener('click', () => {
       st.m4.scaleAuto = false; st.m4.scale = s.id;
       saveCAGED(st); renderModo4();
@@ -1017,9 +1025,9 @@ document.getElementById('m4-bpm').addEventListener('change', e => {
 });
 
 // Metro mode (auto/manual)
-[{id:'auto',label:'Auto'},{id:'manual',label:'Manual'}].forEach(m => {
+[{id:'auto'},{id:'manual'}].forEach(m => {
   const b = document.createElement('button');
-  b.className = 'btn'; b.dataset.mm = m.id; b.textContent = m.label;
+  b.className = 'btn'; b.dataset.mm = m.id; b.textContent = I18N.t('metromode_' + m.id);
   b.addEventListener('click', () => {
     st.m4.metroMode = m.id; saveCAGED(st); renderModo4();
   });
@@ -1043,13 +1051,20 @@ function m4StartMetro() {
   m4Metro.start();
   const btn = document.getElementById('m4-play');
   btn.classList.add('on');
-  btn.textContent = '■ Stop';
+  btn.textContent = '■ ' + I18N.t('btn_stop');
 }
 function m4StopMetro() {
   if (m4Metro) m4Metro.stop();
   const btn = document.getElementById('m4-play');
   btn.classList.remove('on');
-  btn.textContent = '▶ Play';
+  btn.textContent = '▶ ' + I18N.t('btn_play');
+}
+// Play/Stop label is state-driven, not data-i18n; refresh it on language change.
+function m4UpdatePlayLabel() {
+  const btn = document.getElementById('m4-play');
+  if (!btn) return;
+  const playing = m4Metro && m4Metro.playing;
+  btn.textContent = playing ? '■ ' + I18N.t('btn_stop') : '▶ ' + I18N.t('btn_play');
 }
 function m4ToggleMetro() {
   if (m4Metro && m4Metro.playing) m4StopMetro();
@@ -1158,7 +1173,180 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ─── i18n dictionary ───────────────────────────────────────────────────────
+I18N.register({
+  es: {
+    page_title: 'CAGED — 5 Formas',
+    back_tools: '← Herramientas',
+    header_title: 'CAGED — 5 Formas',
+    header_sub: 'Sistema de navegación del mástil',
+    tab_forma: '1 · Forma',
+    tab_mapa: '2 · Mapa',
+    tab_zona: '3 · Zona',
+    tab_prog: '4 · Progresión',
+
+    lbl_forma: 'Forma',
+    lbl_calidad: 'Calidad',
+    lbl_raiz: 'Raíz',
+    lbl_formas: 'Formas',
+    lbl_escala: 'Escala',
+    lbl_zona: 'Zona',
+    lbl_compases: 'Compases',
+    lbl_modo: 'Modo',
+    range_a: 'a',
+
+    m1_help: '<strong>Forma movible.</strong> Las 5 formas CAGED son digitaciones que vienen de los acordes abiertos C, A, G, E, D. Al moverlas con cejilla, suenan distinto: <strong>Forma E en traste 0 = E mayor; en traste 3 = G mayor; en traste 5 = A mayor</strong>. Acá: tocá una forma → arranca en posición abierta (acorde igual al nombre de la forma) → usá <code>←</code>/<code>→</code> para deslizarla y ver qué acorde produce en cada traste.',
+    m1_mapa_badge: '↳ mapa',
+    m1_mapa_tip: 'Esta forma es útil para ver chord tones en esta zona del mástil; como acorde full es impráctica fuera de esta posición.',
+
+    m2_help: '<strong>Mapa del acorde.</strong> Elegís un acorde (ej: G mayor) y ves <strong>las 5 formas que producen ese acorde</strong> superpuestas en el mástil completo. Cada forma está pintada en su color (C verde, A azul, G amarillo, E rojo, D violeta) y todas las tónicas en dorado. Sirve como mapa visual: "¿dónde está G en todo el diapasón?". Toggleá las formas individuales con los botones, o "Solo tónicas" para ver solo las anclas.',
+    m2_solo: 'Solo tónicas',
+
+    m3_help: '<strong>Zona de improvisación.</strong> Para practicar improvisación sobre <strong>un acorde estático</strong>. Elegís un acorde + una zona del mástil + una escala. Los chord tones (notas del acorde) aparecen coloreados por <strong>función</strong>: tónica dorada, 3ra naranja, 5ta azul, 7ma verde. La escala alrededor en gris tenue. La forma CAGED define la zona por defecto, pero podés ajustar con el slider.',
+
+    m4_help: '<strong>Progresión con cambios.</strong> Para practicar <strong>navegar progresiones</strong> sin mover mucho la mano. Armás una progresión (manual o cargada de Improvisar), elegís una zona fija del mástil + escala. Apretás <code>Play</code> y el metrónomo cicla los acordes — el mástil va mostrando los chord tones del acorde activo en la misma zona. Las notas con halo blanco son <strong>común con el acorde anterior</strong>: tus puntos de anclaje al cambiar.',
+    m4_add: '+ Agregar',
+    m4_load: 'Cargar de Improvisar',
+    m4_clear: 'Borrar',
+
+    leg_R: 'R',
+    leg_3rd: '3ra',
+    leg_5th: '5ta',
+    leg_7th: '7ma',
+    leg_scale: 'escala',
+    leg_common: 'común',
+
+    footer_tuning: 'Afinación estándar',
+    footer_tools: '← Herramientas',
+    footer_shortcuts: 'Atajos',
+
+    qual_major: 'Mayor',
+    qual_minor: 'm',
+    qual_dom7: '7',
+    qual_maj7: 'maj7',
+    qual_min7: 'm7',
+
+    scale_auto: 'Auto',
+    scale_pent_major: 'Pent May',
+    scale_pent_minor: 'Pent Men',
+    scale_major: 'Diat May',
+    scale_minor: 'Diat Men',
+    scale_mixolydian: 'Mixol',
+    scale_dorian: 'Dórico',
+
+    metromode_auto: 'Auto',
+    metromode_manual: 'Manual',
+
+    info_fret: 'Traste',
+    info_shape: 'Forma',
+
+    slots_empty: 'Sin acordes — agrega manual o cargá de Improvisar',
+    slot_remove: 'Eliminar',
+
+    btn_play: 'Play',
+    btn_stop: 'Stop',
+
+    alert_max: 'Máximo 8 acordes por progresión.',
+    confirm_clear: 'Borrar toda la progresión?',
+    alert_no_saved: 'No hay progresión guardada en Improvisar.',
+    alert_incompatible: 'La progresión no tiene acordes compatibles (CAGED v1 soporta mayor/menor/7/maj7/m7).',
+  },
+  en: {
+    page_title: 'CAGED — 5 Shapes',
+    back_tools: '← Tools',
+    header_title: 'CAGED — 5 Shapes',
+    header_sub: 'Fretboard navigation system',
+    tab_forma: '1 · Shape',
+    tab_mapa: '2 · Map',
+    tab_zona: '3 · Zone',
+    tab_prog: '4 · Progression',
+
+    lbl_forma: 'Shape',
+    lbl_calidad: 'Quality',
+    lbl_raiz: 'Root',
+    lbl_formas: 'Shapes',
+    lbl_escala: 'Scale',
+    lbl_zona: 'Zone',
+    lbl_compases: 'Beats',
+    lbl_modo: 'Mode',
+    range_a: 'to',
+
+    m1_help: '<strong>Movable shape.</strong> The 5 CAGED shapes are fingerings derived from the open chords C, A, G, E, D. When you move them with a barre, they sound different: <strong>E shape at fret 0 = E major; at fret 3 = G major; at fret 5 = A major</strong>. Here: pick a shape → it starts in open position (chord matching the shape name) → use <code>←</code>/<code>→</code> to slide it up the neck and see which chord it produces at each fret.',
+    m1_mapa_badge: '↳ map',
+    m1_mapa_tip: 'This shape is useful for seeing chord tones in this zone of the fretboard; as a full chord it is impractical outside this position.',
+
+    m2_help: '<strong>Chord map.</strong> Pick a chord (e.g. G major) and see <strong>the 5 shapes that produce that chord</strong> overlaid across the whole fretboard. Each shape is painted in its color (C green, A blue, G yellow, E red, D purple) and all roots in gold. It works as a visual map: "where is G across the whole fretboard?". Toggle individual shapes with the buttons, or "Roots only" to see just the anchors.',
+    m2_solo: 'Roots only',
+
+    m3_help: '<strong>Improvisation zone.</strong> To practice improvising over <strong>a static chord</strong>. Pick a chord + a fretboard zone + a scale. The chord tones (notes of the chord) appear colored by <strong>function</strong>: root gold, 3rd orange, 5th blue, 7th green. The surrounding scale in dim grey. The CAGED shape sets the default zone, but you can adjust it with the slider.',
+
+    m4_help: '<strong>Progression with changes.</strong> To practice <strong>navigating progressions</strong> without moving your hand much. Build a progression (manually or loaded from Improvise), pick a fixed fretboard zone + scale. Hit <code>Play</code> and the metronome cycles the chords — the fretboard shows the chord tones of the active chord in the same zone. Notes with a white halo are <strong>shared with the previous chord</strong>: your anchor points when changing.',
+    m4_add: '+ Add',
+    m4_load: 'Load from Improvise',
+    m4_clear: 'Clear',
+
+    leg_R: 'R',
+    leg_3rd: '3rd',
+    leg_5th: '5th',
+    leg_7th: '7th',
+    leg_scale: 'scale',
+    leg_common: 'common',
+
+    footer_tuning: 'Standard tuning',
+    footer_tools: '← Tools',
+    footer_shortcuts: 'Shortcuts',
+
+    qual_major: 'Major',
+    qual_minor: 'm',
+    qual_dom7: '7',
+    qual_maj7: 'maj7',
+    qual_min7: 'm7',
+
+    scale_auto: 'Auto',
+    scale_pent_major: 'Maj Pent',
+    scale_pent_minor: 'Min Pent',
+    scale_major: 'Maj Diat',
+    scale_minor: 'Min Diat',
+    scale_mixolydian: 'Mixo',
+    scale_dorian: 'Dorian',
+
+    metromode_auto: 'Auto',
+    metromode_manual: 'Manual',
+
+    info_fret: 'Fret',
+    info_shape: 'Shape',
+
+    slots_empty: 'No chords — add manually or load from Improvise',
+    slot_remove: 'Remove',
+
+    btn_play: 'Play',
+    btn_stop: 'Stop',
+
+    alert_max: 'Maximum 8 chords per progression.',
+    confirm_clear: 'Clear the whole progression?',
+    alert_no_saved: 'No progression saved in Improvise.',
+    alert_incompatible: 'The progression has no compatible chords (CAGED v1 supports major/minor/7/maj7/m7).',
+  }
+});
+
+// Re-render dynamic JS-generated strings when the language changes.
+window.addEventListener('i18n:changed', function () {
+  // Refresh static-but-JS-built button labels across all modes.
+  document.querySelectorAll('[data-q]').forEach(b => { b.textContent = qLabel(b.dataset.q); });
+  document.querySelectorAll('[data-scale]').forEach(b => {
+    b.textContent = b.dataset.scale === 'auto' ? I18N.t('scale_auto') : scLabel(b.dataset.scale);
+  });
+  document.querySelectorAll('[data-mm]').forEach(b => { b.textContent = I18N.t('metromode_' + b.dataset.mm); });
+  m4UpdatePlayLabel();
+  // Re-render the active mode so dynamic text (m1-info, slots, chord names) refreshes.
+  if (st.mode === 'forma') renderModo1();
+  if (st.mode === 'mapa')  renderModo2();
+  if (st.mode === 'zona')  renderModo3();
+  if (st.mode === 'prog')  renderModo4();
+});
+
 switchMode(st.mode);
+I18N.init();
 </script>
 </body>
 </html>

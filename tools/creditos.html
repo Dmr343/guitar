@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créditos y licencias — Herramientas de Guitarra</title>
+  <link rel="stylesheet" href="legal.css">
+</head>
+<body>
+  <div class="wrap">
+    <a href="index.html" class="back-link" data-i18n="back_link">← Volver a las herramientas</a>
+    <h1 data-i18n="page_title">Créditos y licencias</h1>
+    <div class="subtitle" data-i18n="subtitle">Open source · Atribución</div>
+
+    <p data-i18n="intro">El código de estas herramientas es original. El motor de audio y los
+      sonidos instrumentales se apoyan en proyectos de código abierto y bancos
+      de samples de libre distribución. A continuación se reconoce a sus
+      autores, tal y como exigen sus licencias.</p>
+
+    <h2 data-i18n="h2_libs">Librerías</h2>
+    <table>
+      <thead>
+        <tr><th data-i18n="th_project">Proyecto</th><th data-i18n="th_author">Autor</th><th data-i18n="th_license">Licencia</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://github.com/Tonejs/Tone.js" target="_blank" rel="noopener">Tone.js</a></td>
+          <td data-i18n="lib_tone_author">Yotam Mann y colaboradores</td>
+          <td>MIT</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/surikov/webaudiofont" target="_blank" rel="noopener">WebAudioFont</a></td>
+          <td>Sergey Surikov</td>
+          <td>MIT</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 data-i18n="h2_sounds">Sonidos e instrumentos</h2>
+    <table>
+      <thead>
+        <tr><th data-i18n="th_soundbank">Banco de sonidos</th><th data-i18n="th_origin">Origen</th><th data-i18n="th_license2">Licencia</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-i18n="sf_fluid_name">Soundfonts General MIDI (FluidR3 GM)</td>
+          <td data-i18n-html="sf_fluid_origin">Frank Wen — servidos vía <a href="https://github.com/surikov/webaudiofontdata" target="_blank" rel="noopener">webaudiofontdata</a> de Sergey Surikov</td>
+          <td data-i18n="sf_fluid_license">Libre distribución (MIT)</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/nbrosowsky/tonejs-instruments" target="_blank" rel="noopener">tonejs-instruments</a></td>
+          <td data-i18n="sf_tonejs_origin">Nick Brosowsky — samples de Versilian Studios (VSCO2 Community Edition) y University of Iowa Electronic Music Studios</td>
+          <td>MIT · CC0 / <span data-i18n="public_domain">dominio público</span></td>
+        </tr>
+        <tr>
+          <td><a href="https://tonejs.github.io/" target="_blank" rel="noopener">Tone.js drum samples</a></td>
+          <td data-i18n="sf_drums_origin">Proyecto Tone.js</td>
+          <td>MIT</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="card">
+      <p data-i18n-html="note_realtime"><strong>Nota:</strong> los soundfonts y samples se cargan en tiempo real
+      desde los servidores públicos de sus respectivos proyectos cuando eliges un
+      instrumento que los usa. Esta herramienta no redistribuye esos archivos.</p>
+    </div>
+
+    <h2 data-i18n="h2_mit_notice">Aviso de licencia MIT</h2>
+    <div class="card">
+      <p data-i18n="mit_notice_body">Las librerías Tone.js y WebAudioFont se distribuyen bajo licencia MIT,
+      que en resumen permite su uso, copia y modificación conservando el aviso de
+      copyright de sus autores. El texto íntegro de cada licencia está disponible
+      en los repositorios enlazados arriba.</p>
+    </div>
+
+    <h2 data-i18n="h2_project_license">Licencia del proyecto</h2>
+    <div class="card">
+      <p data-i18n-html="project_license_body">El código y el diseño originales de estas herramientas se publican bajo licencia MIT. Puedes ver el texto completo en el archivo <a href="../LICENSE" target="_blank" rel="noopener">LICENSE</a>.</p>
+    </div>
+
+    <p class="updated"><span data-i18n="updated_label">Última actualización:</span> <span data-i18n="updated_date">junio de 2026.</span></p>
+  </div>
+
+  <footer>
+    <a href="index.html" data-i18n="footer_home">Inicio</a> ·
+    <a href="creditos.html" data-i18n="footer_credits">Créditos</a> ·
+    <a href="privacidad.html" data-i18n="footer_privacy">Privacidad</a> ·
+    <a href="aviso-legal.html" data-i18n="footer_legal">Aviso legal</a>
+  </footer>
+
+  <script src="i18n.js"></script>
+  <script>
+    I18N.register({
+      es: {
+        back_link: '← Volver a las herramientas',
+        page_title: 'Créditos y licencias',
+        subtitle: 'Open source · Atribución',
+        intro: 'El código de estas herramientas es original. El motor de audio y los sonidos instrumentales se apoyan en proyectos de código abierto y bancos de samples de libre distribución. A continuación se reconoce a sus autores, tal y como exigen sus licencias.',
+        h2_libs: 'Librerías',
+        th_project: 'Proyecto',
+        th_author: 'Autor',
+        th_license: 'Licencia',
+        lib_tone_author: 'Yotam Mann y colaboradores',
+        h2_sounds: 'Sonidos e instrumentos',
+        th_soundbank: 'Banco de sonidos',
+        th_origin: 'Origen',
+        th_license2: 'Licencia',
+        sf_fluid_name: 'Soundfonts General MIDI (FluidR3 GM)',
+        sf_fluid_origin: 'Frank Wen — servidos vía <a href="https://github.com/surikov/webaudiofontdata" target="_blank" rel="noopener">webaudiofontdata</a> de Sergey Surikov',
+        sf_fluid_license: 'Libre distribución (MIT)',
+        sf_tonejs_origin: 'Nick Brosowsky — samples de Versilian Studios (VSCO2 Community Edition) y University of Iowa Electronic Music Studios',
+        public_domain: 'dominio público',
+        sf_drums_origin: 'Proyecto Tone.js',
+        note_realtime: '<strong>Nota:</strong> los soundfonts y samples se cargan en tiempo real desde los servidores públicos de sus respectivos proyectos cuando eliges un instrumento que los usa. Esta herramienta no redistribuye esos archivos.',
+        h2_mit_notice: 'Aviso de licencia MIT',
+        mit_notice_body: 'Las librerías Tone.js y WebAudioFont se distribuyen bajo licencia MIT, que en resumen permite su uso, copia y modificación conservando el aviso de copyright de sus autores. El texto íntegro de cada licencia está disponible en los repositorios enlazados arriba.',
+        h2_project_license: 'Licencia del proyecto',
+        project_license_body: 'El código y el diseño originales de estas herramientas se publican bajo licencia MIT. Puedes ver el texto completo en el archivo <a href="../LICENSE" target="_blank" rel="noopener">LICENSE</a>.',
+        updated_label: 'Última actualización:',
+        updated_date: 'junio de 2026.',
+        footer_home: 'Inicio',
+        footer_credits: 'Créditos',
+        footer_privacy: 'Privacidad',
+        footer_legal: 'Aviso legal'
+      },
+      en: {
+        back_link: '← Back to the tools',
+        page_title: 'Credits and licenses',
+        subtitle: 'Open source · Attribution',
+        intro: 'The code of these tools is original. The audio engine and instrument sounds rely on open source projects and freely distributable sample libraries. Their authors are credited below, as required by their licenses.',
+        h2_libs: 'Libraries',
+        th_project: 'Project',
+        th_author: 'Author',
+        th_license: 'License',
+        lib_tone_author: 'Yotam Mann and contributors',
+        h2_sounds: 'Sounds and instruments',
+        th_soundbank: 'Sound bank',
+        th_origin: 'Source',
+        th_license2: 'License',
+        sf_fluid_name: 'General MIDI soundfonts (FluidR3 GM)',
+        sf_fluid_origin: 'Frank Wen — served via <a href="https://github.com/surikov/webaudiofontdata" target="_blank" rel="noopener">webaudiofontdata</a> by Sergey Surikov',
+        sf_fluid_license: 'Freely distributable (MIT)',
+        sf_tonejs_origin: 'Nick Brosowsky — samples from Versilian Studios (VSCO2 Community Edition) and the University of Iowa Electronic Music Studios',
+        public_domain: 'public domain',
+        sf_drums_origin: 'Tone.js project',
+        note_realtime: '<strong>Note:</strong> the soundfonts and samples are loaded in real time from the public servers of their respective projects when you choose an instrument that uses them. This tool does not redistribute those files.',
+        h2_mit_notice: 'MIT license notice',
+        mit_notice_body: 'The Tone.js and WebAudioFont libraries are distributed under the MIT license, which in short allows their use, copying and modification as long as the authors’ copyright notice is preserved. The full text of each license is available in the repositories linked above.',
+        h2_project_license: 'Project license',
+        project_license_body: 'The original source code and design of these tools are released under the MIT license. You can read the full text in the <a href="../LICENSE" target="_blank" rel="noopener">LICENSE</a> file.',
+        updated_label: 'Last updated:',
+        updated_date: 'June 2026.',
+        footer_home: 'Home',
+        footer_credits: 'Credits',
+        footer_privacy: 'Privacy',
+        footer_legal: 'Legal notice'
+      }
+    });
+    I18N.init();
+  </script>
+</body>
+</html>

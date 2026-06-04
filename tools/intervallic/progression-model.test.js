@@ -166,6 +166,14 @@
       ctx.model.changeActiveBars(+1);
       T.assertEq(ctx.callCount, 0);
     });
+    T.it('devuelve true si cambió, false en no-op', () => {
+      const ctx = makeModel({ progression: [{root:'C',quality:'maj7',bars:1}], activeIdx: 0 });
+      T.assertEq(ctx.model.changeActiveBars(+1), true);   // 1 → 2
+      T.assertEq(ctx.model.changeActiveBars(-1), true);   // 2 → 1
+      T.assertEq(ctx.model.changeActiveBars(-1), false);  // ya en el piso (1)
+      const empty = makeModel();
+      T.assertEq(empty.model.changeActiveBars(+1), false); // sin acorde activo
+    });
   });
 
   T.describe('ProgressionModel — setActiveChord', () => {

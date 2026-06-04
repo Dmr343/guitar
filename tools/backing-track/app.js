@@ -14,6 +14,9 @@
   const theory = W.GuitarShared && W.GuitarShared.theory;
   const ProgressionModel = W.ProgressionModel;
 
+  const I18N = W.I18N || { t: k => k };
+  const t = k => I18N.t(k);
+
   const el = id => document.getElementById(id);
   const btnPlay = el('btn-play');
   const ctlTempo = el('ctl-tempo');
@@ -54,10 +57,11 @@
   const configEl = el('config');
   const configToggle = el('config-toggle');
 
-  const TIPO_LABEL = {
-    bajo: 'Bajo', acordes: 'Acordes', bateria: 'Batería',
-    percusion: 'Percusión', pad: 'Pad', lead: 'Lead',
-  };
+  // Etiqueta visible de un tipo de pista. La clave (bajo/acordes/…) es
+  // dato interno; el texto mostrado se traduce.
+  function tipoLabel(tipo) {
+    return t('tipo_' + tipo);
+  }
   const PATTERN_TIPO = {
     bajo: 'bass', acordes: 'chord', lead: 'chord',
     bateria: 'drums', percusion: 'perc',
@@ -70,13 +74,11 @@
   // Tipos polifónicos: comparten todos los presets entre sí (un sitar,
   // un pad o un lead se pueden usar en cualquier pista melódica).
   const POLY_TIPOS = ['acordes', 'lead', 'pad'];
+  // Cualidades de acorde. `v` es dato interno; la etiqueta visible se
+  // resuelve por clave de traducción (qual_<v>) en qualityLabel().
   const QUALITIES = [
-    { v: 'major', label: 'Mayor' },
-    { v: 'minor', label: 'menor' },
-    { v: 'dom7',  label: 'Dominante 7' },
-    { v: 'maj7',  label: 'Mayor 7' },
-    { v: 'min7',  label: 'menor 7' },
-    { v: 'm7b5',  label: 'Semidisminuido' },
+    { v: 'major' }, { v: 'minor' }, { v: 'dom7' },
+    { v: 'maj7' }, { v: 'min7' }, { v: 'm7b5' },
   ];
   // Glifos del cifrado jazz (Real Book). Solo display: los datos
   // internos siguen siendo 'maj7', 'm7b5', etc.
@@ -89,10 +91,9 @@
   const OSC_TYPES = ['sine', 'triangle', 'sawtooth', 'square',
     'fatsawtooth', 'fattriangle', 'fatsquare', 'pulse'];
   const FILTER_TYPES = ['lowpass', 'highpass', 'bandpass'];
+  // Efectos. `tipo` es dato interno; la etiqueta se traduce (fx_<tipo>).
   const EFFECTS = [
-    { tipo: 'reverb', label: 'Reverb' },
-    { tipo: 'distortion', label: 'Distorsión' },
-    { tipo: 'chorus', label: 'Chorus' },
+    { tipo: 'reverb' }, { tipo: 'distortion' }, { tipo: 'chorus' },
   ];
 
   function setStatus(text, cls) {
@@ -161,7 +162,7 @@
     const id = factoryProgState.id;
     if (!id) {
       tonalidadSelect.disabled = true;
-      tonalidadSelect.title = 'Cargá una progresión del catálogo para transponerla';
+      tonalidadSelect.title = t('key_title_load');
       btnTonalidadReset.disabled = true;
       return;
     }
@@ -173,13 +174,13 @@
     }
     if (prog.transponible === false) {
       tonalidadSelect.disabled = true;
-      tonalidadSelect.title = 'Esta progresión recorre las 12 tonalidades; no se transpone.';
+      tonalidadSelect.title = t('key_title_all12');
       btnTonalidadReset.disabled = true;
       return;
     }
     tonalidadSelect.disabled = false;
     tonalidadSelect.value = factoryProgState.tonalidad || prog.tonalidad;
-    tonalidadSelect.title = 'Transponer la progresión cargada';
+    tonalidadSelect.title = t('key_title_transpose');
     btnTonalidadReset.disabled = (factoryProgState.tonalidad === prog.tonalidad);
   }
 
@@ -274,7 +275,7 @@
       sel.appendChild(g);
     }
 
-    if (track.customPreset) addOption(sel, '__custom', '(editado)');
+    if (track.customPreset) addOption(sel, '__custom', t('preset_edited'));
     // Las pistas melódicas comparten el pool completo de presets;
     // bajo y batería/percusión usan solo los de su tipo.
     const pool = (POLY_TIPOS.indexOf(track.tipo) >= 0) ? POLY_TIPOS : [track.tipo];
@@ -284,19 +285,17 @@
       usr = usr.concat(BT.userLibrary.byTipo(t));
     });
     const online = p => (p.motor === 'sampler' || p.motor === 'webaudiofont');
-    addGroup('Sintetizados', fac.filter(p => !online(p)));
-    addGroup('Reales (internet)', fac.filter(online));
-    addGroup('Mis presets', usr);
+    addGroup(t('preset_grp_synth'), fac.filter(p => !online(p)));
+    addGroup(t('preset_grp_real'), fac.filter(online));
+    addGroup(t('preset_grp_mine'), usr);
     return sel;
   }
 
-  // Etiquetas visibles para cada categoría del desplegable.
-  const CATEGORIA_LABEL = {
-    estudio: 'Estudio',
-    improvisacion: 'Improvisación',
-    bailable: 'Bailables',
-    experimental: 'Experimental',
-  };
+  // Etiqueta visible de cada categoría del desplegable. La clave
+  // (estudio/…) es dato interno; el texto se traduce (cat_<clave>).
+  function categoriaLabel(cat) {
+    return t('cat_' + cat);
+  }
   // Orden de aparición de los optgroups.
   const CATEGORIA_ORDER = ['estudio', 'improvisacion', 'bailable', 'experimental'];
 
@@ -304,7 +303,7 @@
     progSelect.innerHTML = '';
     const custom = document.createElement('option');
     custom.value = '';
-    custom.textContent = '(personalizada)';
+    custom.textContent = t('prog_custom');
     progSelect.appendChild(custom);
     // Agrupa por categoría preservando el orden interno del array.
     const groups = {};
@@ -318,7 +317,7 @@
       .concat(Object.keys(groups).filter(c => CATEGORIA_ORDER.indexOf(c) < 0));
     ordered.forEach(cat => {
       const og = document.createElement('optgroup');
-      og.label = CATEGORIA_LABEL[cat] || cat;
+      og.label = (CATEGORIA_ORDER.indexOf(cat) >= 0) ? categoriaLabel(cat) : cat;
       groups[cat].forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
@@ -349,7 +348,8 @@
   // Etiqueta de una cualidad en el desplegable: glifo + nombre.
   function qualityLabel(q) {
     const g = QUALITY_GLYPH[q.v] || '';
-    return g ? g + '  ' + q.label : q.label;
+    const label = t('qual_' + q.v);
+    return g ? g + '  ' + label : label;
   }
 
   // ─── Tira de acordes ───
@@ -392,7 +392,7 @@
       const del = document.createElement('span');
       del.className = 'chip-del';
       del.textContent = '×';
-      del.title = 'Quitar acorde';
+      del.title = t('chip_remove_title');
       del.addEventListener('click', (e) => {
         e.stopPropagation();         // no seleccionar al borrar
         model.removeChordAt(i);
@@ -400,7 +400,7 @@
       });
       del.addEventListener('mousedown', (e) => e.stopPropagation()); // no iniciar drag
       chip.appendChild(del);
-      chip.title = 'Clic: seleccionar · Shift+clic: marcar loop · arrastrar: reordenar · Supr/Backspace: borrar';
+      chip.title = t('chip_title');
       chip.addEventListener('click', (e) => {
         if (e.shiftKey) handleLoopClick(i);
         else {
@@ -509,13 +509,20 @@
   function renderEditor() {
     const chord = model.getActive();
     if (!chord) { chordEditor.hidden = true; chordEditor.innerHTML = ''; return; }
+    // Durante el playback la selección sigue al acorde que suena, lo que
+    // dispara onChange → renderEditor en cada compás. Si el usuario tiene un
+    // <select> del editor abierto/enfocado, no reconstruir: el innerHTML=''
+    // destruiría el control a mitad de uso (cierra el dropdown, pierde el foco
+    // y descarta el cambio en curso). Se reconstruye al soltar el control.
+    const ae = document.activeElement;
+    if (ae && ae.tagName === 'SELECT' && chordEditor.contains(ae)) return;
     chordEditor.hidden = false;
     chordEditor.innerHTML = '';
     const idx = model.activeIdx;
 
     const lbl = document.createElement('span');
     lbl.className = 'editor-label';
-    lbl.textContent = 'Editar acorde ' + (idx + 1) + ':';
+    lbl.textContent = t('editor_chord') + ' ' + (idx + 1) + ':';
     chordEditor.appendChild(lbl);
 
     // Helper: cualquier edición desde este editor (root, quality, compases,
@@ -541,25 +548,27 @@
 
     const barsLbl = document.createElement('span');
     barsLbl.className = 'editor-label';
-    barsLbl.textContent = 'Compases';
+    barsLbl.textContent = t('bars_label');
     chordEditor.appendChild(barsLbl);
 
     const stepper = document.createElement('div');
     stepper.className = 'bars-stepper';
+    // Los ± solo desvinculan del catálogo si changeActiveBars cambió algo;
+    // en el tope (1 u 8 compases) es no-op y no debe romper la transposición.
     stepper.appendChild(mkBtn('track-btn', '−',
-      () => editFromEditor(() => model.changeActiveBars(-1))));
+      () => { if (model.changeActiveBars(-1)) unbindFromCatalog(); }));
     const val = document.createElement('span');
     val.className = 'value';
     val.textContent = String(chord.bars);
     stepper.appendChild(val);
     stepper.appendChild(mkBtn('track-btn', '+',
-      () => editFromEditor(() => model.changeActiveBars(1))));
+      () => { if (model.changeActiveBars(1)) unbindFromCatalog(); }));
     chordEditor.appendChild(stepper);
 
     // El reordenamiento de acordes se hace arrastrando los chips.
     const rm = mkBtn('track-btn danger', '✕',
       () => editFromEditor(() => model.removeChordAt(idx)));
-    rm.title = 'Quitar acorde';
+    rm.title = t('chip_remove_title');
     chordEditor.appendChild(rm);
   }
 
@@ -601,7 +610,7 @@
     const handle = document.createElement('span');
     handle.className = 'track-drag';
     handle.textContent = '⠿';
-    handle.title = 'Arrastrar para reordenar';
+    handle.title = t('track_drag_title');
     handle.addEventListener('mousedown', () => { row.draggable = true; });
     row.addEventListener('dragstart', (e) => {
       dragTrackSrc = track.id;
@@ -632,7 +641,7 @@
 
     const mute = document.createElement('button');
     mute.className = 'track-mute';
-    mute.title = 'Silenciar / activar';
+    mute.title = t('track_mute_title');
     mute.textContent = '♪';
     mute.addEventListener('click', () => {
       const enabled = !engine.getTracks().find(t => t.id === track.id).enabled;
@@ -644,7 +653,7 @@
 
     const tipo = document.createElement('span');
     tipo.className = 'track-tipo';
-    tipo.textContent = TIPO_LABEL[track.tipo] || track.tipo;
+    tipo.textContent = tipoLabel(track.tipo);
     row.appendChild(tipo);
 
     // Preset, agrupado por origen (synth / samples / usuario).
@@ -671,7 +680,7 @@
       const spacer = document.createElement('span');
       spacer.className = 'track-pattern';
       spacer.style.opacity = '0.4';
-      spacer.textContent = '(sostenido)';
+      spacer.textContent = t('track_sustained');
       row.appendChild(spacer);
     }
 
@@ -680,7 +689,7 @@
     vol.className = 'track-vol';
     vol.min = '0'; vol.max = '100'; vol.step = '1';
     vol.value = String(Math.round((track.volumen != null ? track.volumen : 0.8) * 100));
-    vol.title = 'Volumen de la pista';
+    vol.title = t('track_vol_title');
     vol.addEventListener('input',
       () => engine.updateTrack(track.id, { volumen: Number(vol.value) / 100 }));
     row.appendChild(vol);
@@ -688,7 +697,7 @@
     // Editar sonido — melódicos editan osc/env/filter; percusión/batería
     // editan vol/tune por pieza del kit. Ambos comparten efectos.
     const gear = mkBtn('track-btn', '⚙', () => openEditor(track.id));
-    gear.title = 'Editar sonido';
+    gear.title = t('track_edit_sound_title');
     row.appendChild(gear);
 
     const rm = mkBtn('track-btn danger', '✕', () => {
@@ -696,7 +705,7 @@
       if (editing && editing.trackId === track.id) closeEditor();
       refreshTracks();
     });
-    rm.title = 'Quitar pista';
+    rm.title = t('track_remove_title');
     row.appendChild(rm);
 
     return row;
@@ -708,7 +717,7 @@
     if (!tracks.length) {
       const hint = document.createElement('div');
       hint.className = 'empty-hint';
-      hint.textContent = 'Sin pistas. Agregá un instrumento para empezar.';
+      hint.textContent = t('tracks_empty');
       tracksEl.appendChild(hint);
       return;
     }
@@ -724,7 +733,7 @@
     // pierde la sección de Piezas del kit.
     if (tipo === 'bateria') {
       return {
-        id: 'desde-cero', nombre: 'Nuevo kit', tipo: tipo, motor: 'synth',
+        id: 'desde-cero', nombre: t('preset_new_kit'), tipo: tipo, motor: 'synth',
         config: {
           pieces: {
             kick:   { engine: 'membrane', note: 'C1',
@@ -742,7 +751,7 @@
     }
     if (tipo === 'percusion') {
       return {
-        id: 'desde-cero', nombre: 'Nuevo kit', tipo: tipo, motor: 'synth',
+        id: 'desde-cero', nombre: t('preset_new_kit'), tipo: tipo, motor: 'synth',
         config: {
           pieces: {
             bongo_hi: { engine: 'membrane', note: 'A3',
@@ -759,7 +768,7 @@
       };
     }
     return {
-      id: 'desde-cero', nombre: 'Nuevo sonido', tipo: tipo, motor: 'synth',
+      id: 'desde-cero', nombre: t('preset_new_sound'), tipo: tipo, motor: 'synth',
       config: {
         oscillator: { type: 'sine' },
         envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 },
@@ -842,12 +851,12 @@
 
     const title = document.createElement('div');
     title.className = 'pe-title';
-    title.textContent = 'Editar sonido — ' + (TIPO_LABEL[track.tipo] || track.tipo);
+    title.textContent = t('pe_title') + ' — ' + tipoLabel(track.tipo);
     presetEditorEl.appendChild(title);
     const sub = document.createElement('div');
     sub.className = 'pe-sub';
-    sub.textContent = 'Base: ' + (editing.preset.nombre || '—') +
-      '. Los cambios afectan solo a esta pista hasta que guardes.';
+    sub.textContent = t('pe_base') + ' ' + (editing.preset.nombre || '—') +
+      '. ' + t('pe_base_note');
     presetEditorEl.appendChild(sub);
 
     const isPercusion = (track.tipo === 'percusion' || track.tipo === 'bateria');
@@ -860,16 +869,14 @@
     if (isSampled && !isPercusion) {
       const note = document.createElement('div');
       note.className = 'pe-notice';
-      note.textContent = 'Este preset usa samples reales — Forma de onda y ' +
-        'Envolvente no afectan al sonido (vienen "horneados" en la grabación). ' +
-        'Los efectos de abajo sí aplican.';
+      note.textContent = t('pe_sampled_notice');
       presetEditorEl.appendChild(note);
     }
 
     if (isPercusion) {
       // Editor de piezas del kit: vol y tune por lane.
       const pieces = cfg.pieces || (cfg.pieces = {});
-      presetEditorEl.appendChild(peGroupLabel('Piezas del kit'));
+      presetEditorEl.appendChild(peGroupLabel(t('pe_kit_pieces')));
       Object.keys(pieces).forEach(lane => {
         const piece = pieces[lane];
         if (!piece) return;
@@ -883,14 +890,14 @@
         presetEditorEl.appendChild(header);
 
         // Volumen 0..100%
-        presetEditorEl.appendChild(peParamRow('Volumen', 0, 1, 0.01,
+        presetEditorEl.appendChild(peParamRow(t('pe_volume'), 0, 1, 0.01,
           piece.vol, v => Math.round(v * 100) + '%',
           v => { piece.vol = v; }));
 
         // Tune solo para engines con pitch.
         if (piece.engine === 'membrane' || piece.engine === 'sample' ||
             piece.engine === 'waf-drum') {
-          presetEditorEl.appendChild(peParamRow('Tono', -12, 12, 1,
+          presetEditorEl.appendChild(peParamRow(t('pe_tune'), -12, 12, 1,
             piece.tune,
             v => (v > 0 ? '+' : '') + Math.round(v) + ' st',
             v => { piece.tune = Math.round(v); }));
@@ -898,14 +905,14 @@
       });
     } else {
       // Oscilador (solo para melódicos synth — WAF y sampler lo ignoran).
-      presetEditorEl.appendChild(peGroupLabel('Oscilador'));
-      presetEditorEl.appendChild(peSelectRow('Forma de onda', OSC_TYPES,
+      presetEditorEl.appendChild(peGroupLabel(t('pe_oscillator')));
+      presetEditorEl.appendChild(peSelectRow(t('pe_waveform'), OSC_TYPES,
         (cfg.oscillator && cfg.oscillator.type) || 'sine', v => {
           cfg.oscillator = { type: v };
         }));
 
       // Envolvente ADSR
-      presetEditorEl.appendChild(peGroupLabel('Envolvente (ADSR)'));
+      presetEditorEl.appendChild(peGroupLabel(t('pe_envelope')));
       const secs = v => v.toFixed(2) + ' s';
       presetEditorEl.appendChild(peParamRow('Attack', 0, 2, 0.01,
         env.attack != null ? env.attack : 0.01, secs, v => { env.attack = v; }));
@@ -921,22 +928,22 @@
       if (track.tipo === 'bajo') {
         const filt = cfg.filter || (cfg.filter = { type: 'lowpass', Q: 1 });
         const fenv = cfg.filterEnvelope || (cfg.filterEnvelope = {});
-        presetEditorEl.appendChild(peGroupLabel('Filtro'));
-        presetEditorEl.appendChild(peSelectRow('Tipo', FILTER_TYPES,
+        presetEditorEl.appendChild(peGroupLabel(t('pe_filter')));
+        presetEditorEl.appendChild(peSelectRow(t('pe_type'), FILTER_TYPES,
           filt.type || 'lowpass', v => { filt.type = v; }));
-        presetEditorEl.appendChild(peParamRow('Resonancia (Q)', 0, 12, 0.1,
+        presetEditorEl.appendChild(peParamRow(t('pe_resonance'), 0, 12, 0.1,
           filt.Q != null ? filt.Q : 1, v => v.toFixed(1), v => { filt.Q = v; }));
-        presetEditorEl.appendChild(peParamRow('Frecuencia base', 40, 1200, 10,
+        presetEditorEl.appendChild(peParamRow(t('pe_base_freq'), 40, 1200, 10,
           fenv.baseFrequency != null ? fenv.baseFrequency : 200,
           v => Math.round(v) + ' Hz', v => { fenv.baseFrequency = v; }));
-        presetEditorEl.appendChild(peParamRow('Octavas', 0, 6, 0.1,
+        presetEditorEl.appendChild(peParamRow(t('pe_octaves'), 0, 6, 0.1,
           fenv.octaves != null ? fenv.octaves : 3, v => v.toFixed(1),
           v => { fenv.octaves = v; }));
       }
     }
 
     // Efectos
-    presetEditorEl.appendChild(peGroupLabel('Efectos'));
+    presetEditorEl.appendChild(peGroupLabel(t('pe_effects')));
     EFFECTS.forEach(fx => {
       const current = (editing.preset.efectos || []).find(e => e.tipo === fx.tipo);
       const row = document.createElement('div');
@@ -945,7 +952,7 @@
       chk.type = 'checkbox';
       chk.checked = !!current;
       const lbl = document.createElement('label');
-      lbl.textContent = fx.label;
+      lbl.textContent = t('fx_' + fx.tipo);
       lbl.style.minWidth = '80px';
       const range = fld('input');
       range.type = 'range';
@@ -996,34 +1003,34 @@
     // Restablecer — vuelve al preset de fábrica original (descarta
     // todas las ediciones de esta sesión). Es lo que el usuario suele
     // querer cuando piensa "resetear".
-    const restore = mkBtn('btn btn-secondary', 'Restablecer', () => {
+    const restore = mkBtn('btn btn-secondary', t('pe_restore'), () => {
       const factory = BT.factoryPresets.byId(track.presetId);
       if (!factory) return;
       editing.preset = BT.factoryPresets.clone(factory);
       applyEditing();
       renderPresetEditor();
     });
-    restore.title = 'Volver al preset de fábrica (descartar ediciones)';
+    restore.title = t('pe_restore_title');
     actions.appendChild(restore);
 
     // Desde cero — crea un preset vacío genérico (synth simple para
     // melódicos, kit básico para percusión). No restaura el original.
-    const scratch = mkBtn('btn btn-secondary', 'Desde cero', () => {
+    const scratch = mkBtn('btn btn-secondary', t('pe_scratch'), () => {
       editing.preset = blankPreset(track.tipo);
       applyEditing();
       renderPresetEditor();
     });
-    scratch.title = 'Crear un preset vacío (no es lo mismo que restablecer)';
+    scratch.title = t('pe_scratch_title');
     actions.appendChild(scratch);
 
     const nameInput = fld('input');
     nameInput.type = 'text';
-    nameInput.placeholder = 'Nombre del preset';
+    nameInput.placeholder = t('pe_name_ph');
     nameInput.value = '';
     actions.appendChild(nameInput);
 
-    const save = mkBtn('btn btn-primary', 'Guardar como nuevo', () => {
-      const nombre = nameInput.value.trim() || 'Mi sonido';
+    const save = mkBtn('btn btn-primary', t('pe_save_as_new'), () => {
+      const nombre = nameInput.value.trim() || t('pe_default_name');
       const toSave = JSON.parse(JSON.stringify(editing.preset));
       toSave.nombre = nombre;
       toSave.tipo = track.tipo;
@@ -1035,50 +1042,50 @@
     });
     actions.appendChild(save);
 
-    actions.appendChild(mkBtn('btn btn-secondary', 'Cerrar', closeEditor));
+    actions.appendChild(mkBtn('btn btn-secondary', t('pe_close'), closeEditor));
     presetEditorEl.appendChild(actions);
   }
 
   // ─── Modo arreglo ───
-  const LANE_LABEL = {
-    main: 'Notas', kick: 'Bombo', snare: 'Caja', hat: 'Hi-hat',
-    cymbal: 'Platillo', bongo_hi: 'Bongó ↑', bongo_lo: 'Bongó ↓',
-    conga: 'Conga', shaker: 'Shaker',
-  };
-
-  // Etiquetas de instrumentos del GM drum kit por midi note. Permite que
-  // el editor de kit muestre "Claves" en lugar de "Shaker" cuando la lane
-  // está cargada con un waf-drum específico.
-  const WAF_DRUM_LABEL = {
-    35: 'Bombo acústico', 36: 'Bombo', 37: 'Sidestick', 38: 'Caja',
-    39: 'Palmas', 40: 'Caja eléctrica', 41: 'Tom piso', 42: 'Hi-hat cerrado',
-    43: 'Tom piso alto', 44: 'Hi-hat pedal', 45: 'Tom bajo', 46: 'Hi-hat abierto',
-    47: 'Tom medio bajo', 48: 'Tom medio alto', 49: 'Crash 1', 50: 'Tom alto',
-    51: 'Ride 1', 52: 'Chinese', 53: 'Ride bell', 54: 'Pandereta',
-    55: 'Splash', 56: 'Cencerro', 57: 'Crash 2', 58: 'Vibraslap',
-    59: 'Ride 2', 60: 'Bongó ↑', 61: 'Bongó ↓',
-    62: 'Conga muda', 63: 'Conga ↑', 64: 'Conga ↓',
-    65: 'Timbal ↑', 66: 'Timbal ↓', 67: 'Agogo ↑', 68: 'Agogo ↓',
-    69: 'Cabasa', 70: 'Maracas', 71: 'Silbato ↑', 72: 'Silbato ↓',
-    73: 'Güiro corto', 74: 'Güiro largo', 75: 'Claves',
-    76: 'Wood block ↑', 77: 'Wood block ↓',
-    78: 'Cuica muda', 79: 'Cuica abierta',
-    80: 'Triángulo mudo', 81: 'Triángulo abierto',
-  };
-  function pieceLabel(lane, piece) {
-    if (piece && piece.engine === 'waf-drum' && WAF_DRUM_LABEL[piece.note]) {
-      return WAF_DRUM_LABEL[piece.note];
-    }
-    return LANE_LABEL[lane] || lane;
+  // Lanes del kit / secuenciador. Las claves (main/kick/…) son dato
+  // interno; la etiqueta visible se traduce (lane_<clave>).
+  const LANE_KEYS = ['main', 'kick', 'snare', 'hat', 'cymbal',
+    'bongo_hi', 'bongo_lo', 'conga', 'shaker'];
+  function laneLabel(lane) {
+    return (LANE_KEYS.indexOf(lane) >= 0) ? t('lane_' + lane) : lane;
   }
-  const VOICING_OPTS = [
-    { id: 'close', nombre: 'Cerrado' },
-    { id: 'open', nombre: 'Abierto (drop-2)' },
-  ];
-  const INVERSION_OPTS = [
-    { id: '0', nombre: 'Fundamental' }, { id: '1', nombre: '1ª inversión' },
-    { id: '2', nombre: '2ª inversión' }, { id: '3', nombre: '3ª inversión' },
-  ];
+
+  // Instrumentos del GM drum kit por midi note. La nota MIDI es dato;
+  // la etiqueta visible se traduce (waf_<nota>). Permite que el editor
+  // de kit muestre "Claves" en vez de "Shaker" para un waf-drum dado.
+  const WAF_DRUM_NOTES = [
+    35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,
+    59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81];
+  function pieceLabel(lane, piece) {
+    if (piece && piece.engine === 'waf-drum' &&
+        WAF_DRUM_NOTES.indexOf(piece.note) >= 0) {
+      return t('waf_' + piece.note);
+    }
+    return laneLabel(lane);
+  }
+  // Opciones de voicing / inversión / octava. El `id` es dato interno;
+  // el `nombre` visible se resuelve por traducción al construir el select.
+  function voicingOpts() {
+    return [
+      { id: 'close', nombre: t('voicing_close') },
+      { id: 'open', nombre: t('voicing_open') },
+    ];
+  }
+  function inversionOpts() {
+    return [
+      { id: '0', nombre: t('inversion_root') }, { id: '1', nombre: t('inversion_1') },
+      { id: '2', nombre: t('inversion_2') }, { id: '3', nombre: t('inversion_3') },
+    ];
+  }
+  // Etiqueta "Oct. N" para los selectores de octava.
+  function octaveOpts(nums) {
+    return nums.map(n => ({ id: String(n), nombre: t('octave_abbr') + ' ' + n }));
+  }
   let hideIndicator = false;
 
   function cycleCell(pattern, lane, step) {
@@ -1103,7 +1110,7 @@
     if (!pattern) {
       const note = document.createElement('div');
       note.className = 'empty-hint';
-      note.textContent = '(acorde sostenido — sin patrón rítmico)';
+      note.textContent = t('seq_sustained');
       wrap.appendChild(note);
       return wrap;
     }
@@ -1112,7 +1119,7 @@
       laneRow.className = 'seq-lane';
       const label = document.createElement('span');
       label.className = 'seq-lane-label';
-      label.textContent = LANE_LABEL[lane] || lane;
+      label.textContent = laneLabel(lane);
       laneRow.appendChild(label);
       const cells = document.createElement('div');
       cells.className = 'seq-cells';
@@ -1142,7 +1149,7 @@
     head.className = 'arrange-track-head';
     const name = document.createElement('span');
     name.className = 'track-tipo';
-    name.textContent = TIPO_LABEL[track.tipo] || track.tipo;
+    name.textContent = tipoLabel(track.tipo);
     head.appendChild(name);
 
     // Variante A / B del patrón.
@@ -1166,20 +1173,18 @@
     // Voicings (acordes / lead / pad) u octava (bajo).
     if (track.tipo === 'bajo') {
       head.appendChild(makeArrangeSelect(
-        [{ id: '1', nombre: 'Oct. 1' }, { id: '2', nombre: 'Oct. 2' },
-         { id: '3', nombre: 'Oct. 3' }],
+        octaveOpts([1, 2, 3]),
         String(track.octave != null ? track.octave : 2),
         v => engine.updateTrack(track.id, { octave: Number(v) })));
     } else if (['acordes', 'lead', 'pad'].indexOf(track.tipo) >= 0) {
-      head.appendChild(makeArrangeSelect(VOICING_OPTS,
+      head.appendChild(makeArrangeSelect(voicingOpts(),
         track.voicing || 'close',
         v => engine.updateTrack(track.id, { voicing: v })));
-      head.appendChild(makeArrangeSelect(INVERSION_OPTS,
+      head.appendChild(makeArrangeSelect(inversionOpts(),
         String(track.inversion || 0),
         v => engine.updateTrack(track.id, { inversion: Number(v) })));
       head.appendChild(makeArrangeSelect(
-        [{ id: '2', nombre: 'Oct. 2' }, { id: '3', nombre: 'Oct. 3' },
-         { id: '4', nombre: 'Oct. 4' }],
+        octaveOpts([2, 3, 4]),
         String(track.octave != null ? track.octave : 3),
         v => engine.updateTrack(track.id, { octave: Number(v) })));
     }
@@ -1215,16 +1220,16 @@
     // Groove de estilo — aplica patrones + tempo a todas las pistas.
     const grLabel0 = document.createElement('div');
     grLabel0.className = 'section-label';
-    grLabel0.textContent = 'Groove de estilo';
+    grLabel0.textContent = t('arr_style_groove');
     arrangePanel.appendChild(grLabel0);
     const grRow = document.createElement('div');
     grRow.className = 'control-row';
     const grCap = document.createElement('label');
-    grCap.textContent = 'Aplicar';
+    grCap.textContent = t('arr_apply');
     const grSel = fld('select');
     const grPlaceholder = document.createElement('option');
     grPlaceholder.value = '';
-    grPlaceholder.textContent = '(elegir un groove…)';
+    grPlaceholder.textContent = t('arr_choose_groove');
     grSel.appendChild(grPlaceholder);
     (BT.factoryGrooves ? BT.factoryGrooves.GROOVES : []).forEach(g => {
       const opt = document.createElement('option');
@@ -1244,12 +1249,12 @@
     // Humanización (intensidad global).
     const humLabel = document.createElement('div');
     humLabel.className = 'section-label';
-    humLabel.textContent = 'Humanización';
+    humLabel.textContent = t('arr_humanize');
     arrangePanel.appendChild(humLabel);
     const humRow = document.createElement('div');
     humRow.className = 'control-row';
     const humCap = document.createElement('label');
-    humCap.textContent = 'Intensidad';
+    humCap.textContent = t('arr_intensity');
     const humSlider = fld('input');
     humSlider.type = 'range';
     humSlider.min = '0'; humSlider.max = '100'; humSlider.step = '1';
@@ -1270,7 +1275,7 @@
     const hideRow = document.createElement('div');
     hideRow.className = 'control-row';
     const hideCap = document.createElement('label');
-    hideCap.textContent = 'Ocultar acorde';
+    hideCap.textContent = t('arr_hide_chord');
     const hideChk = fld('input');
     hideChk.type = 'checkbox';
     hideChk.checked = hideIndicator;
@@ -1288,13 +1293,13 @@
     // Grooves y voicings por pista.
     const grLabel = document.createElement('div');
     grLabel.className = 'section-label';
-    grLabel.textContent = 'Groove y voicings por pista';
+    grLabel.textContent = t('arr_groove_voicings');
     arrangePanel.appendChild(grLabel);
     const tracks = engine.getTracks();
     if (!tracks.length) {
       const hint = document.createElement('div');
       hint.className = 'empty-hint';
-      hint.textContent = 'Agregá pistas para editar sus grooves.';
+      hint.textContent = t('arr_add_tracks_hint');
       arrangePanel.appendChild(hint);
     } else {
       tracks.forEach(t => arrangePanel.appendChild(makeArrangeTrack(t)));
@@ -1350,7 +1355,13 @@
     if (snap.factoryProg && snap.factoryProg.id &&
         BT.factoryProgressions.byId(snap.factoryProg.id)) {
       loaded = loadFactoryProgression(snap.factoryProg.id, snap.factoryProg.tonalidad);
-      if (loaded) progSelect.value = snap.factoryProg.id;
+      if (loaded) {
+        progSelect.value = snap.factoryProg.id;
+        // loadFactoryProgression aplica el tempo NATIVO del catálogo, pisando
+        // el tempo guardado que engine.restore() ya había restaurado. Lo
+        // reponemos para no perder el BPM customizado al reabrir el proyecto.
+        if (Number.isFinite(snap.tempo)) engine.setTempo(snap.tempo);
+      }
     }
     if (!loaded) {
       // Formato viejo o progresión personalizada: cargar acordes inline.
@@ -1371,7 +1382,7 @@
     if (!list.length) {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = '(sin proyectos guardados)';
+      opt.textContent = t('proj_none');
       projSelect.appendChild(opt);
       return;
     }
@@ -1411,13 +1422,16 @@
     configToggle.setAttribute('aria-expanded', String(!collapsed));
   }
   // Refleja el estado de reproducción en la UI (lo dispara onTransport).
+  function modeLabel(mode) {
+    return (mode === 'arreglo') ? t('mode_arrange') : t('mode_practice');
+  }
   function setPlayUI(playing) {
-    btnPlay.textContent = playing ? '■  Detener' : '▶  Play';
+    btnPlay.textContent = playing ? t('btn_stop') : t('btn_play');
     btnPlay.classList.toggle('is-playing', playing);
     document.body.classList.toggle('playing', playing);   // agranda el panel
     setConfigCollapsed(playing);   // la configuración se pliega al tocar
-    if (playing) setStatus('Sonando — ' + engine.getMode(), 'playing');
-    else setStatus('Detenido');
+    if (playing) setStatus(t('status_playing') + ' — ' + modeLabel(engine.getMode()), 'playing');
+    else setStatus(t('status_stopped'));
   }
 
   // Alterna reproducción / parada. Disparado por el botón y por la
@@ -1428,7 +1442,7 @@
     try {
       await engine.play();
     } catch (err) {
-      setStatus('Error al iniciar el audio: ' + err.message, 'error');
+      setStatus(t('status_audio_error') + ' ' + err.message, 'error');
     }
   }
 
@@ -1471,8 +1485,8 @@
       case 'Escape': if (engine.isPlaying()) engine.stop(); break;
       case 'ArrowLeft':  navChord(-1); e.preventDefault(); break;
       case 'ArrowRight': navChord(1);  e.preventDefault(); break;
-      case 'ArrowUp':    model.changeActiveBars(1);  unbindFromCatalog(); e.preventDefault(); break;
-      case 'ArrowDown':  model.changeActiveBars(-1); unbindFromCatalog(); e.preventDefault(); break;
+      case 'ArrowUp':    if (model.changeActiveBars(1))  unbindFromCatalog(); e.preventDefault(); break;
+      case 'ArrowDown':  if (model.changeActiveBars(-1)) unbindFromCatalog(); e.preventDefault(); break;
       case 'Delete':
       case 'Backspace': {
         // Borra el acorde seleccionado. Re-selecciona el anterior (o el
@@ -1538,17 +1552,17 @@
 
   // Proyectos
   btnSaveProj.addEventListener('click', function () {
-    const nombre = projName.value.trim() || 'Proyecto';
+    const nombre = projName.value.trim() || t('proj_default_name');
     storage.saveProject(nombre, takeSnapshot());
     refreshProjects();
     projSelect.value = '';
-    setStatus('Proyecto "' + nombre + '" guardado');
+    setStatus(t('status_proj_saved_a') + ' "' + nombre + '" ' + t('status_proj_saved_b'));
   });
   btnLoadProj.addEventListener('click', function () {
     const id = projSelect.value;
     if (!id) return;
     const snap = storage.loadProject(id);
-    if (snap) { restoreSnapshot(snap); setStatus('Proyecto cargado'); }
+    if (snap) { restoreSnapshot(snap); setStatus(t('status_proj_loaded')); }
   });
   btnDelProj.addEventListener('click', function () {
     const id = projSelect.value;
@@ -1571,9 +1585,9 @@
       if (ok) {
         refreshProjects();
         refreshTracks();
-        setStatus('Librería y proyectos importados');
+        setStatus(t('status_imported'));
       } else {
-        setStatus('Archivo JSON inválido', 'error');
+        setStatus(t('status_invalid_json'), 'error');
       }
     };
     reader.readAsText(file);
@@ -1587,10 +1601,10 @@
   // acumulación; si se estabiliza, está sano.
   let voiceMax = 0;
   engine.onTick(function (tick) {
-    if (!tick) { diagVoices.textContent = 'Voces activas: —'; voiceMax = 0; return; }
+    if (!tick) { diagVoices.textContent = t('diag_voices') + ' —'; voiceMax = 0; return; }
     const n = engine.getActiveVoices();
     if (n > voiceMax) voiceMax = n;
-    diagVoices.textContent = 'Voces activas: ' + n + ' · máx ' + voiceMax;
+    diagVoices.textContent = t('diag_voices') + ' ' + n + ' · ' + t('diag_max') + ' ' + voiceMax;
   });
   // Autoguardado de la sesión: debounced, para no escribir en
   // localStorage en cada tick de un slider (eso traba el audio).
@@ -1642,5 +1656,21 @@
   syncControls();
   subdivSelect.value = engine.getSubdivision();
   buildBeatMeter(SUBDIV_COUNT[engine.getSubdivision()] || 4);
-  setStatus(handoff ? 'Progresión recibida del Intervalic Atlas' : 'Detenido');
+  setStatus(handoff ? t('status_handoff') : t('status_stopped'));
+
+  // Re-render dinámico al cambiar de idioma: las partes generadas por JS
+  // (acordes, editor, pistas, modo arreglo, controles de tonalidad y el
+  // botón Play) se reconstruyen para aplicar el nuevo idioma. Los textos
+  // estáticos del HTML los refresca el propio motor i18n.
+  W.addEventListener('i18n:changed', function () {
+    initProgSelect();
+    progSelect.value = factoryProgState.id || '';
+    fillSelect(newQuality, QUALITIES, 'v', qualityLabel);
+    syncTonalidadControls();
+    renderChords();
+    renderEditor();
+    renderHeroChords(engine.getActiveChordIndex());
+    refreshTracks();
+    setPlayUI(engine.isPlaying());
+  });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -196,13 +196,18 @@
     return true;
   };
 
+  // Devuelve true si efectivamente cambió los compases; false si fue un no-op
+  // (sin acorde activo, o ya en el límite de clampBars). Los callers usan ese
+  // booleano para no ejecutar efectos colaterales en un no-op (ej. desvincular
+  // del catálogo al apretar ↑/↓ en un acorde ya en el tope).
   ProgressionModel.prototype.changeActiveBars = function (delta) {
     const c = this._progression[this._activeIdx];
-    if (!c) return;
+    if (!c) return false;
     const next = clampBars(c.bars + delta);
-    if (next === c.bars) return;
+    if (next === c.bars) return false;
     c.bars = next;
     this._notify();
+    return true;
   };
 
   ProgressionModel.prototype.setActiveChord = function (idx) {

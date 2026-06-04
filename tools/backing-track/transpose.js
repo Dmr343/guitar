@@ -89,6 +89,11 @@
   function gradoSemitone(grado, modo) {
     const p = parseGrado(grado);
     if (!p) return -1;
+    // Un dominante secundario alterado (ej. 'bVII/V', '#IV/ii') es notación
+    // ambigua: no hay convención definida para cómo aplicar el bemol/sostenido
+    // sobre la quinta del grado destino. Se rechaza en vez de realizarlo con
+    // una interpretación arbitraria.
+    if (p.secondary && p.alteration !== 0) return -1;
     const map = DEGREE_SEMITONE[modo] || DEGREE_SEMITONE.major;
 
     let base;

@@ -163,6 +163,42 @@
       color: var(--text-dim);
       letter-spacing: 0.1em;
     }
+    .footer-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      background: var(--surface);
+      color: var(--text-mid);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .ghost-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      transform: translateY(-2px);
+    }
+    .footer-links { margin-bottom: 16px; }
+    .footer-links a {
+      color: var(--text-mid);
+      text-decoration: none;
+      margin: 0 9px;
+      letter-spacing: 0.06em;
+    }
+    .footer-links a:hover { color: var(--gold); }
 
     @media (prefers-reduced-motion: reduce) {
       .card { animation: none; opacity: 1; transform: none; }
@@ -172,9 +208,9 @@
 <body>
 
   <div class="header">
-    <div class="header-label">Herramientas interactivas</div>
-    <h1>Herramientas de Guitarra</h1>
-    <p>Una colección de apps para practicar el mástil, las escalas, la armonía y el oído. Usalas en el orden que quieras.</p>
+    <div class="header-label" data-i18n="header_label">Herramientas interactivas</div>
+    <h1 data-i18n="header_title">Herramientas de Guitarra</h1>
+    <p data-i18n="header_desc">Una colección de apps para practicar el mástil, las escalas, la armonía y el oído. Usalas en el orden que quieras.</p>
   </div>
 
   <div class="grid">
@@ -182,71 +218,149 @@
     <a href="diapason.html" class="card" style="--accent: var(--c-diapason);">
       <div class="card-head">
         <div class="card-icon">🎸</div>
-        <div class="card-cat">Mástil</div>
+        <div class="card-cat" data-i18n="cat_mastil">Mástil</div>
       </div>
-      <div class="card-title">Diapasón Interactivo</div>
-      <div class="card-desc">Aprendé las 12 notas en todo el mástil. Seleccioná una nota y mirá todas sus posiciones. Modo ejercicio con metrónomo.</div>
+      <div class="card-title" data-i18n="card_diapason_title">Diapasón Interactivo</div>
+      <div class="card-desc" data-i18n="card_diapason_desc">Aprendé las 12 notas en todo el mástil. Seleccioná una nota y mirá todas sus posiciones. Modo ejercicio con metrónomo.</div>
     </a>
 
     <a href="escalas.html" class="card" style="--accent: var(--c-escalas);">
       <div class="card-head">
         <div class="card-icon">🎵</div>
-        <div class="card-cat">Escalas</div>
+        <div class="card-cat" data-i18n="cat_escalas">Escalas</div>
       </div>
-      <div class="card-title">Escalas</div>
-      <div class="card-desc">Visualizá patrones de escalas, conectá posiciones en el mástil y poné a prueba lo que sabés con el modo quiz.</div>
+      <div class="card-title" data-i18n="card_escalas_title">Escalas</div>
+      <div class="card-desc" data-i18n="card_escalas_desc">Visualizá patrones de escalas, conectá posiciones en el mástil y poné a prueba lo que sabés con el modo quiz.</div>
     </a>
 
     <a href="acordes.html" class="card" style="--accent: var(--c-acordes);">
       <div class="card-head">
         <div class="card-icon">🎸</div>
-        <div class="card-cat">Armonía</div>
+        <div class="card-cat" data-i18n="cat_armonia">Armonía</div>
       </div>
-      <div class="card-title">CAGED — 5 Formas</div>
-      <div class="card-desc">Sistema CAGED en 4 modos: forma movible con cejilla, las 5 formas de un acorde, zona de improvisación con chord tones por función, y progresión de cambios con metrónomo.</div>
+      <div class="card-title" data-i18n="card_caged_title">CAGED — 5 Formas</div>
+      <div class="card-desc" data-i18n="card_caged_desc">Sistema CAGED en 4 modos: forma movible con cejilla, las 5 formas de un acorde, zona de improvisación con chord tones por función, y progresión de cambios con metrónomo.</div>
     </a>
 
     <a href="intervallic.html" class="card" style="--accent: var(--c-atlas);">
       <div class="card-head">
         <div class="card-icon">🗺️</div>
-        <div class="card-cat">Armonía</div>
+        <div class="card-cat" data-i18n="cat_armonia">Armonía</div>
       </div>
-      <div class="card-title">Interval Atlas</div>
-      <div class="card-desc">Visualizá los intervalos del mástil en los 22 trastes sobre una progresión de acordes. Capas para chord tones, guide tones, escala, tensiones y aproximación. Para improvisar con contexto armónico móvil.</div>
+      <div class="card-title" data-i18n="card_atlas_title">Interval Atlas</div>
+      <div class="card-desc" data-i18n="card_atlas_desc">Visualizá los intervalos del mástil en los 22 trastes sobre una progresión de acordes. Capas para chord tones, guide tones, escala, tensiones y aproximación. Para improvisar con contexto armónico móvil.</div>
     </a>
 
     <a href="improvisar.html" class="card" style="--accent: var(--c-improv);">
       <div class="card-head">
         <div class="card-icon">🎯</div>
-        <div class="card-cat">Improvisación</div>
+        <div class="card-cat" data-i18n="cat_improv">Improvisación</div>
       </div>
-      <div class="card-title">Improvisar</div>
-      <div class="card-desc">Visualizá los acordes diatónicos de tu escala en el mástil. Armá progresiones y ve las nubes de notas de cada acorde superpuestas para improvisar sin perder el mapa.</div>
+      <div class="card-title" data-i18n="card_improv_title">Improvisar</div>
+      <div class="card-desc" data-i18n="card_improv_desc">Visualizá los acordes diatónicos de tu escala en el mástil. Armá progresiones y ve las nubes de notas de cada acorde superpuestas para improvisar sin perder el mapa.</div>
     </a>
 
     <a href="backing-track/index.html" class="card" style="--accent: var(--c-backing);">
       <div class="card-head">
         <div class="card-icon">🎚️</div>
-        <div class="card-cat">Práctica</div>
+        <div class="card-cat" data-i18n="cat_practica">Práctica</div>
       </div>
-      <div class="card-title">Backing Track</div>
-      <div class="card-desc">Generá un acompañamiento en loop (bajo, acordes, batería, pads) sobre una progresión y improvisá encima. Elegí, editá y guardá tus propios sonidos.</div>
+      <div class="card-title" data-i18n="card_backing_title">Backing Track</div>
+      <div class="card-desc" data-i18n="card_backing_desc">Generá un acompañamiento en loop (bajo, acordes, batería, pads) sobre una progresión y improvisá encima. Elegí, editá y guardá tus propios sonidos.</div>
     </a>
 
     <a href="oido.html" class="card" style="--accent: var(--c-oido);">
       <div class="card-head">
         <div class="card-icon">👂</div>
-        <div class="card-cat">Oído</div>
+        <div class="card-cat" data-i18n="cat_oido">Oído</div>
       </div>
-      <div class="card-title">Entrenador de Oído</div>
-      <div class="card-desc">Modo escucha (sin guitarra) y modo guitarra. Intervalos, mayor/menor, progresiones. El oído es la base de todo.</div>
+      <div class="card-title" data-i18n="card_oido_title">Entrenador de Oído</div>
+      <div class="card-desc" data-i18n="card_oido_desc">Modo escucha (sin guitarra) y modo guitarra. Intervalos, mayor/menor, progresiones. El oído es la base de todo.</div>
     </a>
 
   </div>
 
   <footer>
-    Afinación estándar &nbsp;E A D G B e
+    <div class="footer-actions">
+      <a class="ghost-btn" href="https://ko-fi.com/dadiabatic" target="_blank" rel="noopener" data-i18n="coffee_btn">☕ Invitame un café</a>
+      <a class="ghost-btn" href="https://forms.gle/pSdGVFHuYGkRBSmU9" target="_blank" rel="noopener" data-i18n="feedback_btn">💬 Sugerencias</a>
+    </div>
+    <div class="footer-links">
+      <a href="creditos.html" data-i18n="footer_credits">Créditos</a> ·
+      <a href="privacidad.html" data-i18n="footer_privacy">Privacidad</a> ·
+      <a href="aviso-legal.html" data-i18n="footer_legal">Aviso legal</a>
+    </div>
+    <span data-i18n="footer_tuning">Afinación estándar</span> &nbsp;E A D G B e
   </footer>
+
+  <script src="i18n.js"></script>
+  <script>
+    I18N.register({
+      es: {
+        header_label: 'Herramientas interactivas',
+        header_title: 'Herramientas de Guitarra',
+        header_desc: 'Una colección de apps para practicar el mástil, las escalas, la armonía y el oído. Usalas en el orden que quieras.',
+        cat_mastil: 'Mástil',
+        cat_escalas: 'Escalas',
+        cat_armonia: 'Armonía',
+        cat_improv: 'Improvisación',
+        cat_practica: 'Práctica',
+        cat_oido: 'Oído',
+        card_diapason_title: 'Diapasón Interactivo',
+        card_diapason_desc: 'Aprendé las 12 notas en todo el mástil. Seleccioná una nota y mirá todas sus posiciones. Modo ejercicio con metrónomo.',
+        card_escalas_title: 'Escalas',
+        card_escalas_desc: 'Visualizá patrones de escalas, conectá posiciones en el mástil y poné a prueba lo que sabés con el modo quiz.',
+        card_caged_title: 'CAGED — 5 Formas',
+        card_caged_desc: 'Sistema CAGED en 4 modos: forma movible con cejilla, las 5 formas de un acorde, zona de improvisación con chord tones por función, y progresión de cambios con metrónomo.',
+        card_atlas_title: 'Interval Atlas',
+        card_atlas_desc: 'Visualizá los intervalos del mástil en los 22 trastes sobre una progresión de acordes. Capas para chord tones, guide tones, escala, tensiones y aproximación. Para improvisar con contexto armónico móvil.',
+        card_improv_title: 'Improvisar',
+        card_improv_desc: 'Visualizá los acordes diatónicos de tu escala en el mástil. Armá progresiones y ve las nubes de notas de cada acorde superpuestas para improvisar sin perder el mapa.',
+        card_backing_title: 'Backing Track',
+        card_backing_desc: 'Generá un acompañamiento en loop (bajo, acordes, batería, pads) sobre una progresión y improvisá encima. Elegí, editá y guardá tus propios sonidos.',
+        card_oido_title: 'Entrenador de Oído',
+        card_oido_desc: 'Modo escucha (sin guitarra) y modo guitarra. Intervalos, mayor/menor, progresiones. El oído es la base de todo.',
+        coffee_btn: '☕ Invitame un café',
+        feedback_btn: '💬 Sugerencias',
+        footer_credits: 'Créditos',
+        footer_privacy: 'Privacidad',
+        footer_legal: 'Aviso legal',
+        footer_tuning: 'Afinación estándar'
+      },
+      en: {
+        header_label: 'Interactive tools',
+        header_title: 'Guitar Tools',
+        header_desc: 'A collection of apps to practice the fretboard, scales, harmony and ear training. Use them in any order you like.',
+        cat_mastil: 'Fretboard',
+        cat_escalas: 'Scales',
+        cat_armonia: 'Harmony',
+        cat_improv: 'Improvisation',
+        cat_practica: 'Practice',
+        cat_oido: 'Ear',
+        card_diapason_title: 'Interactive Fretboard',
+        card_diapason_desc: 'Learn the 12 notes all over the fretboard. Pick a note and see all its positions. Practice mode with metronome.',
+        card_escalas_title: 'Scales',
+        card_escalas_desc: 'Visualize scale shapes, connect positions across the fretboard and test what you know with quiz mode.',
+        card_caged_title: 'CAGED — 5 Shapes',
+        card_caged_desc: 'CAGED system in 4 modes: movable barre shape, the 5 shapes of a chord, an improvisation zone with chord tones by function, and a changes progression with metronome.',
+        card_atlas_title: 'Interval Atlas',
+        card_atlas_desc: 'Visualize fretboard intervals across all 22 frets over a chord progression. Layers for chord tones, guide tones, scale, tensions and approach notes. To improvise with moving harmonic context.',
+        card_improv_title: 'Improvise',
+        card_improv_desc: 'Visualize the diatonic chords of your scale on the fretboard. Build progressions and see each chord’s note clouds overlaid so you can improvise without losing the map.',
+        card_backing_title: 'Backing Track',
+        card_backing_desc: 'Generate a looping accompaniment (bass, chords, drums, pads) over a progression and solo on top. Choose, edit and save your own sounds.',
+        card_oido_title: 'Ear Trainer',
+        card_oido_desc: 'Listening mode (no guitar) and guitar mode. Intervals, major/minor, progressions. Your ear is the foundation of everything.',
+        coffee_btn: '☕ Buy me a coffee',
+        feedback_btn: '💬 Feedback',
+        footer_credits: 'Credits',
+        footer_privacy: 'Privacy',
+        footer_legal: 'Legal notice',
+        footer_tuning: 'Standard tuning'
+      }
+    });
+    I18N.init();
+  </script>
 
 </body>
 </html>

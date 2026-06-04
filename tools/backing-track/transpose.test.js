@@ -64,6 +64,12 @@
       const r = transpose.realizeChord({ grado: 'V/V', quality: 'dom7' }, 'C', 'major');
       T.assertEq(r.root, 'D');
     });
+    T.it('dominante secundario alterado (bVII/V) se rechaza (notación ambigua)', () => {
+      T.assertEq(transpose.gradoSemitone('bVII/V', 'major'), -1);
+      T.assertEq(transpose.gradoSemitone('#IV/ii', 'major'), -1);
+      // realizeChord devuelve null y realizeProgression lo descarta.
+      T.assertEq(transpose.realizeChord({ grado: 'bVII/V', quality: 'dom7' }, 'C', 'major'), null);
+    });
   });
 
   T.describe('transpose.realizeChord — alteraciones cromáticas', () => {

@@ -5,3 +5,7 @@ transcript/
 # Media y zips
 *.mp3
 *.zip
+*.pdf
+
+# Cloudflare / build cache
+.wrangler/

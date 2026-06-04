@@ -8,6 +8,15 @@
   const NUM_FRETS = 22;
   const SVG_NS = 'http://www.w3.org/2000/svg';
 
+  // Traducción: usa W.I18N si existe; si no (tests sin DOM), devuelve la clave.
+  // tf() interpola {placeholders} con los valores dados.
+  function t(key) { return (W.I18N && W.I18N.t) ? W.I18N.t(key) : key; }
+  function tf(key, vars) {
+    let s = t(key);
+    if (vars) for (const k in vars) s = s.replace('{' + k + '}', vars[k]);
+    return s;
+  }
+
   // Pares bemol/natural en mismo hue. El BEMOL es la versión clara (luz),
   // el NATURAL la oscura/profunda. La diferencia es marcada pero la familia
   // de color hace que se reconozcan como "primos".
@@ -229,7 +238,7 @@
     const pop = document.createElement('div');
     pop.className = 'edit-popover';
     pop.innerHTML = `
-      <div class="edit-popover-title">Editar acorde #${idx + 1}</div>
+      <div class="edit-popover-title">${t('edit_chord')}${idx + 1}</div>
       <select class="ep-root">
         ${['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
           .map(r => `<option ${r === c.root ? 'selected' : ''}>${r}</option>`).join('')}
@@ -242,8 +251,8 @@
         <option value="m7b5" ${c.quality==='m7b5'?'selected':''}>m7b5</option>
       </select>
       <div class="edit-popover-actions">
-        <button class="btn ep-cancel">Cancelar</button>
-        <button class="btn primary ep-save">Guardar</button>
+        <button class="btn ep-cancel">${t('cancel')}</button>
+        <button class="btn primary ep-save">${t('save')}</button>
       </div>
     `;
     document.body.appendChild(pop);
@@ -308,7 +317,7 @@
     pop.className = 'edit-popover';
     const title = document.createElement('div');
     title.className = 'edit-popover-title';
-    title.textContent = 'Agregar acorde · ' + root;
+    title.textContent = t('add_chord') + root;
     pop.appendChild(title);
     QUICK_ADD_QUALITIES.forEach(pair => {
       const q = pair[0], label = pair[1];
@@ -425,12 +434,13 @@
       div.className = 'prog-chord' + (i === state.activeIdx ? ' active' : '');
       div.style.width = slotWidth(c.bars) + 'px';
       div.setAttribute('draggable', 'true');
-      div.title = 'Click: activar · × : borrar · doble click: editar · arrastrar: reordenar · ↑↓: ± compás';
+      div.title = t('prog_chord_t');
       const qCol = QUALITY_PALETTE_COLOR[c.quality] || '#5a5a5a';
       div.style.borderLeft = '3px solid ' + qCol;
-      div.innerHTML = `<button class="pc-del" type="button" title="Borrar (Del)" aria-label="Borrar acorde">×</button>
+      const barsWord = c.bars === 1 ? t('bars_singular') : t('bars_plural');
+      div.innerHTML = `<button class="pc-del" type="button" title="${t('pc_del_t')}" aria-label="${t('pc_del_aria')}">×</button>
         <div class="pc-name">${chordName(ch)}</div>
-        <div class="pc-bars-vis" aria-label="${c.bars} compás${c.bars===1?'':'es'}">${'●'.repeat(c.bars)}</div>`;
+        <div class="pc-bars-vis" aria-label="${c.bars} ${barsWord}">${'●'.repeat(c.bars)}</div>`;
 
       // Visual: highlight si está dentro del loop range activo
       if (state.loopRange) {
@@ -562,7 +572,7 @@
       const btn = document.createElement('button');
       btn.className = 'diat-chip';
       btn.style.borderLeftColor = color;
-      btn.title = `${d.numeral} — ${name}\nNotas: ${notes}`;
+      btn.title = `${d.numeral} — ${name}\n${t('diat_notes')}${notes}`;
       btn.innerHTML = `
         <div class="diat-chip-row">
           <span class="diat-chip-roman">${d.numeral}</span>
@@ -584,6 +594,20 @@
 
   // ─── UI de presets ─────────────────────────────────────────────────────
   let _presetsActiveGenre = null;
+
+  // Etiqueta traducida de un género. Clave: 'genre_' + id. Fallback: g.label.
+  function genreLabel(g) {
+    const key = 'genre_' + g.id;
+    const tr = t(key);
+    return tr === key ? g.label : tr;
+  }
+  // Nombre traducido de un preset. Clave: 'preset_' + id con '-' → '_'.
+  // Fallback al p.name (español) si no hay traducción registrada.
+  function presetName(p) {
+    const key = 'preset_' + p.id.replace(/-/g, '_');
+    const tr = t(key);
+    return tr === key ? p.name : tr;
+  }
 
   function openPresetsModal() {
     if (!W.AtlasPresets) return;
@@ -607,7 +631,7 @@
     W.AtlasPresets.GENRES.forEach(g => {
       const b = document.createElement('button');
       b.className = 'modal-tab' + (g.id === _presetsActiveGenre ? ' active' : '');
-      b.textContent = g.label;
+      b.textContent = genreLabel(g);
       b.addEventListener('click', () => { _presetsActiveGenre = g.id; renderPresetsModal(); });
       tabs.appendChild(b);
     });
@@ -619,7 +643,7 @@
       const summary = p.chords.map(c =>
         c.root + (QUALITY_LABEL[c.quality] ?? c.quality)).join(' · ');
       card.innerHTML = `
-        <div class="preset-card-name">${p.name}</div>
+        <div class="preset-card-name">${presetName(p)}</div>
         <div class="preset-card-chords">${summary}</div>
       `;
       card.addEventListener('click', () => {
@@ -648,10 +672,10 @@
       const del = document.createElement('span');
       del.className = 'fav-item-del';
       del.textContent = '✕';
-      del.title = 'Borrar favorito';
+      del.title = t('fav_del_t');
       del.addEventListener('click', e => {
         e.stopPropagation();
-        if (confirm('¿Borrar "' + f.name + '"?')) {
+        if (confirm(tf('fav_del_confirm', { name: f.name }))) {
           deleteFavorite(f.id);
           renderFavorites();
         }
@@ -666,10 +690,10 @@
 
   function promptSaveFavorite() {
     if (!state.progression.length) {
-      alert('Agregá acordes antes de guardar como favorito.');
+      alert(t('fav_need_chords'));
       return;
     }
-    const name = prompt('Nombre del favorito:', 'Mi progresión');
+    const name = prompt(t('fav_prompt'), t('fav_default_name'));
     if (!name) return;
     saveCurrentAsFavorite(name.trim());
     renderFavorites();
@@ -679,7 +703,7 @@
     const info = $('atlas-info');
     if (!info) return;
     const c = activeChord();
-    if (!c) { info.className = 'empty-state'; info.textContent = '—'; return; }
+    if (!c) { info.className = 'empty-state'; info.textContent = t('info_none'); return; }
     info.className = '';
     const tones = c.notes.map((n, i) => `${n}=${c.intervals[i]}`).join(' · ');
     const FR = W.FretboardRenderer;
@@ -688,8 +712,8 @@
     info.innerHTML = `
       <div style="font-size:18px;font-weight:700;color:var(--gold);margin-bottom:4px">${chordName(c)}</div>
       <div style="font-size:11px;color:var(--text-mid);line-height:1.6">${tones}</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">Tensiones disponibles: ${ts.length ? ts.join(', ') : '—'}</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Escala asociada: ${scaleName}</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">${t('info_tensions')}${ts.length ? ts.join(', ') : t('info_none')}</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${t('info_scale')}${scaleName}</div>
     `;
   }
 
@@ -710,7 +734,7 @@
 
     const hint = document.createElement('span');
     hint.style.cssText = 'color:var(--text-dim);font-size:10px;margin-right:2px';
-    hint.textContent = 'Leyenda — click para mostrar/ocultar:';
+    hint.textContent = t('legend_hint');
     lg.appendChild(hint);
 
     LEGEND_INTERVALS.forEach(i => {
@@ -721,8 +745,8 @@
       const btn = document.createElement('button');
       btn.className = 'legend-toggle' + (on ? '' : ' off') + (isChord ? ' is-chord' : '');
       btn.title = isChord
-        ? (on ? `Ocultar ${i} · nota del acorde` : `Mostrar ${i} · nota del acorde`)
-        : (on ? `Ocultar ${i}` : `Mostrar ${i}`);
+        ? (on ? tf('legend_hide_chord', { i }) : tf('legend_show_chord', { i }))
+        : (on ? tf('legend_hide', { i }) : tf('legend_show', { i }));
       btn.innerHTML = `<span class="legend-dot" style="background:${INTERVAL_COLORS_FULL[i]}"></span>${i}`;
       btn.addEventListener('click', () => toggleLegendInterval(i));
       lg.appendChild(btn);
@@ -734,8 +758,8 @@
     if (hidden.size > 0 || extra.size > 0 || hasHiddenCells) {
       const reset = document.createElement('button');
       reset.className = 'legend-toggle reset';
-      reset.textContent = 'Reset';
-      reset.title = 'Volver al acorde puro';
+      reset.textContent = t('legend_reset');
+      reset.title = t('legend_reset_t');
       reset.addEventListener('click', () => {
         state.hiddenIntervals = [];
         state.extraIntervals = [];
@@ -1130,6 +1154,20 @@
     renderPalette();
     renderFavorites();
     render();
+
+    // Re-render del contenido generado en JS al cambiar de idioma.
+    W.addEventListener('i18n:changed', () => {
+      render();              // bar + legend + info + mástil
+      renderPalette();       // tabs/chips diatónicos
+      renderFavorites();
+      const modal = $('atlas-presets-modal');
+      if (modal && modal.style.display === 'flex') renderPresetsModal();
+      // Refrescar etiqueta del botón de play según el estado actual.
+      if (transport) {
+        const s = transport.getState();
+        setPlayingUI(s.transport, s.prerollRemaining);
+      }
+    });
   }
 
   const PREROLL_BEATS = 2;  // count-in corto, separado del compás
@@ -1277,20 +1315,21 @@
   }
 
   function setPlayingUI(t, prerollRemaining) {
+    const tr = (key) => ((W.I18N && W.I18N.t) ? W.I18N.t(key) : key);
     const btn = $('atlas-play');
     if (!btn) return;
     btn.classList.remove('playing', 'paused');
     if (t === 'playing') {
-      btn.textContent = '❚❚ Pausa';
+      btn.textContent = tr('play_pause');
       btn.classList.add('playing');
     } else if (t === 'paused') {
-      btn.textContent = '▶ Reanudar';
+      btn.textContent = tr('play_resume');
       btn.classList.add('paused');
     } else if (t === 'preroll') {
       btn.classList.add('playing');
       btn.textContent = '◷ ' + (prerollRemaining != null ? prerollRemaining : PREROLL_BEATS);
     } else {
-      btn.textContent = '▶ Play';
+      btn.textContent = tr('play_label');
     }
   }
 

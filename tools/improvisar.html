@@ -206,19 +206,19 @@
 </head>
 <body>
 
-<a href="index.html" class="back">← Herramientas</a>
+<a href="index.html" class="back" data-i18n="back_tools">← Herramientas</a>
 
 <div class="header">
-  <h1>Improvisar sobre la escala</h1>
+  <h1 data-i18n="header_title">Improvisar sobre la escala</h1>
 </div>
 
 <!-- Selector de tonalidad -->
 <div class="section">
-  <div class="section-label">Tonalidad</div>
+  <div class="section-label" data-i18n="section_key">Tonalidad</div>
   <div class="root-grid" id="root-grid"></div>
   <div class="type-row">
-    <button class="type-btn active-minor" data-type="minor">Menor natural</button>
-    <button class="type-btn" data-type="major">Mayor natural</button>
+    <button class="type-btn active-minor" data-type="minor" data-i18n="type_minor">Menor natural</button>
+    <button class="type-btn" data-type="major" data-i18n="type_major">Mayor natural</button>
   </div>
 </div>
 
@@ -227,33 +227,33 @@
 
 <!-- Paleta de acordes -->
 <div class="chord-palette" id="chord-palette">
-  <div class="section-label">Acordes diatónicos — hacé click para agregar a la progresión</div>
+  <div class="section-label" data-i18n="palette_label">Acordes diatónicos — hacé click para agregar a la progresión</div>
   <div class="chord-btns" id="chord-btns"></div>
 </div>
 
 <!-- Agregar cualquier acorde fuera de la escala -->
 <details class="extra-chord-picker" id="extra-chord-picker" style="display:none;">
-  <summary>➕ Agregar acorde fuera de la escala</summary>
+  <summary data-i18n="extra_summary">➕ Agregar acorde fuera de la escala</summary>
   <div class="extra-picker-body">
-    <div class="extra-picker-hint">Elegí raíz y calidad para sumar un acorde cromático a la progresión</div>
-    <div class="picker-label">Raíz</div>
+    <div class="extra-picker-hint" data-i18n="extra_hint">Elegí raíz y calidad para sumar un acorde cromático a la progresión</div>
+    <div class="picker-label" data-i18n="extra_root">Raíz</div>
     <div class="extra-picker-roots" id="extra-picker-roots"></div>
-    <div class="picker-label">Calidad</div>
+    <div class="picker-label" data-i18n="extra_quality">Calidad</div>
     <div class="extra-picker-quals" id="extra-picker-quals"></div>
   </div>
 </details>
 
 <!-- Progresión -->
 <div class="prog-area" id="prog-area">
-  <div class="section-label">Progresión</div>
+  <div class="section-label" data-i18n="section_progression">Progresión</div>
   <div class="sabor-row" id="sabor-row"></div>
   <div class="presets-row" id="presets-row"></div>
   <div class="prog-slots" id="prog-slots">
-    <span class="prog-empty">Seleccioná una tonalidad y hacé click en un acorde para empezar</span>
+    <span class="prog-empty" data-i18n="prog_empty_start">Seleccioná una tonalidad y hacé click en un acorde para empezar</span>
   </div>
   <div class="prog-controls">
-    <button class="btn-sm" id="btn-clear">Limpiar</button>
-    <span style="font-size:10px;color:var(--text-dim);">Click en un slot para quitarlo · máx. 8 acordes</span>
+    <button class="btn-sm" id="btn-clear" data-i18n="btn_clear">Limpiar</button>
+    <span style="font-size:10px;color:var(--text-dim);" data-i18n="prog_controls_hint">Click en un slot para quitarlo · máx. 8 acordes</span>
   </div>
 </div>
 
@@ -261,15 +261,15 @@
 <div class="legend" id="legend"></div>
 <div class="layer-controls" id="layer-controls">
   <div class="layer-row">
-    <span class="layer-controls-hint">Visualización:</span>
-    <button class="layer-toggle active" id="toggle-3s" title="Tríadas en 3 cuerdas (tecla 3)">Tríadas 3c</button>
-    <button class="layer-toggle" id="toggle-2s" title="Tríadas en 2 cuerdas (tecla 2)">Tríadas 2c</button>
+    <span class="layer-controls-hint" data-i18n="layer_visualization">Visualización:</span>
+    <button class="layer-toggle active" id="toggle-3s" data-i18n="toggle_3s" data-i18n-attr="title:toggle_3s_t" title="Tríadas en 3 cuerdas (tecla 3)">Tríadas 3c</button>
+    <button class="layer-toggle" id="toggle-2s" data-i18n="toggle_2s" data-i18n-attr="title:toggle_2s_t" title="Tríadas en 2 cuerdas (tecla 2)">Tríadas 2c</button>
   </div>
   <div class="layer-row">
-    <span class="layer-controls-hint">Armonía:</span>
-    <button class="layer-toggle" id="toggle-7s" title="Acordes con 7ma diatónica (tecla 7)">7mas</button>
-    <button class="layer-toggle" id="toggle-sus2" title="Acordes sus2 (tecla S)">Sus2</button>
-    <button class="layer-toggle" id="toggle-sus4" title="Acordes sus4 (tecla D)">Sus4</button>
+    <span class="layer-controls-hint" data-i18n="layer_harmony">Armonía:</span>
+    <button class="layer-toggle" id="toggle-7s" data-i18n="toggle_7s" data-i18n-attr="title:toggle_7s_t" title="Acordes con 7ma diatónica (tecla 7)">7mas</button>
+    <button class="layer-toggle" id="toggle-sus2" data-i18n="toggle_sus2" data-i18n-attr="title:toggle_sus2_t" title="Acordes sus2 (tecla S)">Sus2</button>
+    <button class="layer-toggle" id="toggle-sus4" data-i18n="toggle_sus4" data-i18n-attr="title:toggle_sus4_t" title="Acordes sus4 (tecla D)">Sus4</button>
   </div>
 </div>
 
@@ -293,7 +293,7 @@
     <span style="font-size:10px;color:var(--text-dim);letter-spacing:.1em;">BPM</span>
   </div>
   <div class="metro-bpc-row">
-    <span>Tiempos por acorde:</span>
+    <span data-i18n="metro_bpc_label">Tiempos por acorde:</span>
     <select id="metro-bpc">
       <option value="2">2</option>
       <option value="4" selected>4</option>
@@ -304,9 +304,10 @@
   <div class="metro-chord-lbl" id="metro-chord-lbl"></div>
 </div>
 
-<footer>Afinación estándar · E A D G B e · Trastes 0–12 · <a href="index.html">← Herramientas</a></footer>
+<footer><span data-i18n="footer_info">Afinación estándar · E A D G B e · Trastes 0–12</span> · <a href="index.html" data-i18n="back_tools">← Herramientas</a></footer>
 
 <!-- Shared modules (plain script tags — work with file:// and HTTP). -->
+<script src="i18n.js"></script>
 <script src="./shared/theory.js"></script>
 <script src="./shared/storage.js"></script>
 <script>
@@ -350,10 +351,16 @@ function buildScale(root, isMinor){
   return notes; // 7 notes
 }
 
+// Etiqueta de calidad de acorde, traducida en el momento de render.
+// La clave estable (ch.qualityKey o ch.type) nunca cambia; solo el texto mostrado.
+function chordTypeLabel(ch){
+  const key = ch.qualityKey || ch.type;
+  return I18N.t('chordtype_' + key);
+}
+
 function buildChords(scaleNotes){
   const MAJ = ['I','II','III','IV','V','VI','VII'];
   const MIN = ['i','ii','iii','iv','v','vi','vii'];
-  const TYPE_LABEL = {maj:'Mayor',min:'Menor',dim:'Disminuido',aug:'Aumentado'};
 
   return scaleNotes.map((root,i)=>{
     const third = scaleNotes[(i+2)%7];
@@ -368,7 +375,7 @@ function buildChords(scaleNotes){
     else if(ti===3&&fi===6){ type='dim'; roman=MIN[i]+'°'; name=root+'°'; }
     else { type='aug'; roman=MAJ[i]+'+'; name=root+'+'; }
 
-    return { degree:i, roman, name, type, typeLabel:TYPE_LABEL[type],
+    return { degree:i, roman, name, type,
              notes:[root,third,fifth], root, third, fifth };
   });
 }
@@ -923,11 +930,11 @@ function renderFretboard(){
 // ── UI ────────────────────────────────────────────────────────────────────
 function renderPositionFilter(){
   const row=document.getElementById('pos-filter');
-  row.innerHTML='<span class="pos-filter-label">Posición:</span>';
+  row.innerHTML='<span class="pos-filter-label">'+I18N.t('pos_filter_label')+'</span>';
   POSITIONS.forEach((pos,idx)=>{
     const btn=document.createElement('button');
     btn.className='pos-btn'+(st.posFilter===idx?' active-pos':'');
-    btn.textContent=pos.label;
+    btn.textContent=I18N.t('pos_'+pos.id);
     btn.addEventListener('click',()=>{
       st.posFilter=idx;
       renderPositionFilter();
@@ -961,7 +968,7 @@ function renderScaleInfo(){
   const el2=document.getElementById('scale-info');
   if(!st.root){ el2.style.display='none'; return; }
   el2.style.display='block';
-  const typeName=st.isMinor?'Menor Natural':'Mayor Natural';
+  const typeName=st.isMinor?I18N.t('scale_minor_natural'):I18N.t('scale_major_natural');
   el2.innerHTML=`<strong>${st.root} ${typeName}</strong> &nbsp;·&nbsp; <span class="notes">${st.scale.join(' — ')}</span>`;
 }
 
@@ -993,7 +1000,7 @@ function renderChordPalette(){
       <span class="chord-btn-roman">${ch.roman}</span>
       <span class="chord-btn-name">${displayName}</span>
       <span class="chord-btn-notes">${displayNotes}</span>
-      <span class="chord-btn-type">${ch.typeLabel}</span>`;
+      <span class="chord-btn-type">${chordTypeLabel(ch)}</span>`;
     btn.title=`${ch.roman} — ${displayName}: ${displayNotes}`;
     btn.addEventListener('click',()=>addToProg(i));
     btns.appendChild(btn);
@@ -1016,7 +1023,7 @@ function renderProgression(){
   ['estable','tenso','explorar'].forEach(sabor=>{
     const btn=document.createElement('button');
     btn.className='sabor-btn'+(st.activeSabor===sabor?' active':'');
-    btn.textContent=sabor.charAt(0).toUpperCase()+sabor.slice(1);
+    btn.textContent=I18N.t('sabor_'+sabor);
     btn.addEventListener('click',()=>{
       if(sabor==='explorar'){
         generateExplorarProg();
@@ -1050,7 +1057,7 @@ function renderProgression(){
   const slotCh7s = st.show7s ? buildSeventhChords(st.scale) : null;
   const slotChSus = st.susMode ? buildSusChords(st.scale, st.susMode) : null;
   if(!hasProg){
-    slots.innerHTML='<span class="prog-empty">Hacé click en un acorde arriba para agregarlo</span>';
+    slots.innerHTML='<span class="prog-empty">'+I18N.t('prog_empty_add')+'</span>';
   } else {
     slots.innerHTML='';
     let dragSrcIdx=null;
@@ -1069,7 +1076,7 @@ function renderProgression(){
       slot.className='prog-slot'+(isActive?' metro-active':'');
       slot.style.cssText=`border-color:${col};color:${col};background:${col}18;`;
       slot.innerHTML=`<span class="prog-slot-roman">${ch.roman}</span><span class="prog-slot-name">${displayName}</span><span class="prog-slot-remove">✕</span>`;
-      slot.title='Click para quitar · arrastrar para reordenar';
+      slot.title=I18N.t('slot_title');
       slot.setAttribute('draggable','true');
       slot.dataset.pi=pi;
       slot.addEventListener('click',()=>{
@@ -1110,7 +1117,7 @@ function renderLegend(){
   leg.style.display='flex';
   lc.style.display='flex';
   const seen=new Set();
-  leg.innerHTML='<span class="legend-label">Leyenda:</span>';
+  leg.innerHTML='<span class="legend-label">'+I18N.t('legend_label')+'</span>';
   st.progression.forEach(di=>{
     if(seen.has(di)) return; seen.add(di);
     const ch=st.chords[di];
@@ -1118,7 +1125,7 @@ function renderLegend(){
     const hidden=st.hiddenDegrees.has(di);
     const item=document.createElement('div');
     item.className='legend-item'+(hidden?' legend-item--hidden':'');
-    item.title=hidden?'Click para mostrar':'Click para ocultar';
+    item.title=hidden?I18N.t('legend_show'):I18N.t('legend_hide');
     item.style.cursor='pointer';
     item.innerHTML=`<div class="legend-dot" style="background:${hidden?'#333':col};box-shadow:${hidden?'none':'0 0 6px '+col+'77'};"></div>${ch.roman} ${ch.name}`;
     item.addEventListener('click',()=>{
@@ -1192,7 +1199,7 @@ function startMetro(){
   st.metro.beats=0;
   st.metro.idx=0;
   document.getElementById('metro-btn').classList.add('on');
-  document.getElementById('metro-btn').textContent='■ Detener';
+  document.getElementById('metro-btn').textContent=I18N.t('metro_stop');
   scheduleTick();
   updateMetroLabel();
 }
@@ -1201,7 +1208,7 @@ function stopMetro(){
   st.metro.playing=false;
   clearTimeout(st.metro.timer);
   document.getElementById('metro-btn').classList.remove('on');
-  document.getElementById('metro-btn').textContent='▶ Ciclar';
+  document.getElementById('metro-btn').textContent=I18N.t('metro_cycle');
   document.getElementById('metro-beat-dot').classList.remove('on');
   document.getElementById('metro-chord-lbl').textContent='';
   renderProgression();
@@ -1334,14 +1341,13 @@ const EXTRA_QUALITIES = [
   {id:'min7',  label:'m7',     semitones:[0,3,7,10]},
 ];
 const EXTRA_QUALITY_SUFFIX = {major:'',minor:'m',dom7:'7',maj7:'maj7',min7:'m7'};
-const EXTRA_QUALITY_LABEL  = {major:'Mayor',minor:'Menor',dom7:'Dom 7ª',maj7:'Mayor 7ª',min7:'Menor 7ª'};
 
 function makeExtraChord(root, quality){
   const q = EXTRA_QUALITIES.find(x=>x.id===quality) || EXTRA_QUALITIES[0];
   const ri = CHROMATIC.indexOf(root);
   const notes = q.semitones.map(s=>CHROMATIC[(ri+s)%12]);
-  return { root, type:quality, name:root+(EXTRA_QUALITY_SUFFIX[quality]||''),
-           notes, roman:'✦', typeLabel:EXTRA_QUALITY_LABEL[quality]||quality };
+  return { root, type:quality, qualityKey:quality, name:root+(EXTRA_QUALITY_SUFFIX[quality]||''),
+           notes, roman:'✦' };
 }
 
 function setupExtraPicker(){
@@ -1366,7 +1372,7 @@ function setupExtraPicker(){
   EXTRA_QUALITIES.forEach(q=>{
     const btn = document.createElement('button');
     btn.className = 'ep-btn ep-qual';
-    btn.textContent = q.label;
+    btn.textContent = I18N.t('epqual_'+q.id);
     btn.addEventListener('click',()=>{
       if(!ps.root || st.progression.length>=8) return;
       const chord = makeExtraChord(ps.root, q.id);
@@ -1564,7 +1570,159 @@ function init(){
   renderTwoStringTriadLayer();
 }
 
+// ── i18n ──────────────────────────────────────────────────────────────────
+I18N.register({
+  es: {
+    back_tools: '← Herramientas',
+    header_title: 'Improvisar sobre la escala',
+    section_key: 'Tonalidad',
+    type_minor: 'Menor natural',
+    type_major: 'Mayor natural',
+    palette_label: 'Acordes diatónicos — hacé click para agregar a la progresión',
+    extra_summary: '➕ Agregar acorde fuera de la escala',
+    extra_hint: 'Elegí raíz y calidad para sumar un acorde cromático a la progresión',
+    extra_root: 'Raíz',
+    extra_quality: 'Calidad',
+    section_progression: 'Progresión',
+    prog_empty_start: 'Seleccioná una tonalidad y hacé click en un acorde para empezar',
+    prog_empty_add: 'Hacé click en un acorde arriba para agregarlo',
+    btn_clear: 'Limpiar',
+    prog_controls_hint: 'Click en un slot para quitarlo · máx. 8 acordes',
+    layer_visualization: 'Visualización:',
+    layer_harmony: 'Armonía:',
+    toggle_3s: 'Tríadas 3c',
+    toggle_3s_t: 'Tríadas en 3 cuerdas (tecla 3)',
+    toggle_2s: 'Tríadas 2c',
+    toggle_2s_t: 'Tríadas en 2 cuerdas (tecla 2)',
+    toggle_7s: '7mas',
+    toggle_7s_t: 'Acordes con 7ma diatónica (tecla 7)',
+    toggle_sus2: 'Sus2',
+    toggle_sus2_t: 'Acordes sus2 (tecla S)',
+    toggle_sus4: 'Sus4',
+    toggle_sus4_t: 'Acordes sus4 (tecla D)',
+    metro_bpc_label: 'Tiempos por acorde:',
+    footer_info: 'Afinación estándar · E A D G B e · Trastes 0–12',
+    scale_minor_natural: 'Menor Natural',
+    scale_major_natural: 'Mayor Natural',
+    chordtype_maj: 'Mayor',
+    chordtype_min: 'Menor',
+    chordtype_dim: 'Disminuido',
+    chordtype_aug: 'Aumentado',
+    chordtype_major: 'Mayor',
+    chordtype_minor: 'Menor',
+    chordtype_dom7: 'Dom 7ª',
+    chordtype_maj7: 'Mayor 7ª',
+    chordtype_min7: 'Menor 7ª',
+    pos_filter_label: 'Posición:',
+    pos_all: 'Todas',
+    pos_open: 'Abierta',
+    pos_p2: 'Pos 2',
+    pos_p5: 'Pos 5',
+    pos_p7: 'Pos 7',
+    pos_p9: 'Pos 9',
+    pos_p12: 'Pos 12',
+    sabor_estable: 'Estable',
+    sabor_tenso: 'Tenso',
+    sabor_explorar: 'Explorar',
+    slot_title: 'Click para quitar · arrastrar para reordenar',
+    legend_label: 'Leyenda:',
+    legend_show: 'Click para mostrar',
+    legend_hide: 'Click para ocultar',
+    epqual_major: 'Mayor',
+    epqual_minor: 'Menor',
+    epqual_dom7: '7',
+    epqual_maj7: 'maj7',
+    epqual_min7: 'm7',
+    metro_cycle: '▶ Ciclar',
+    metro_stop: '■ Detener',
+  },
+  en: {
+    back_tools: '← Tools',
+    header_title: 'Improvise over the scale',
+    section_key: 'Key',
+    type_minor: 'Natural minor',
+    type_major: 'Natural major',
+    palette_label: 'Diatonic chords — click to add to the progression',
+    extra_summary: '➕ Add chord outside the scale',
+    extra_hint: 'Pick a root and quality to add a chromatic chord to the progression',
+    extra_root: 'Root',
+    extra_quality: 'Quality',
+    section_progression: 'Progression',
+    prog_empty_start: 'Pick a key and click a chord to get started',
+    prog_empty_add: 'Click a chord above to add it',
+    btn_clear: 'Clear',
+    prog_controls_hint: 'Click a slot to remove it · max 8 chords',
+    layer_visualization: 'Display:',
+    layer_harmony: 'Harmony:',
+    toggle_3s: 'Triads 3str',
+    toggle_3s_t: 'Triads on 3 strings (key 3)',
+    toggle_2s: 'Triads 2str',
+    toggle_2s_t: 'Triads on 2 strings (key 2)',
+    toggle_7s: '7ths',
+    toggle_7s_t: 'Chords with diatonic 7th (key 7)',
+    toggle_sus2: 'Sus2',
+    toggle_sus2_t: 'Sus2 chords (key S)',
+    toggle_sus4: 'Sus4',
+    toggle_sus4_t: 'Sus4 chords (key D)',
+    metro_bpc_label: 'Beats per chord:',
+    footer_info: 'Standard tuning · E A D G B e · Frets 0–12',
+    scale_minor_natural: 'Natural Minor',
+    scale_major_natural: 'Natural Major',
+    chordtype_maj: 'Major',
+    chordtype_min: 'Minor',
+    chordtype_dim: 'Diminished',
+    chordtype_aug: 'Augmented',
+    chordtype_major: 'Major',
+    chordtype_minor: 'Minor',
+    chordtype_dom7: 'Dom 7th',
+    chordtype_maj7: 'Major 7th',
+    chordtype_min7: 'Minor 7th',
+    pos_filter_label: 'Position:',
+    pos_all: 'All',
+    pos_open: 'Open',
+    pos_p2: 'Pos 2',
+    pos_p5: 'Pos 5',
+    pos_p7: 'Pos 7',
+    pos_p9: 'Pos 9',
+    pos_p12: 'Pos 12',
+    sabor_estable: 'Stable',
+    sabor_tenso: 'Tense',
+    sabor_explorar: 'Explore',
+    slot_title: 'Click to remove · drag to reorder',
+    legend_label: 'Legend:',
+    legend_show: 'Click to show',
+    legend_hide: 'Click to hide',
+    epqual_major: 'Major',
+    epqual_minor: 'Minor',
+    epqual_dom7: '7',
+    epqual_maj7: 'maj7',
+    epqual_min7: 'm7',
+    metro_cycle: '▶ Cycle',
+    metro_stop: '■ Stop',
+  }
+});
+
+// Etiqueta del botón del metrónomo según su estado (no usa data-i18n porque su
+// texto lo controla startMetro/stopMetro de forma dinámica).
+function updateMetroBtnLabel(){
+  const b = document.getElementById('metro-btn');
+  if(b) b.textContent = st.metro.playing ? I18N.t('metro_stop') : I18N.t('metro_cycle');
+}
+
+// Re-render de strings dinámicos generados en JS al cambiar idioma.
+window.addEventListener('i18n:changed', function(){
+  renderScaleInfo();
+  renderChordPalette();
+  renderProgression();
+  renderLegend();
+  renderPositionFilter();
+  setupExtraPicker();
+  updateMetroBtnLabel();
+});
+
 init();
+I18N.init();
+updateMetroBtnLabel();
 </script>
 </body>
 </html>

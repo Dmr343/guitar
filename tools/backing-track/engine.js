@@ -99,7 +99,7 @@
     let mode = 'practica';
     let humanizeAmount = 0;        // 0..1 — intensidad de humanización
     let loopRangeIdx = null;       // [a,b] índices de acorde, o null (loop completo)
-    let focusChordIndex = 0;       // acorde con foco — punto de reinicio al editar en vivo
+    let focusChordIndex = -1;      // acorde con foco (-1 = sin foco → arranca en el inicio del loop); punto de reinicio al editar en vivo
     let subdivision = 'negra';     // subdivisión del indicador de compás
     let trackCounter = 0;
     let tickCounter = -1;          // cuenta de subdivisiones del indicador
@@ -218,6 +218,7 @@
         const pa = a[k] || {}, pb = b[k] || {};
         return pa.engine === pb.engine &&
                pa.note === pb.note &&
+               pa.noise === pb.noise &&
                pa.file === pb.file &&
                pa.baseUrl === pb.baseUrl &&
                pa.url === pb.url &&
@@ -726,7 +727,7 @@
     // solo: para saltar en vivo, usar jumpToChord.
     function setFocusChord(idx) {
       idx = Math.round(Number(idx));
-      focusChordIndex = Number.isFinite(idx) && idx >= 0 ? idx : 0;
+      focusChordIndex = Number.isFinite(idx) && idx >= 0 ? idx : -1;
     }
 
     // Step de inicio de un acorde dentro de la progresión.
@@ -757,9 +758,17 @@
     }
 
     // Posición BBS desde la que arranca play(): el acorde con foco si
-    // está dentro de la progresión, o el inicio del loop si no.
+    // está dentro de la progresión (incluido el índice 0), o el inicio del
+    // loop si no hay foco. Si hay un loop activo en un rango y el acorde con
+    // foco cae FUERA del rango, arranca en el inicio del loop — si no, la
+    // primera pasada tocaría acordes de afuera antes de envolver al rango.
     function startBBSForPlay() {
-      if (focusChordIndex > 0 && focusChordIndex < progression.length) {
+      if (focusChordIndex >= 0 && focusChordIndex < progression.length) {
+        if (loopEnabled && loopRangeIdx) {
+          const lo = Math.min(loopRangeIdx[0], loopRangeIdx[1]);
+          const hi = Math.max(loopRangeIdx[0], loopRangeIdx[1]);
+          if (focusChordIndex < lo || focusChordIndex > hi) return loopStartBBS;
+        }
         return stepToBBS(chordStartStep(focusChordIndex));
       }
       return loopStartBBS;
@@ -783,9 +792,15 @@
       ensureTickLoop();                          // metrónomo independiente del rebuild
       // Coalescer de ediciones por compás: consume pendingRebuild al
       // inicio de cada compás (en vez de esperar al final del loop entero).
+      // Se dispara un pelín DESPUÉS del downbeat (offset '64n'), no exacto en
+      // el borde: si reconstruimos justo en el borde, disposeParts() + Part
+      // nuevo .start(0) dropea el evento que cae en ese instante (= beat 1 de
+      // un cambio de acorde se queda mudo). Difiriéndolo, el downbeat lo toca
+      // el schedule viejo y el nuevo entra para el resto del compás.
+      // NOTA: este timing conviene verificarlo con audio real en el navegador.
       barRebuildId = transport.scheduleRepeat(function () {
         onBarBoundary();
-      }, '1m');
+      }, '1m', '64n');
       transport.start();
       playing = true;
       emit('transport', 'play');
@@ -805,6 +820,10 @@
       pendingRebuild = false;
       playing = false;
       activeChordIndex = -1;
+      // El foco se reseteó al acorde que sonaba durante el playback (vía
+      // onChange → setFocusChord). Sin esto, Stop + Play retomaba a mitad de
+      // progresión en vez de reiniciar desde el inicio del loop.
+      focusChordIndex = -1;
       emit('chord', -1);
       emit('tick', null);    // limpia el indicador de compás
       emit('transport', 'stop');

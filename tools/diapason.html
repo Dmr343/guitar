@@ -113,44 +113,44 @@
 </head>
 <body>
 
-<a href="index.html" class="back">← Herramientas</a>
+<a href="index.html" class="back" data-i18n="back_link">← Herramientas</a>
 
 <div class="header">
-  <div class="header-label">Mástil</div>
-  <h1>Memorizar el Diapasón</h1>
+  <div class="header-label" data-i18n="header_label">Mástil</div>
+  <h1 data-i18n="header_title">Memorizar el Diapasón</h1>
 </div>
 
 <!-- Note selector -->
 <div class="selector-section">
-  <div class="selector-label">Notas naturales — empezá aquí</div>
+  <div class="selector-label" data-i18n="natural_label">Notas naturales — empezá aquí</div>
   <div class="note-row" id="natural-row"></div>
-  <button class="toggle-altered" id="toggle-altered-btn">▼ Alteradas</button>
+  <button class="toggle-altered" id="toggle-altered-btn" data-i18n="altered_toggle_closed">▼ Alteradas</button>
   <div id="altered-section" style="display:none; margin-top:8px;">
-    <div class="selector-label" style="margin-top:8px;">Notas alteradas — cuando domines las naturales</div>
+    <div class="selector-label" style="margin-top:8px;" data-i18n="altered_label">Notas alteradas — cuando domines las naturales</div>
     <div class="note-row" id="altered-row"></div>
   </div>
-  <div><button class="clear-btn" id="clear-btn" style="display:none;">✕ Limpiar selección</button></div>
+  <div><button class="clear-btn" id="clear-btn" style="display:none;" data-i18n="clear_btn">✕ Limpiar selección</button></div>
 </div>
 
 <!-- Toggles -->
 <div class="controls">
   <label class="toggle-label">
     <div class="toggle-track" id="tog-all"><div class="toggle-thumb"></div></div>
-    Mostrar todas las notas
+    <span data-i18n="tog_all">Mostrar todas las notas</span>
   </label>
   <label class="toggle-label">
     <div class="toggle-track on" id="tog-labels"><div class="toggle-thumb"></div></div>
-    Nombres en los puntos
+    <span data-i18n="tog_labels">Nombres en los puntos</span>
   </label>
   <label class="toggle-label">
     <div class="toggle-track" id="tog-exercise"><div class="toggle-thumb"></div></div>
-    Modo Ejercicio 🎸
+    <span data-i18n="tog_exercise">Modo Ejercicio 🎸</span>
   </label>
 </div>
 
 <!-- Exercise panel -->
 <div class="exercise-panel" id="exercise-panel" style="display:none;">
-  <div class="ex-hint" id="ex-hint">Seleccioná una nota para comenzar el ejercicio</div>
+  <div class="ex-hint" id="ex-hint" data-i18n="ex_hint_default">Seleccioná una nota para comenzar el ejercicio</div>
   <div class="ex-controls">
     <div class="bpm-control">
       <button class="bpm-btn" id="bpm-down">−5</button>
@@ -161,11 +161,11 @@
       <button class="bpm-btn" id="bpm-up">+5</button>
     </div>
     <div style="display:flex;gap:5px;">
-      <button class="dir-btn active" data-dir="asc" id="dir-asc">↑ Asc</button>
-      <button class="dir-btn" data-dir="desc" id="dir-desc">↓ Desc</button>
-      <button class="dir-btn" data-dir="ambos" id="dir-ambos">↕ Ambos</button>
+      <button class="dir-btn active" data-dir="asc" id="dir-asc" data-i18n="dir_asc">↑ Asc</button>
+      <button class="dir-btn" data-dir="desc" id="dir-desc" data-i18n="dir_desc">↓ Desc</button>
+      <button class="dir-btn" data-dir="ambos" id="dir-ambos" data-i18n="dir_ambos">↕ Ambos</button>
     </div>
-    <button class="start-btn stopped" id="start-btn">▶ Iniciar</button>
+    <button class="start-btn stopped" id="start-btn" data-i18n="start_btn">▶ Iniciar</button>
     <div class="metro-dot" id="metro-dot"></div>
   </div>
   <div class="string-indicators" id="string-indicators"></div>
@@ -182,10 +182,67 @@
 <div class="info-panel" id="info-panel" style="display:none;"></div>
 
 <footer>
-  Afinación estándar · E A D G B e · Trastes 0–12 · <a href="index.html">← Herramientas</a>
+  <span data-i18n="footer_tuning">Afinación estándar</span> · E A D G B e · <span data-i18n="footer_frets">Trastes 0–12</span> · <a href="index.html" data-i18n="footer_link">← Herramientas</a>
 </footer>
 
+<script src="i18n.js"></script>
 <script>
+// ─── i18n ───────────────────────────────────────────────────────────
+I18N.register({
+  es: {
+    back_link: '← Herramientas',
+    header_label: 'Mástil',
+    header_title: 'Memorizar el Diapasón',
+    natural_label: 'Notas naturales — empezá aquí',
+    altered_toggle_closed: '▼ Alteradas',
+    altered_toggle_open: '▲ Alteradas',
+    altered_label: 'Notas alteradas — cuando domines las naturales',
+    clear_btn: '✕ Limpiar selección',
+    tog_all: 'Mostrar todas las notas',
+    tog_labels: 'Nombres en los puntos',
+    tog_exercise: 'Modo Ejercicio 🎸',
+    ex_hint_default: 'Seleccioná una nota para comenzar el ejercicio',
+    dir_asc: '↑ Asc',
+    dir_desc: '↓ Desc',
+    dir_ambos: '↕ Ambos',
+    start_btn: '▶ Iniciar',
+    stop_btn: '⏹ Parar',
+    ex_hint_play: 'Tocá',
+    ex_hint_each_string: 'en cada cuerda — de 6 (E) a 1 (e)',
+    open_string: 'al aire (○)',
+    fret_label: 'traste',
+    footer_tuning: 'Afinación estándar',
+    footer_frets: 'Trastes 0–12',
+    footer_link: '← Herramientas'
+  },
+  en: {
+    back_link: '← Tools',
+    header_label: 'Fretboard',
+    header_title: 'Memorize the Fretboard',
+    natural_label: 'Natural notes — start here',
+    altered_toggle_closed: '▼ Sharps/flats',
+    altered_toggle_open: '▲ Sharps/flats',
+    altered_label: 'Sharps & flats — once you master the naturals',
+    clear_btn: '✕ Clear selection',
+    tog_all: 'Show all notes',
+    tog_labels: 'Names on the dots',
+    tog_exercise: 'Practice Mode 🎸',
+    ex_hint_default: 'Select a note to start the exercise',
+    dir_asc: '↑ Asc',
+    dir_desc: '↓ Desc',
+    dir_ambos: '↕ Both',
+    start_btn: '▶ Start',
+    stop_btn: '⏹ Stop',
+    ex_hint_play: 'Play',
+    ex_hint_each_string: 'on every string — from 6 (E) to 1 (e)',
+    open_string: 'open string (○)',
+    fret_label: 'fret',
+    footer_tuning: 'Standard tuning',
+    footer_frets: 'Frets 0–12',
+    footer_link: '← Tools'
+  }
+});
+
 // ─── Data ───────────────────────────────────────────────────────────
 const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const NATURAL_NOTES = ['A','B','C','D','E','F','G'];
@@ -431,7 +488,7 @@ function renderInfo() {
       `<div class="info-row">
         <span class="info-row-str">${p.label}</span>
         <span class="info-row-arrow">→</span>
-        <span class="info-row-frets">${p.frets.map(f => f === 0 ? 'al aire (○)' : 'traste '+f).join('   ·   ')}</span>
+        <span class="info-row-frets">${p.frets.map(f => f === 0 ? I18N.t('open_string') : I18N.t('fret_label')+' '+f).join('   ·   ')}</span>
       </div>`
     ).join('');
 }
@@ -446,11 +503,16 @@ function render() {
   if (state.selectedNote && state.exerciseMode) {
     panel.style.borderColor = NOTE_COLORS[state.selectedNote] + '44';
     document.getElementById('ex-hint').innerHTML =
-      `Tocá <strong style="color:${NOTE_COLORS[state.selectedNote]};font-size:15px">${state.selectedNote}</strong> en cada cuerda — de 6 (E) a 1 (e)`;
+      `${I18N.t('ex_hint_play')} <strong style="color:${NOTE_COLORS[state.selectedNote]};font-size:15px">${state.selectedNote}</strong> ${I18N.t('ex_hint_each_string')}`;
   }
 
   // Update string indicators
   if (state.exerciseMode) renderStringIndicators();
+
+  // Keep the running start/stop button label in sync with the language
+  if (state.exerciseRunning) {
+    document.getElementById('start-btn').textContent = I18N.t('stop_btn');
+  }
 }
 
 // ─── Metronome ───────────────────────────────────────────────────────
@@ -500,7 +562,8 @@ function startExercise() {
   startTime = performance.now();
   state.currentString = getSequence()[0];
   document.getElementById('start-btn').className = 'start-btn running';
-  document.getElementById('start-btn').textContent = '⏹ Parar';
+  document.getElementById('start-btn').removeAttribute('data-i18n');
+  document.getElementById('start-btn').textContent = I18N.t('stop_btn');
   tick();
 }
 
@@ -508,7 +571,8 @@ function stopExercise() {
   state.exerciseRunning = false;
   clearTimeout(metroInterval);
   document.getElementById('start-btn').className = 'start-btn stopped';
-  document.getElementById('start-btn').textContent = '▶ Iniciar';
+  document.getElementById('start-btn').setAttribute('data-i18n', 'start_btn');
+  document.getElementById('start-btn').textContent = I18N.t('start_btn');
   document.getElementById('metro-dot').classList.remove('beat');
   render();
 }
@@ -589,7 +653,9 @@ document.getElementById('toggle-altered-btn').addEventListener('click', () => {
   state.showAltered = !state.showAltered;
   document.getElementById('altered-section').style.display = state.showAltered ? '' : 'none';
   document.getElementById('toggle-altered-btn').classList.toggle('open', state.showAltered);
-  document.getElementById('toggle-altered-btn').textContent = (state.showAltered ? '▲' : '▼') + ' Alteradas';
+  const alteredBtn = document.getElementById('toggle-altered-btn');
+  alteredBtn.setAttribute('data-i18n', state.showAltered ? 'altered_toggle_open' : 'altered_toggle_closed');
+  alteredBtn.textContent = I18N.t(state.showAltered ? 'altered_toggle_open' : 'altered_toggle_closed');
 });
 
 // Clear
@@ -626,6 +692,10 @@ document.getElementById('start-btn').addEventListener('click', () => {
 
 // Initial render
 render();
+
+// i18n: inject toggle button, apply translations, and re-render dynamic strings on change
+I18N.init();
+window.addEventListener('i18n:changed', render);
 
 // Save minimal progress marker
 function saveProgress() {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entrenador de Oído</title>
+  <title data-i18n="page_title">Entrenador de Oído</title>
   <style>
     :root{
       --bg:#0e0e0e;--surface:#141414;--surface2:#1a1a1a;--border:#222;
@@ -112,23 +112,23 @@
 </head>
 <body>
 
-<a href="index.html" class="back">← Herramientas</a>
+<a href="index.html" class="back" data-i18n="back_link">← Herramientas</a>
 <div class="header">
-  <div class="header-label">Oído</div>
-  <h1>Entrenador de Oído</h1>
+  <div class="header-label" data-i18n="header_label">Oído</div>
+  <h1 data-i18n="header_title">Entrenador de Oído</h1>
 </div>
 
 <!-- Mode selector -->
 <div class="mode-cards">
   <div class="mode-card active" data-mode="escucha">
     <div class="mode-card-icon">🎧</div>
-    <div class="mode-card-title">Modo Escucha</div>
-    <div class="mode-card-desc">Sin guitarra. En el bus, en la cola. La app toca, vos identificás.</div>
+    <div class="mode-card-title" data-i18n="mode_listen_title">Modo Escucha</div>
+    <div class="mode-card-desc" data-i18n="mode_listen_desc">Sin guitarra. En el bus, en la cola. La app toca, vos identificás.</div>
   </div>
   <div class="mode-card" data-mode="guitarra">
     <div class="mode-card-icon">🎸</div>
-    <div class="mode-card-title">Modo Guitarra</div>
-    <div class="mode-card-desc">Con instrumento. La app te da instrucciones, vos las ejecutás en la guitarra.</div>
+    <div class="mode-card-title" data-i18n="mode_guitar_title">Modo Guitarra</div>
+    <div class="mode-card-desc" data-i18n="mode_guitar_desc">Con instrumento. La app te da instrucciones, vos las ejecutás en la guitarra.</div>
   </div>
 </div>
 
@@ -138,8 +138,9 @@
 <!-- Main content -->
 <div id="main-content"></div>
 
-<footer>El oído es la base de todo · <a href="index.html">← Herramientas</a></footer>
+<footer><span data-i18n="footer_text">El oído es la base de todo</span> · <a href="index.html" data-i18n="footer_link">← Herramientas</a></footer>
 
+<script src="i18n.js"></script>
 <script>
 // ─── Audio ───────────────────────────────────────────────────────────
 let audioCtx = null;
@@ -193,55 +194,58 @@ function playChord(notes,minor=false){
 }
 
 // ─── Levels ──────────────────────────────────────────────────────────
+// NOTE: `label` is the stable internal identity used for answer comparison
+// (btn.dataset.label === correct.label) and as the localStorage-independent key.
+// It must NOT be translated. `tkey` is the i18n key used only for DISPLAY.
 const LEVELS = [
   {
-    id:'maj-min', name:'Mayor vs Menor',
-    desc:'Identificá si un acorde es mayor o menor. El más importante para improvisar.',
+    id:'maj-min', nameKey:'lvl_maj_min_name',
+    descKey:'lvl_maj_min_desc',
     type:'chord_quality',
     items:[
-      {label:'Mayor',play:()=>playChord(['C','E','G'])},
-      {label:'Menor',play:()=>playChord(['C','D#','G'])},
+      {label:'Mayor',tkey:'lbl_major',play:()=>playChord(['C','E','G'])},
+      {label:'Menor',tkey:'lbl_minor',play:()=>playChord(['C','D#','G'])},
     ]
   },
   {
-    id:'intervals',name:'Intervalos básicos',
-    desc:'Reconocé la distancia entre dos notas. Clave para escuchar melodías.',
+    id:'intervals',nameKey:'lvl_intervals_name',
+    descKey:'lvl_intervals_desc',
     type:'interval',
     items:[
-      {label:'2ª Mayor',play:()=>playInterval('C','D')},
-      {label:'3ª Mayor',play:()=>playInterval('C','E')},
-      {label:'5ª Justa',play:()=>playInterval('C','G')},
-      {label:'8ª (Octava)',play:()=>playInterval('C','C')},
+      {label:'2ª Mayor',tkey:'lbl_maj2',play:()=>playInterval('C','D')},
+      {label:'3ª Mayor',tkey:'lbl_maj3',play:()=>playInterval('C','E')},
+      {label:'5ª Justa',tkey:'lbl_p5',play:()=>playInterval('C','G')},
+      {label:'8ª (Octava)',tkey:'lbl_octave_paren',play:()=>playInterval('C','C')},
     ]
   },
   {
-    id:'chord_types',name:'Tipos de acorde',
-    desc:'Distinguí major, minor, sus2, sus4 y dom7.',
+    id:'chord_types',nameKey:'lvl_chord_types_name',
+    descKey:'lvl_chord_types_desc',
     type:'chord_quality',
     items:[
-      {label:'Mayor',       play:()=>playChord(['C','E','G'])},
-      {label:'Menor',       play:()=>playChord(['C','D#','G'])},
-      {label:'Sus2',        play:()=>playChord(['C','D','G'])},
-      {label:'Sus4',        play:()=>playChord(['C','F','G'])},
-      {label:'Dominante 7', play:()=>playChord(['C','E','G','A#'])},
+      {label:'Mayor',       tkey:'lbl_major',  play:()=>playChord(['C','E','G'])},
+      {label:'Menor',       tkey:'lbl_minor',  play:()=>playChord(['C','D#','G'])},
+      {label:'Sus2',        tkey:'lbl_sus2',   play:()=>playChord(['C','D','G'])},
+      {label:'Sus4',        tkey:'lbl_sus4',   play:()=>playChord(['C','F','G'])},
+      {label:'Dominante 7', tkey:'lbl_dom7',   play:()=>playChord(['C','E','G','A#'])},
     ]
   },
   {
-    id:'intervals_full',name:'Todos los intervalos',
-    desc:'Los 12 intervalos del sistema cromático.',
+    id:'intervals_full',nameKey:'lvl_intervals_full_name',
+    descKey:'lvl_intervals_full_desc',
     type:'interval',
     items:[
-      {label:'Semitono (2ª m)',   play:()=>playInterval('C','C#')},
-      {label:'Tono (2ª M)',       play:()=>playInterval('C','D')},
-      {label:'3ª menor',          play:()=>playInterval('C','D#')},
-      {label:'3ª Mayor',          play:()=>playInterval('C','E')},
-      {label:'4ª Justa',          play:()=>playInterval('C','F')},
-      {label:'4ª Aumentada',      play:()=>playInterval('C','F#')},
-      {label:'5ª Justa',          play:()=>playInterval('C','G')},
-      {label:'6ª Mayor',          play:()=>playInterval('C','A')},
-      {label:'7ª menor',          play:()=>playInterval('C','A#')},
-      {label:'7ª Mayor',          play:()=>playInterval('C','B')},
-      {label:'Octava',            play:()=>playInterval('C','C')},
+      {label:'Semitono (2ª m)',   tkey:'lbl_min2',     play:()=>playInterval('C','C#')},
+      {label:'Tono (2ª M)',       tkey:'lbl_maj2_alt', play:()=>playInterval('C','D')},
+      {label:'3ª menor',          tkey:'lbl_min3',     play:()=>playInterval('C','D#')},
+      {label:'3ª Mayor',          tkey:'lbl_maj3',     play:()=>playInterval('C','E')},
+      {label:'4ª Justa',          tkey:'lbl_p4',       play:()=>playInterval('C','F')},
+      {label:'4ª Aumentada',      tkey:'lbl_aug4',     play:()=>playInterval('C','F#')},
+      {label:'5ª Justa',          tkey:'lbl_p5',       play:()=>playInterval('C','G')},
+      {label:'6ª Mayor',          tkey:'lbl_maj6',     play:()=>playInterval('C','A')},
+      {label:'7ª menor',          tkey:'lbl_min7',     play:()=>playInterval('C','A#')},
+      {label:'7ª Mayor',          tkey:'lbl_maj7',     play:()=>playInterval('C','B')},
+      {label:'Octava',            tkey:'lbl_octave',   play:()=>playInterval('C','C')},
     ]
   },
 ];
@@ -249,18 +253,18 @@ const LEVELS = [
 // Guitar mode levels
 const GUITAR_LEVELS = [
   {
-    id:'find_note',name:'Encontrar notas',
-    desc:'La app te dice una nota y la cuerda. Vos la encontrás en la guitarra.',
+    id:'find_note',nameKey:'glvl_find_note_name',
+    descKey:'glvl_find_note_desc',
     type:'find_note'
   },
   {
-    id:'interval_up',name:'Subir intervalos',
-    desc:'Tocá una nota, luego subí el intervalo indicado en la misma cuerda.',
+    id:'interval_up',nameKey:'glvl_interval_up_name',
+    descKey:'glvl_interval_up_desc',
     type:'interval_up'
   },
   {
-    id:'chord_play',name:'Tocar acordes',
-    desc:'La app suena un acorde. Vos identificás y lo tocás.',
+    id:'chord_play',nameKey:'glvl_chord_play_name',
+    descKey:'glvl_chord_play_desc',
     type:'chord_play'
   },
 ];
@@ -285,7 +289,7 @@ function renderLevels(){
   row.innerHTML=levels.map(l=>{
     const done=(progress.levels||{})[l.id]>=10;
     const active=state.level===l.id;
-    return `<button class="level-btn ${active?'active':''} ${done&&!active?'done':''}" data-level="${l.id}">${l.name}${done?'✓':''}</button>`;
+    return `<button class="level-btn ${active?'active':''} ${done&&!active?'done':''}" data-level="${l.id}">${I18N.t(l.nameKey)}${done?'✓':''}</button>`;
   }).join('');
   row.querySelectorAll('.level-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -311,14 +315,14 @@ function newEscuchaQuestion(){
   document.getElementById('main-content').innerHTML=`
     <div class="quiz-card">
       <div class="score-bar">
-        <div class="score-item"><div class="score-val">${state.score}</div><div class="score-lbl">Correctas</div></div>
-        <div class="score-item"><div class="score-val">${state.total}</div><div class="score-lbl">Total</div></div>
-        <div class="score-item"><div class="score-val streak">${state.streak}</div><div class="score-lbl">Racha</div></div>
+        <div class="score-item"><div class="score-val">${state.score}</div><div class="score-lbl">${I18N.t('score_correct')}</div></div>
+        <div class="score-item"><div class="score-val">${state.total}</div><div class="score-lbl">${I18N.t('score_total')}</div></div>
+        <div class="score-item"><div class="score-val streak">${state.streak}</div><div class="score-lbl">${I18N.t('score_streak')}</div></div>
       </div>
-      <div class="quiz-question">¿Qué tipo de <span class="highlight">${level.type==='interval'?'intervalo':'acorde'}</span> escuchás?</div>
-      <button class="play-sound-btn" id="play-again">▶ Escuchar de nuevo</button>
+      <div class="quiz-question">${level.type==='interval'?I18N.t('quiz_q_interval'):I18N.t('quiz_q_chord')}</div>
+      <button class="play-sound-btn" id="play-again">${I18N.t('btn_listen_again')}</button>
       <div class="options" id="options">
-        ${opts.map(o=>`<button class="opt-btn" data-label="${o.label}">${o.label}</button>`).join('')}
+        ${opts.map(o=>`<button class="opt-btn" data-label="${o.label}">${I18N.t(o.tkey)}</button>`).join('')}
       </div>
       <div class="feedback" id="feedback"></div>
     </div>
@@ -346,13 +350,13 @@ function newEscuchaQuestion(){
 
       const fb=document.getElementById('feedback');
       fb.className='feedback '+(isCorrect?'correct':'wrong');
-      fb.textContent=isCorrect?'✓ ¡Correcto!':'✗ Era: '+correct.label;
+      fb.textContent=isCorrect?I18N.t('fb_correct'):I18N.t('fb_was')+' '+I18N.t(correct.tkey);
 
       // Save progress
       saveProgress();
 
       const nextBtn=document.createElement('button');
-      nextBtn.className='next-btn';nextBtn.textContent='Siguiente →';
+      nextBtn.className='next-btn';nextBtn.textContent=I18N.t('btn_next');
       nextBtn.addEventListener('click',()=>newEscuchaQuestion());
       document.getElementById('feedback').after(nextBtn);
     });
@@ -370,27 +374,28 @@ function newGuitarQuestion(){
   const openIdx=CHROMATIC_.indexOf(OPEN[strings.indexOf(string)>=0?strings.indexOf(string):0]);
   const targetNote=CHROMATIC_[(openIdx+fret)%12];
 
-  const intervals_=['2ª Mayor','3ª menor','3ª Mayor','4ª Justa','5ª Justa','6ª Mayor','7ª menor'];
+  // tkeys parallel to intervalSemitones; selected by index, only DISPLAYED.
+  const intervalKeys=['lbl_maj2','lbl_min3','lbl_maj3','lbl_p4','lbl_p5','lbl_maj6','lbl_min7'];
   const intervalSemitones=[2,3,4,5,7,9,10];
-  const iIdx=Math.floor(Math.random()*intervals_.length);
-  const interval=intervals_[iIdx];
+  const iIdx=Math.floor(Math.random()*intervalKeys.length);
+  const interval=I18N.t(intervalKeys[iIdx]);
   const semitones=intervalSemitones[iIdx];
   const targetNote2=CHROMATIC_[(CHROMATIC_.indexOf(targetNote)+semitones)%12];
 
   let instruction='',hint='',type=level.type;
 
   if(type==='find_note'){
-    instruction=`Encontrá la nota <strong>${targetNote}</strong> en la cuerda <strong>${string}</strong>`;
-    hint=`Pista: está en el traste ${fret===0?'0 (al aire)':fret}`;
+    instruction=`${I18N.t('gi_find_note_1')} <strong>${targetNote}</strong> ${I18N.t('gi_find_note_2')} <strong>${string}</strong>${I18N.t('gi_string_suffix')}`;
+    hint=`${I18N.t('gh_fret_prefix')} ${fret===0?I18N.t('gh_fret_open'):fret}`;
   } else if(type==='interval_up'){
-    instruction=`Tocá <strong>${targetNote}</strong> en la cuerda <strong>${string}</strong>,<br>luego subí una <strong>${interval}</strong>`;
-    hint=`La nota de llegada es <strong>${targetNote2}</strong>`;
+    instruction=`${I18N.t('gi_interval_up_1')} <strong>${targetNote}</strong> ${I18N.t('gi_interval_up_2')} <strong>${string}</strong>${I18N.t('gi_string_suffix')},<br>${I18N.t('gi_interval_up_3')} <strong>${interval}</strong>`;
+    hint=`${I18N.t('gh_target_prefix')} <strong>${targetNote2}</strong>`;
   } else {
     // chord_play: play a chord, identify
     const isMinor=Math.random()>0.5;
     const chordNote=CHROMATIC_[Math.floor(Math.random()*12)];
     const chordName=chordNote+(isMinor?'m':'');
-    instruction=`Escuchá el acorde y tocalo en la guitarra`;
+    instruction=I18N.t('gi_chord_play');
     setTimeout(()=>{
       const root=noteFreq(chordNote,3);
       const third=isMinor?root*1.189:root*1.26;
@@ -399,25 +404,25 @@ function newGuitarQuestion(){
         playNote(f,1.2,i*0.03);
       });
     },300);
-    hint=`Era: <strong>${chordName}</strong>`;
+    hint=`${I18N.t('gh_was_prefix')} <strong>${chordName}</strong>`;
   }
 
   state.answered=false;
 
   document.getElementById('main-content').innerHTML=`
     <div class="score-bar" style="justify-content:center;display:flex;gap:16px;margin-bottom:16px;">
-      <div class="score-item"><div class="score-val">${state.score}</div><div class="score-lbl">Correctas</div></div>
-      <div class="score-item"><div class="score-val">${state.total}</div><div class="score-lbl">Total</div></div>
-      <div class="score-item"><div class="score-val streak">${state.streak}</div><div class="score-lbl">Racha</div></div>
+      <div class="score-item"><div class="score-val">${state.score}</div><div class="score-lbl">${I18N.t('score_correct')}</div></div>
+      <div class="score-item"><div class="score-val">${state.total}</div><div class="score-lbl">${I18N.t('score_total')}</div></div>
+      <div class="score-item"><div class="score-val streak">${state.streak}</div><div class="score-lbl">${I18N.t('score_streak')}</div></div>
     </div>
     <div class="guitar-instruction">
       <div class="guitar-step">${instruction}</div>
-      <div class="guitar-hint">Tomá tu tiempo. Encontrá la nota, tocala, y evaluá vos mismo si salió bien.</div>
+      <div class="guitar-hint">${I18N.t('guitar_takeyourtime')}</div>
       <div class="guitar-fret-hint" id="guitar-hint" style="display:none;">${hint}</div>
       <div class="guitar-answer-row">
-        <button class="guitar-self" data-ans="show">👁 Ver pista</button>
-        <button class="guitar-self" data-ans="correct">✓ Lo hice bien</button>
-        <button class="guitar-self" data-ans="wrong">✗ No lo logré</button>
+        <button class="guitar-self" data-ans="show">${I18N.t('btn_show_hint')}</button>
+        <button class="guitar-self" data-ans="correct">${I18N.t('btn_did_well')}</button>
+        <button class="guitar-self" data-ans="wrong">${I18N.t('btn_did_not')}</button>
       </div>
     </div>
   `;
@@ -440,7 +445,7 @@ function newGuitarQuestion(){
       // Next button
       const next=document.createElement('button');
       next.className='next-btn';next.style.marginTop='12px';
-      next.textContent='Siguiente →';
+      next.textContent=I18N.t('btn_next');
       next.addEventListener('click',()=>newGuitarQuestion());
       document.querySelector('.guitar-instruction').appendChild(next);
     });
@@ -482,6 +487,163 @@ document.querySelectorAll('.mode-card').forEach(card=>{
 const p=JSON.parse(localStorage.getItem('maru_progress_oido')||'{}');
 p.visited=true;p.pct=p.pct||5;
 localStorage.setItem('maru_progress_oido',JSON.stringify(p));
+
+// ─── i18n ─────────────────────────────────────────────────────────────
+I18N.register({
+  es: {
+    page_title: 'Entrenador de Oído',
+    back_link: '← Herramientas',
+    header_label: 'Oído',
+    header_title: 'Entrenador de Oído',
+    mode_listen_title: 'Modo Escucha',
+    mode_listen_desc: 'Sin guitarra. En el bus, en la cola. La app toca, vos identificás.',
+    mode_guitar_title: 'Modo Guitarra',
+    mode_guitar_desc: 'Con instrumento. La app te da instrucciones, vos las ejecutás en la guitarra.',
+    footer_text: 'El oído es la base de todo',
+    footer_link: '← Herramientas',
+    // Listening levels
+    lvl_maj_min_name: 'Mayor vs Menor',
+    lvl_maj_min_desc: 'Identificá si un acorde es mayor o menor. El más importante para improvisar.',
+    lvl_intervals_name: 'Intervalos básicos',
+    lvl_intervals_desc: 'Reconocé la distancia entre dos notas. Clave para escuchar melodías.',
+    lvl_chord_types_name: 'Tipos de acorde',
+    lvl_chord_types_desc: 'Distinguí major, minor, sus2, sus4 y dom7.',
+    lvl_intervals_full_name: 'Todos los intervalos',
+    lvl_intervals_full_desc: 'Los 12 intervalos del sistema cromático.',
+    // Guitar levels
+    glvl_find_note_name: 'Encontrar notas',
+    glvl_find_note_desc: 'La app te dice una nota y la cuerda. Vos la encontrás en la guitarra.',
+    glvl_interval_up_name: 'Subir intervalos',
+    glvl_interval_up_desc: 'Tocá una nota, luego subí el intervalo indicado en la misma cuerda.',
+    glvl_chord_play_name: 'Tocar acordes',
+    glvl_chord_play_desc: 'La app suena un acorde. Vos identificás y lo tocás.',
+    // Item / interval labels
+    lbl_major: 'Mayor',
+    lbl_minor: 'Menor',
+    lbl_maj2: '2ª Mayor',
+    lbl_maj2_alt: 'Tono (2ª M)',
+    lbl_maj3: '3ª Mayor',
+    lbl_p5: '5ª Justa',
+    lbl_octave_paren: '8ª (Octava)',
+    lbl_sus2: 'Sus2',
+    lbl_sus4: 'Sus4',
+    lbl_dom7: 'Dominante 7',
+    lbl_min2: 'Semitono (2ª m)',
+    lbl_min3: '3ª menor',
+    lbl_p4: '4ª Justa',
+    lbl_aug4: '4ª Aumentada',
+    lbl_maj6: '6ª Mayor',
+    lbl_min7: '7ª menor',
+    lbl_maj7: '7ª Mayor',
+    lbl_octave: 'Octava',
+    // Score / quiz UI
+    score_correct: 'Correctas',
+    score_total: 'Total',
+    score_streak: 'Racha',
+    quiz_q_interval: '¿Qué intervalo escuchás?',
+    quiz_q_chord: '¿Qué tipo de acorde escuchás?',
+    btn_listen_again: '▶ Escuchar de nuevo',
+    btn_next: 'Siguiente →',
+    fb_correct: '✓ ¡Correcto!',
+    fb_was: '✗ Era:',
+    // Guitar mode UI
+    guitar_takeyourtime: 'Tomá tu tiempo. Encontrá la nota, tocala, y evaluá vos mismo si salió bien.',
+    btn_show_hint: '👁 Ver pista',
+    btn_did_well: '✓ Lo hice bien',
+    btn_did_not: '✗ No lo logré',
+    gi_find_note_1: 'Encontrá la nota',
+    gi_find_note_2: 'en la cuerda',
+    gi_string_suffix: '',
+    gh_fret_prefix: 'Pista: está en el traste',
+    gh_fret_open: '0 (al aire)',
+    gi_interval_up_1: 'Tocá',
+    gi_interval_up_2: 'en la cuerda',
+    gi_interval_up_3: 'luego subí una',
+    gh_target_prefix: 'La nota de llegada es',
+    gi_chord_play: 'Escuchá el acorde y tocalo en la guitarra',
+    gh_was_prefix: 'Era:'
+  },
+  en: {
+    page_title: 'Ear Trainer',
+    back_link: '← Tools',
+    header_label: 'Ear',
+    header_title: 'Ear Trainer',
+    mode_listen_title: 'Listening Mode',
+    mode_listen_desc: 'No guitar. On the bus, in line. The app plays, you identify.',
+    mode_guitar_title: 'Guitar Mode',
+    mode_guitar_desc: 'With your instrument. The app gives you instructions, you play them on the guitar.',
+    footer_text: 'Your ear is the foundation of everything',
+    footer_link: '← Tools',
+    // Listening levels
+    lvl_maj_min_name: 'Major vs Minor',
+    lvl_maj_min_desc: 'Identify whether a chord is major or minor. The most important one for improvising.',
+    lvl_intervals_name: 'Basic intervals',
+    lvl_intervals_desc: 'Recognize the distance between two notes. Key for hearing melodies.',
+    lvl_chord_types_name: 'Chord types',
+    lvl_chord_types_desc: 'Tell apart major, minor, sus2, sus4 and dom7.',
+    lvl_intervals_full_name: 'All intervals',
+    lvl_intervals_full_desc: 'The 12 intervals of the chromatic system.',
+    // Guitar levels
+    glvl_find_note_name: 'Find notes',
+    glvl_find_note_desc: 'The app tells you a note and the string. You find it on the guitar.',
+    glvl_interval_up_name: 'Go up intervals',
+    glvl_interval_up_desc: 'Play a note, then go up the given interval on the same string.',
+    glvl_chord_play_name: 'Play chords',
+    glvl_chord_play_desc: 'The app plays a chord. You identify it and play it.',
+    // Item / interval labels
+    lbl_major: 'Major',
+    lbl_minor: 'Minor',
+    lbl_maj2: 'Major 2nd',
+    lbl_maj2_alt: 'Whole step (M2)',
+    lbl_maj3: 'Major 3rd',
+    lbl_p5: 'Perfect 5th',
+    lbl_octave_paren: '8th (Octave)',
+    lbl_sus2: 'Sus2',
+    lbl_sus4: 'Sus4',
+    lbl_dom7: 'Dominant 7',
+    lbl_min2: 'Half step (m2)',
+    lbl_min3: 'Minor 3rd',
+    lbl_p4: 'Perfect 4th',
+    lbl_aug4: 'Augmented 4th',
+    lbl_maj6: 'Major 6th',
+    lbl_min7: 'Minor 7th',
+    lbl_maj7: 'Major 7th',
+    lbl_octave: 'Octave',
+    // Score / quiz UI
+    score_correct: 'Correct',
+    score_total: 'Total',
+    score_streak: 'Streak',
+    quiz_q_interval: 'Which interval do you hear?',
+    quiz_q_chord: 'What type of chord do you hear?',
+    btn_listen_again: '▶ Listen again',
+    btn_next: 'Next →',
+    fb_correct: '✓ Correct!',
+    fb_was: '✗ It was:',
+    // Guitar mode UI
+    guitar_takeyourtime: 'Take your time. Find the note, play it, and judge for yourself whether you nailed it.',
+    btn_show_hint: '👁 Show hint',
+    btn_did_well: '✓ I did it',
+    btn_did_not: '✗ I missed it',
+    gi_find_note_1: 'Find the note',
+    gi_find_note_2: 'on the',
+    gi_string_suffix: ' string',
+    gh_fret_prefix: 'Hint: it is on fret',
+    gh_fret_open: '0 (open)',
+    gi_interval_up_1: 'Play',
+    gi_interval_up_2: 'on the',
+    gi_interval_up_3: 'then go up a',
+    gh_target_prefix: 'The landing note is',
+    gi_chord_play: 'Listen to the chord and play it on the guitar',
+    gh_was_prefix: 'It was:'
+  }
+});
+I18N.init();
+
+// Re-render dynamic content when language changes.
+window.addEventListener('i18n:changed', function(){
+  renderLevels();
+  renderMain();
+});
 
 renderLevels();
 renderMain();

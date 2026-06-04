@@ -9,9 +9,9 @@
 <body>
 
   <header class="header">
-    <a href="../index.html" class="back-link">←</a>
+    <a href="../index.html" class="back-link" data-i18n-attr="title:back_title" title="Volver">←</a>
     <h1>Backing Track</h1>
-    <span class="header-label">Práctica de improvisación</span>
+    <span class="header-label" data-i18n="header_label">Práctica de improvisación</span>
   </header>
 
   <div class="app">
@@ -21,43 +21,43 @@
 
       <div class="transport">
         <button id="btn-play" class="btn btn-primary btn-play">▶&nbsp; Play</button>
-        <span id="status" class="status">Detenido</span>
+        <span id="status" class="status" data-i18n="status_stopped">Detenido</span>
         <div class="transport-ctls">
           <div class="ctl">
-            <label for="ctl-tempo">Tempo</label>
+            <label for="ctl-tempo" data-i18n="tempo">Tempo</label>
             <input type="range" id="ctl-tempo" min="40" max="240" step="1">
             <span class="value" id="val-tempo">100 BPM</span>
           </div>
           <div class="ctl">
-            <label for="ctl-volume">Volumen</label>
+            <label for="ctl-volume" data-i18n="volume">Volumen</label>
             <input type="range" id="ctl-volume" min="0" max="100" step="1">
             <span class="value" id="val-volume">85%</span>
           </div>
           <label class="ctl-loop">
             <input type="checkbox" id="ctl-loop" checked>
-            <span>Loop</span>
+            <span data-i18n="loop">Loop</span>
           </label>
         </div>
       </div>
 
       <div class="now-playing">
         <div class="chord-now">
-          <span class="chord-cap">Acorde</span>
+          <span class="chord-cap" data-i18n="chord_now_cap">Acorde</span>
           <span id="now-chord" class="chord-now-name">—</span>
         </div>
         <div class="chord-next">
-          <span class="chord-cap">Sigue</span>
+          <span class="chord-cap" data-i18n="chord_next_cap">Sigue</span>
           <span id="next-chord" class="chord-next-name">—</span>
         </div>
         <div class="metro">
           <div id="beat-meter" class="beat-meter"></div>
-          <select id="subdiv-select" class="subdiv-select" title="Subdivisión del metrónomo">
-            <option value="redonda">Redonda</option>
-            <option value="blanca">Blanca</option>
-            <option value="negra" selected>Negra</option>
-            <option value="corchea">Corchea</option>
-            <option value="tresillo">Tresillo</option>
-            <option value="semicorchea">Semicorchea</option>
+          <select id="subdiv-select" class="subdiv-select" data-i18n-attr="title:subdiv_title" title="Subdivisión del metrónomo">
+            <option value="redonda" data-i18n="subdiv_redonda">Redonda</option>
+            <option value="blanca" data-i18n="subdiv_blanca">Blanca</option>
+            <option value="negra" selected data-i18n="subdiv_negra">Negra</option>
+            <option value="corchea" data-i18n="subdiv_corchea">Corchea</option>
+            <option value="tresillo" data-i18n="subdiv_tresillo">Tresillo</option>
+            <option value="semicorchea" data-i18n="subdiv_semicorchea">Semicorchea</option>
           </select>
         </div>
       </div>
@@ -68,18 +68,18 @@
            editor de sonido quedan accesibles aunque la configuración
            esté colapsada. -->
       <div class="mixer">
-        <div class="section-label">Pistas</div>
+        <div class="section-label" data-i18n="tracks_label">Pistas</div>
         <div id="tracks"></div>
         <div class="add-track">
           <select id="add-tipo">
-            <option value="bajo">Bajo</option>
-            <option value="acordes">Acordes</option>
-            <option value="bateria">Batería</option>
-            <option value="percusion">Percusión</option>
-            <option value="pad">Pad</option>
-            <option value="lead">Lead</option>
+            <option value="bajo" data-i18n="tipo_bajo">Bajo</option>
+            <option value="acordes" data-i18n="tipo_acordes">Acordes</option>
+            <option value="bateria" data-i18n="tipo_bateria">Batería</option>
+            <option value="percusion" data-i18n="tipo_percusion">Percusión</option>
+            <option value="pad" data-i18n="tipo_pad">Pad</option>
+            <option value="lead" data-i18n="tipo_lead">Lead</option>
           </select>
-          <button id="btn-add" class="btn btn-secondary">+ Agregar instrumento</button>
+          <button id="btn-add" class="btn btn-secondary" data-i18n="btn_add_instrument">+ Agregar instrumento</button>
         </div>
         <div id="preset-editor" class="preset-editor" hidden></div>
       </div>
@@ -93,8 +93,8 @@
       <button type="button" class="config-header" id="config-toggle"
               aria-expanded="true">
         <span class="config-title">
-          <span class="config-title-main">Configuración</span>
-          <span class="config-title-sub">progresión · arreglo · proyecto</span>
+          <span class="config-title-main" data-i18n="config_title">Configuración</span>
+          <span class="config-title-sub" data-i18n="config_subtitle">progresión · arreglo · proyecto</span>
         </span>
         <span class="chevron" id="config-chevron">▾</span>
       </button>
@@ -102,27 +102,29 @@
       <div class="config-body" id="config-body">
 
         <div class="mode-toggle">
-          <button id="mode-practica" class="mode-btn active">Práctica</button>
-          <button id="mode-arreglo" class="mode-btn">Arreglo</button>
+          <button id="mode-practica" class="mode-btn active" data-i18n="mode_practice">Práctica</button>
+          <button id="mode-arreglo" class="mode-btn" data-i18n="mode_arrange">Arreglo</button>
         </div>
 
         <div class="cfg-section">
-          <div class="section-label">Progresión</div>
+          <div class="section-label" data-i18n="progression_label">Progresión</div>
           <div class="control-row">
-            <label for="prog-select">De fábrica</label>
+            <label for="prog-select" data-i18n="factory_label">De fábrica</label>
             <select id="prog-select"></select>
-            <label for="tonalidad-select">Tonalidad</label>
+            <label for="tonalidad-select" data-i18n="key_label">Tonalidad</label>
             <select id="tonalidad-select" disabled></select>
             <button id="btn-tonalidad-reset" class="btn btn-secondary"
+                    data-i18n-attr="title:key_reset_title"
                     title="Volver a la tonalidad nativa de la progresión"
                     disabled>↻</button>
           </div>
           <div class="builder">
             <select id="new-root"></select>
             <select id="new-quality"></select>
-            <button id="btn-add-chord" class="btn btn-secondary">+ Acorde</button>
+            <button id="btn-add-chord" class="btn btn-secondary" data-i18n="btn_add_chord">+ Acorde</button>
             <button id="btn-clear-prog" class="btn btn-danger"
-                    title="Limpiar progresión">Limpiar</button>
+                    data-i18n-attr="title:btn_clear_prog_title"
+                    title="Limpiar progresión" data-i18n="btn_clear_prog">Limpiar</button>
           </div>
           <div id="chord-editor" class="chord-editor" hidden></div>
         </div>
@@ -130,21 +132,24 @@
         <div id="arrange-panel" class="arrange-panel" hidden></div>
 
         <div class="cfg-section">
-          <div class="section-label">Proyecto</div>
+          <div class="section-label" data-i18n="project_label">Proyecto</div>
           <div class="control-row">
-            <input type="text" id="proj-name" placeholder="Nombre del proyecto">
-            <button id="btn-save-proj" class="btn btn-primary">Guardar</button>
+            <input type="text" id="proj-name" data-i18n-attr="placeholder:proj_name_ph" placeholder="Nombre del proyecto">
+            <button id="btn-save-proj" class="btn btn-primary" data-i18n="btn_save">Guardar</button>
           </div>
           <div class="control-row">
             <select id="proj-select"></select>
-            <button id="btn-load-proj" class="btn btn-secondary">Cargar</button>
+            <button id="btn-load-proj" class="btn btn-secondary" data-i18n="btn_load">Cargar</button>
             <button id="btn-del-proj" class="btn btn-danger icon-btn"
+                    data-i18n-attr="title:btn_del_proj_title"
                     title="Borrar proyecto seleccionado">🗑</button>
           </div>
           <div class="control-row project-io">
             <button id="btn-export" class="btn btn-secondary icon-btn"
+                    data-i18n-attr="title:btn_export_title"
                     title="Exportar respaldo JSON">⭳ JSON</button>
             <button id="btn-import" class="btn btn-secondary icon-btn"
+                    data-i18n-attr="title:btn_import_title"
                     title="Importar respaldo JSON">⭱ JSON</button>
             <input type="file" id="import-file" accept="application/json" hidden>
           </div>
@@ -160,6 +165,9 @@
   <!-- WebAudioFont: reproductor de soundfonts GM (instrumentos reales).
        El reproductor es local; los soundfonts se cargan por CDN. -->
   <script src="./vendor/WebAudioFontPlayer.js"></script>
+
+  <!-- Motor i18n ES/EN compartido (file:// safe). Un nivel arriba. -->
+  <script src="../i18n.js"></script>
 
   <!-- Dependencias compartidas del repo -->
   <script src="../shared/theory.js"></script>
@@ -182,6 +190,359 @@
   <script src="./integration.js"></script>
   <script src="./engine.js"></script>
   <script src="./app.js"></script>
+
+  <!-- Diccionario ES/EN del Backing Track + arranque del motor i18n.
+       Carga tras la app para que el botón aparezca y app.js pueda
+       re-renderizar al cambiar idioma (evento i18n:changed). -->
+  <script>
+    I18N.register({
+      es: {
+        // Cabecera / transporte
+        back_title: 'Volver',
+        header_label: 'Práctica de improvisación',
+        btn_play: '▶  Play',
+        btn_stop: '■  Detener',
+        play: '▶  Play',
+        tempo: 'Tempo',
+        volume: 'Volumen',
+        loop: 'Loop',
+        chord_now_cap: 'Acorde',
+        chord_next_cap: 'Sigue',
+        // Subdivisión del metrónomo
+        subdiv_title: 'Subdivisión del metrónomo',
+        subdiv_redonda: 'Redonda',
+        subdiv_blanca: 'Blanca',
+        subdiv_negra: 'Negra',
+        subdiv_corchea: 'Corchea',
+        subdiv_tresillo: 'Tresillo',
+        subdiv_semicorchea: 'Semicorchea',
+        // Estado
+        status_stopped: 'Detenido',
+        status_playing: 'Sonando',
+        status_audio_error: 'Error al iniciar el audio:',
+        status_handoff: 'Progresión recibida del Intervalic Atlas',
+        status_proj_saved_a: 'Proyecto',
+        status_proj_saved_b: 'guardado',
+        status_proj_loaded: 'Proyecto cargado',
+        status_imported: 'Librería y proyectos importados',
+        status_invalid_json: 'Archivo JSON inválido',
+        // Mixer / pistas
+        tracks_label: 'Pistas',
+        tracks_empty: 'Sin pistas. Agregá un instrumento para empezar.',
+        btn_add_instrument: '+ Agregar instrumento',
+        tipo_bajo: 'Bajo',
+        tipo_acordes: 'Acordes',
+        tipo_bateria: 'Batería',
+        tipo_percusion: 'Percusión',
+        tipo_pad: 'Pad',
+        tipo_lead: 'Lead',
+        track_drag_title: 'Arrastrar para reordenar',
+        track_mute_title: 'Silenciar / activar',
+        track_vol_title: 'Volumen de la pista',
+        track_edit_sound_title: 'Editar sonido',
+        track_remove_title: 'Quitar pista',
+        track_sustained: '(sostenido)',
+        preset_edited: '(editado)',
+        preset_grp_synth: 'Sintetizados',
+        preset_grp_real: 'Reales (internet)',
+        preset_grp_mine: 'Mis presets',
+        // Configuración
+        config_title: 'Configuración',
+        config_subtitle: 'progresión · arreglo · proyecto',
+        mode_practice: 'Práctica',
+        mode_arrange: 'Arreglo',
+        // Progresión
+        progression_label: 'Progresión',
+        factory_label: 'De fábrica',
+        key_label: 'Tonalidad',
+        key_reset_title: 'Volver a la tonalidad nativa de la progresión',
+        key_title_load: 'Cargá una progresión del catálogo para transponerla',
+        key_title_all12: 'Esta progresión recorre las 12 tonalidades; no se transpone.',
+        key_title_transpose: 'Transponer la progresión cargada',
+        btn_add_chord: '+ Acorde',
+        btn_clear_prog: 'Limpiar',
+        btn_clear_prog_title: 'Limpiar progresión',
+        prog_custom: '(personalizada)',
+        // Categorías de progresiones
+        cat_estudio: 'Estudio',
+        cat_improvisacion: 'Improvisación',
+        cat_bailable: 'Bailables',
+        cat_experimental: 'Experimental',
+        // Cualidades de acorde
+        qual_major: 'Mayor',
+        qual_minor: 'menor',
+        qual_dom7: 'Dominante 7',
+        qual_maj7: 'Mayor 7',
+        qual_min7: 'menor 7',
+        qual_m7b5: 'Semidisminuido',
+        // Editor de acorde
+        editor_chord: 'Editar acorde',
+        bars_label: 'Compases',
+        chip_remove_title: 'Quitar acorde',
+        chip_title: 'Clic: seleccionar · Shift+clic: marcar loop · arrastrar: reordenar · Supr/Backspace: borrar',
+        // Proyecto
+        project_label: 'Proyecto',
+        proj_name_ph: 'Nombre del proyecto',
+        btn_save: 'Guardar',
+        btn_load: 'Cargar',
+        btn_del_proj_title: 'Borrar proyecto seleccionado',
+        btn_export_title: 'Exportar respaldo JSON',
+        btn_import_title: 'Importar respaldo JSON',
+        proj_none: '(sin proyectos guardados)',
+        proj_default_name: 'Proyecto',
+        // Editor de sonido (preset)
+        pe_title: 'Editar sonido',
+        pe_base: 'Base:',
+        pe_base_note: 'Los cambios afectan solo a esta pista hasta que guardes.',
+        pe_sampled_notice: 'Este preset usa samples reales — Forma de onda y Envolvente no afectan al sonido (vienen "horneados" en la grabación). Los efectos de abajo sí aplican.',
+        pe_kit_pieces: 'Piezas del kit',
+        pe_volume: 'Volumen',
+        pe_tune: 'Tono',
+        pe_oscillator: 'Oscilador',
+        pe_waveform: 'Forma de onda',
+        pe_envelope: 'Envolvente (ADSR)',
+        pe_filter: 'Filtro',
+        pe_type: 'Tipo',
+        pe_resonance: 'Resonancia (Q)',
+        pe_base_freq: 'Frecuencia base',
+        pe_octaves: 'Octavas',
+        pe_effects: 'Efectos',
+        pe_restore: 'Restablecer',
+        pe_restore_title: 'Volver al preset de fábrica (descartar ediciones)',
+        pe_scratch: 'Desde cero',
+        pe_scratch_title: 'Crear un preset vacío (no es lo mismo que restablecer)',
+        pe_name_ph: 'Nombre del preset',
+        pe_save_as_new: 'Guardar como nuevo',
+        pe_default_name: 'Mi sonido',
+        pe_close: 'Cerrar',
+        preset_new_kit: 'Nuevo kit',
+        preset_new_sound: 'Nuevo sonido',
+        // Efectos
+        fx_reverb: 'Reverb',
+        fx_distortion: 'Distorsión',
+        fx_chorus: 'Chorus',
+        // Modo arreglo
+        arr_style_groove: 'Groove de estilo',
+        arr_apply: 'Aplicar',
+        arr_choose_groove: '(elegir un groove…)',
+        arr_humanize: 'Humanización',
+        arr_intensity: 'Intensidad',
+        arr_hide_chord: 'Ocultar acorde',
+        arr_groove_voicings: 'Groove y voicings por pista',
+        arr_add_tracks_hint: 'Agregá pistas para editar sus grooves.',
+        seq_sustained: '(acorde sostenido — sin patrón rítmico)',
+        // Voicings / inversiones / octava
+        voicing_close: 'Cerrado',
+        voicing_open: 'Abierto (drop-2)',
+        inversion_root: 'Fundamental',
+        inversion_1: '1ª inversión',
+        inversion_2: '2ª inversión',
+        inversion_3: '3ª inversión',
+        octave_abbr: 'Oct.',
+        // Lanes del kit / secuenciador
+        lane_main: 'Notas',
+        lane_kick: 'Bombo',
+        lane_snare: 'Caja',
+        lane_hat: 'Hi-hat',
+        lane_cymbal: 'Platillo',
+        lane_bongo_hi: 'Bongó ↑',
+        lane_bongo_lo: 'Bongó ↓',
+        lane_conga: 'Conga',
+        lane_shaker: 'Shaker',
+        // GM drum kit (por nota MIDI)
+        waf_35: 'Bombo acústico', waf_36: 'Bombo', waf_37: 'Sidestick', waf_38: 'Caja',
+        waf_39: 'Palmas', waf_40: 'Caja eléctrica', waf_41: 'Tom piso', waf_42: 'Hi-hat cerrado',
+        waf_43: 'Tom piso alto', waf_44: 'Hi-hat pedal', waf_45: 'Tom bajo', waf_46: 'Hi-hat abierto',
+        waf_47: 'Tom medio bajo', waf_48: 'Tom medio alto', waf_49: 'Crash 1', waf_50: 'Tom alto',
+        waf_51: 'Ride 1', waf_52: 'Chinese', waf_53: 'Ride bell', waf_54: 'Pandereta',
+        waf_55: 'Splash', waf_56: 'Cencerro', waf_57: 'Crash 2', waf_58: 'Vibraslap',
+        waf_59: 'Ride 2', waf_60: 'Bongó ↑', waf_61: 'Bongó ↓',
+        waf_62: 'Conga muda', waf_63: 'Conga ↑', waf_64: 'Conga ↓',
+        waf_65: 'Timbal ↑', waf_66: 'Timbal ↓', waf_67: 'Agogo ↑', waf_68: 'Agogo ↓',
+        waf_69: 'Cabasa', waf_70: 'Maracas', waf_71: 'Silbato ↑', waf_72: 'Silbato ↓',
+        waf_73: 'Güiro corto', waf_74: 'Güiro largo', waf_75: 'Claves',
+        waf_76: 'Wood block ↑', waf_77: 'Wood block ↓',
+        waf_78: 'Cuica muda', waf_79: 'Cuica abierta',
+        waf_80: 'Triángulo mudo', waf_81: 'Triángulo abierto',
+        // Diagnóstico (?debug)
+        diag_voices: 'Voces activas:',
+        diag_max: 'máx'
+      },
+      en: {
+        // Header / transport
+        back_title: 'Back',
+        header_label: 'Improvisation practice',
+        btn_play: '▶  Play',
+        btn_stop: '■  Stop',
+        play: '▶  Play',
+        tempo: 'Tempo',
+        volume: 'Volume',
+        loop: 'Loop',
+        chord_now_cap: 'Chord',
+        chord_next_cap: 'Next',
+        // Metronome subdivision
+        subdiv_title: 'Metronome subdivision',
+        subdiv_redonda: 'Whole note',
+        subdiv_blanca: 'Half note',
+        subdiv_negra: 'Quarter note',
+        subdiv_corchea: 'Eighth note',
+        subdiv_tresillo: 'Triplet',
+        subdiv_semicorchea: 'Sixteenth note',
+        // Status
+        status_stopped: 'Stopped',
+        status_playing: 'Playing',
+        status_audio_error: 'Failed to start audio:',
+        status_handoff: 'Progression received from the Interval Atlas',
+        status_proj_saved_a: 'Project',
+        status_proj_saved_b: 'saved',
+        status_proj_loaded: 'Project loaded',
+        status_imported: 'Library and projects imported',
+        status_invalid_json: 'Invalid JSON file',
+        // Mixer / tracks
+        tracks_label: 'Tracks',
+        tracks_empty: 'No tracks. Add an instrument to get started.',
+        btn_add_instrument: '+ Add instrument',
+        tipo_bajo: 'Bass',
+        tipo_acordes: 'Chords',
+        tipo_bateria: 'Drums',
+        tipo_percusion: 'Percussion',
+        tipo_pad: 'Pad',
+        tipo_lead: 'Lead',
+        track_drag_title: 'Drag to reorder',
+        track_mute_title: 'Mute / unmute',
+        track_vol_title: 'Track volume',
+        track_edit_sound_title: 'Edit sound',
+        track_remove_title: 'Remove track',
+        track_sustained: '(sustained)',
+        preset_edited: '(edited)',
+        preset_grp_synth: 'Synthesized',
+        preset_grp_real: 'Real (internet)',
+        preset_grp_mine: 'My presets',
+        // Configuration
+        config_title: 'Settings',
+        config_subtitle: 'progression · arrangement · project',
+        mode_practice: 'Practice',
+        mode_arrange: 'Arrange',
+        // Progression
+        progression_label: 'Progression',
+        factory_label: 'Built-in',
+        key_label: 'Key',
+        key_reset_title: 'Back to the progression’s native key',
+        key_title_load: 'Load a progression from the catalog to transpose it',
+        key_title_all12: 'This progression cycles through all 12 keys; it is not transposed.',
+        key_title_transpose: 'Transpose the loaded progression',
+        btn_add_chord: '+ Chord',
+        btn_clear_prog: 'Clear',
+        btn_clear_prog_title: 'Clear progression',
+        prog_custom: '(custom)',
+        // Progression categories
+        cat_estudio: 'Study',
+        cat_improvisacion: 'Improvisation',
+        cat_bailable: 'Danceable',
+        cat_experimental: 'Experimental',
+        // Chord qualities
+        qual_major: 'Major',
+        qual_minor: 'minor',
+        qual_dom7: 'Dominant 7',
+        qual_maj7: 'Major 7',
+        qual_min7: 'minor 7',
+        qual_m7b5: 'Half-diminished',
+        // Chord editor
+        editor_chord: 'Edit chord',
+        bars_label: 'Bars',
+        chip_remove_title: 'Remove chord',
+        chip_title: 'Click: select · Shift+click: set loop · drag: reorder · Del/Backspace: delete',
+        // Project
+        project_label: 'Project',
+        proj_name_ph: 'Project name',
+        btn_save: 'Save',
+        btn_load: 'Load',
+        btn_del_proj_title: 'Delete selected project',
+        btn_export_title: 'Export JSON backup',
+        btn_import_title: 'Import JSON backup',
+        proj_none: '(no saved projects)',
+        proj_default_name: 'Project',
+        // Sound (preset) editor
+        pe_title: 'Edit sound',
+        pe_base: 'Base:',
+        pe_base_note: 'Changes affect only this track until you save.',
+        pe_sampled_notice: 'This preset uses real samples — Waveform and Envelope do not affect the sound (they are "baked" into the recording). The effects below do apply.',
+        pe_kit_pieces: 'Kit pieces',
+        pe_volume: 'Volume',
+        pe_tune: 'Tune',
+        pe_oscillator: 'Oscillator',
+        pe_waveform: 'Waveform',
+        pe_envelope: 'Envelope (ADSR)',
+        pe_filter: 'Filter',
+        pe_type: 'Type',
+        pe_resonance: 'Resonance (Q)',
+        pe_base_freq: 'Base frequency',
+        pe_octaves: 'Octaves',
+        pe_effects: 'Effects',
+        pe_restore: 'Reset',
+        pe_restore_title: 'Back to the factory preset (discard edits)',
+        pe_scratch: 'From scratch',
+        pe_scratch_title: 'Create an empty preset (not the same as reset)',
+        pe_name_ph: 'Preset name',
+        pe_save_as_new: 'Save as new',
+        pe_default_name: 'My sound',
+        pe_close: 'Close',
+        preset_new_kit: 'New kit',
+        preset_new_sound: 'New sound',
+        // Effects
+        fx_reverb: 'Reverb',
+        fx_distortion: 'Distortion',
+        fx_chorus: 'Chorus',
+        // Arrange mode
+        arr_style_groove: 'Style groove',
+        arr_apply: 'Apply',
+        arr_choose_groove: '(choose a groove…)',
+        arr_humanize: 'Humanize',
+        arr_intensity: 'Intensity',
+        arr_hide_chord: 'Hide chord',
+        arr_groove_voicings: 'Groove and voicings per track',
+        arr_add_tracks_hint: 'Add tracks to edit their grooves.',
+        seq_sustained: '(sustained chord — no rhythmic pattern)',
+        // Voicings / inversions / octave
+        voicing_close: 'Close',
+        voicing_open: 'Open (drop-2)',
+        inversion_root: 'Root position',
+        inversion_1: '1st inversion',
+        inversion_2: '2nd inversion',
+        inversion_3: '3rd inversion',
+        octave_abbr: 'Oct.',
+        // Kit / sequencer lanes
+        lane_main: 'Notes',
+        lane_kick: 'Kick',
+        lane_snare: 'Snare',
+        lane_hat: 'Hi-hat',
+        lane_cymbal: 'Cymbal',
+        lane_bongo_hi: 'Bongo ↑',
+        lane_bongo_lo: 'Bongo ↓',
+        lane_conga: 'Conga',
+        lane_shaker: 'Shaker',
+        // GM drum kit (by MIDI note)
+        waf_35: 'Acoustic kick', waf_36: 'Kick', waf_37: 'Sidestick', waf_38: 'Snare',
+        waf_39: 'Hand clap', waf_40: 'Electric snare', waf_41: 'Floor tom', waf_42: 'Closed hi-hat',
+        waf_43: 'High floor tom', waf_44: 'Pedal hi-hat', waf_45: 'Low tom', waf_46: 'Open hi-hat',
+        waf_47: 'Low-mid tom', waf_48: 'High-mid tom', waf_49: 'Crash 1', waf_50: 'High tom',
+        waf_51: 'Ride 1', waf_52: 'Chinese', waf_53: 'Ride bell', waf_54: 'Tambourine',
+        waf_55: 'Splash', waf_56: 'Cowbell', waf_57: 'Crash 2', waf_58: 'Vibraslap',
+        waf_59: 'Ride 2', waf_60: 'Bongo ↑', waf_61: 'Bongo ↓',
+        waf_62: 'Mute conga', waf_63: 'Conga ↑', waf_64: 'Conga ↓',
+        waf_65: 'Timbale ↑', waf_66: 'Timbale ↓', waf_67: 'Agogo ↑', waf_68: 'Agogo ↓',
+        waf_69: 'Cabasa', waf_70: 'Maracas', waf_71: 'Whistle ↑', waf_72: 'Whistle ↓',
+        waf_73: 'Short guiro', waf_74: 'Long guiro', waf_75: 'Claves',
+        waf_76: 'Wood block ↑', waf_77: 'Wood block ↓',
+        waf_78: 'Mute cuica', waf_79: 'Open cuica',
+        waf_80: 'Mute triangle', waf_81: 'Open triangle',
+        // Diagnostics (?debug)
+        diag_voices: 'Active voices:',
+        diag_max: 'max'
+      }
+    });
+    I18N.init();
+  </script>
 
 </body>
 </html>

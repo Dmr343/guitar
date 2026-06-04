@@ -100,12 +100,18 @@
 
   // resolveBass — la fundamental del acorde en una octava grave, como
   // nota única (el bajo es el ancla auditiva del cambio de acorde).
+  //
+  // Normaliza la grafía a sostenidos (igual que resolveChord vía
+  // numberToPitch). Why: en tonalidades de bemoles transpose emite raíces
+  // como 'Eb'/'Ab', y el motor WebAudioFont (instruments.noteToMidi) no
+  // parseaba bemoles → el bajo sonaba como Do central. Devolviendo 'D#2' en
+  // vez de 'Eb2' el bajo suena en la altura correcta en cualquier motor.
   function resolveBass(chord, octave) {
     chord = chord || {};
     const root = chord.root;
     if (pc(root) < 0) return null;
     const oct = Number.isFinite(octave) ? octave : 2;
-    return root + oct;
+    return numberToPitch(pitchNumber(pc(root), oct));
   }
 
   W.BackingTrack = W.BackingTrack || {};

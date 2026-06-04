@@ -108,6 +108,17 @@
     T.it('root inválido devuelve null', () => {
       T.assertEq(voicing.resolveBass({ root: 'Z' }), null);
     });
+    T.it('normaliza grafía de bemoles a sostenidos (Eb → D#2)', () => {
+      // Why: el motor WebAudioFont no parsea bemoles; un bajo 'Eb2' sonaba
+      // como Do central. Normalizado a 'D#2' suena en la altura correcta.
+      T.assertEq(voicing.resolveBass({ root: 'Eb' }, 2), 'D#2');
+      T.assertEq(voicing.resolveBass({ root: 'Ab' }, 2), 'G#2');
+      T.assertEq(voicing.resolveBass({ root: 'Bb' }, 2), 'A#2');
+    });
+    T.it('un root con sostenido o natural se mantiene', () => {
+      T.assertEq(voicing.resolveBass({ root: 'F#' }, 2), 'F#2');
+      T.assertEq(voicing.resolveBass({ root: 'G' }, 2), 'G2');
+    });
   });
 
 })(

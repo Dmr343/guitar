@@ -127,21 +127,21 @@
 </head>
 <body>
 
-  <a href="index.html" class="back">← Herramientas</a>
-  <h1>Interval Atlas</h1>
-  <p class="subtitle">Intervalos del mástil sobre tu progresión, en todas las direcciones.</p>
+  <a href="index.html" class="back" data-i18n="back">← Herramientas</a>
+  <h1 data-i18n="title">Interval Atlas</h1>
+  <p class="subtitle" data-i18n="subtitle">Intervalos del mástil sobre tu progresión, en todas las direcciones.</p>
 
   <div class="panel-layout" id="atlas-panel-layout">
     <div class="fretboard-wrap">
       <div class="progression-bar" id="atlas-bar"></div>
 
       <div class="row">
-        <button class="btn primary" id="atlas-play">▶ Play</button>
+        <button class="btn primary" id="atlas-play" data-i18n="play">▶ Play</button>
         <button class="btn" id="atlas-prev">←</button>
         <button class="btn" id="atlas-next">→</button>
         <label>BPM <input type="number" id="atlas-bpm" value="80" min="40" max="220" style="width:60px"></label>
-        <button class="btn" id="atlas-tap" title="Tap tempo (T): clickeá al ritmo">TAP</button>
-        <label title="Compás: clicks por barra antes de acentuar el 1">Compás
+        <button class="btn" id="atlas-tap" data-i18n-attr="title:tap_t" title="Tap tempo (T): clickeá al ritmo">TAP</button>
+        <label data-i18n-attr="title:meter_t" title="Compás: clicks por barra antes de acentuar el 1"><span data-i18n="meter">Compás</span>
           <select id="atlas-bpc" style="width:64px">
             <option value="2">2/4</option>
             <option value="3">3/4</option>
@@ -151,39 +151,39 @@
             <option value="7">7/8</option>
           </select>
         </label>
-        <div id="atlas-beat-meter" class="beat-meter" title="Posición en el compás"></div>
+        <div id="atlas-beat-meter" class="beat-meter" data-i18n-attr="title:beatmeter_t" title="Posición en el compás"></div>
         <select id="atlas-direction">
-          <option value="all">Dirección: Todas</option>
-          <option value="horizontal">Horizontal</option>
-          <option value="vertical">Vertical</option>
-          <option value="diagonal">Diagonal</option>
+          <option value="all" data-i18n="dir_all">Dirección: Todas</option>
+          <option value="horizontal" data-i18n="dir_horizontal">Horizontal</option>
+          <option value="vertical" data-i18n="dir_vertical">Vertical</option>
+          <option value="diagonal" data-i18n="dir_diagonal">Diagonal</option>
         </select>
       </div>
 
       <details id="atlas-options-block" class="filters-block" open>
-        <summary>▾ Capas y opciones</summary>
+        <summary data-i18n="layers_summary">▾ Capas y opciones</summary>
         <div class="layer-toggles" style="margin-top:8px">
-          <label class="layer-toggle"><input type="checkbox" id="atlas-l-chord" checked> Chord tones</label>
-          <label class="layer-toggle"><input type="checkbox" id="atlas-l-scale"> Escala asociada</label>
-          <label class="layer-toggle"><input type="checkbox" id="atlas-l-tensions"> Tensiones</label>
-          <label class="layer-toggle"><input type="checkbox" id="atlas-l-approach"> Próximo acorde</label>
-          <label class="layer-toggle"><input type="checkbox" id="atlas-l-all"> Todas las 12</label>
-          <label class="layer-toggle"><input type="checkbox" id="atlas-show-names"> Nombres de nota</label>
+          <label class="layer-toggle"><input type="checkbox" id="atlas-l-chord" checked> <span data-i18n="layer_chord">Chord tones</span></label>
+          <label class="layer-toggle"><input type="checkbox" id="atlas-l-scale"> <span data-i18n="layer_scale">Escala asociada</span></label>
+          <label class="layer-toggle"><input type="checkbox" id="atlas-l-tensions"> <span data-i18n="layer_tensions">Tensiones</span></label>
+          <label class="layer-toggle"><input type="checkbox" id="atlas-l-approach"> <span data-i18n="layer_approach">Próximo acorde</span></label>
+          <label class="layer-toggle"><input type="checkbox" id="atlas-l-all"> <span data-i18n="layer_all">Todas las 12</span></label>
+          <label class="layer-toggle"><input type="checkbox" id="atlas-show-names"> <span data-i18n="layer_names">Nombres de nota</span></label>
           <span style="border-left:1px solid var(--border);height:18px;margin:0 6px"></span>
-          <label class="layer-toggle" title="Conteo previo de 4 clicks antes de empezar"><input type="checkbox" id="atlas-preroll"> Pre-roll</label>
-          <label class="layer-toggle" title="Silenciar click del metrónomo"><input type="checkbox" id="atlas-mute-click"> 🔇 Mute click</label>
+          <label class="layer-toggle" data-i18n-attr="title:preroll_t" title="Conteo previo de 4 clicks antes de empezar"><input type="checkbox" id="atlas-preroll"> <span data-i18n="preroll">Pre-roll</span></label>
+          <label class="layer-toggle" data-i18n-attr="title:muteclick_t" title="Silenciar click del metrónomo"><input type="checkbox" id="atlas-mute-click"> <span data-i18n="muteclick">🔇 Mute click</span></label>
         </div>
       </details>
 
       <details id="atlas-filters-block" class="filters-block">
-        <summary>▾ Filtros del mástil</summary>
+        <summary data-i18n="filters_summary">▾ Filtros del mástil</summary>
         <div class="row" style="margin-top:8px">
-          <label>Trastes
+          <label><span data-i18n="frets">Trastes</span>
             <input type="number" id="atlas-fret-min" value="0" min="0" max="22" style="width:48px">
             <span>–</span>
             <input type="number" id="atlas-fret-max" value="22" min="0" max="22" style="width:48px">
           </label>
-          <label>Cuerdas
+          <label><span data-i18n="strings">Cuerdas</span>
             <input type="checkbox" id="atlas-s-1" data-string="1" checked>1
             <input type="checkbox" id="atlas-s-2" data-string="2" checked>2
             <input type="checkbox" id="atlas-s-3" data-string="3" checked>3
@@ -191,7 +191,7 @@
             <input type="checkbox" id="atlas-s-5" data-string="5" checked>5
             <input type="checkbox" id="atlas-s-6" data-string="6" checked>6
           </label>
-          <button class="btn" id="atlas-reset" style="margin-left:auto">Reset filtros</button>
+          <button class="btn" id="atlas-reset" style="margin-left:auto" data-i18n="reset_filters">Reset filtros</button>
         </div>
       </details>
 
@@ -200,14 +200,14 @@
     </div>
 
     <div class="side-panel">
-      <button class="panel-toggle" id="atlas-panel-hide" type="button" title="Ocultar editor (más espacio para el diapasón)" aria-label="Ocultar editor">›</button>
-      <h3>Editor de progresión</h3>
+      <button class="panel-toggle" id="atlas-panel-hide" type="button" data-i18n-attr="title:panelhide_t;aria-label:panelhide_aria" title="Ocultar editor (más espacio para el diapasón)" aria-label="Ocultar editor">›</button>
+      <h3 data-i18n="prog_editor">Editor de progresión</h3>
 
       <div class="mode-tabs">
-        <button class="mode-tab active" data-mode="libre">Libre</button>
-        <button class="mode-tab" data-mode="diatonic">Diatónico</button>
-        <button class="btn danger" id="atlas-clear-prog" title="Limpiar (Esc)" style="margin-left:auto">Limpiar</button>
-        <button class="btn" id="atlas-send-bt" title="Abrir esta progresión en el módulo de backing tracks" style="margin-left:6px">→ Backing track</button>
+        <button class="mode-tab active" data-mode="libre" data-i18n="mode_free">Libre</button>
+        <button class="mode-tab" data-mode="diatonic" data-i18n="mode_diatonic">Diatónico</button>
+        <button class="btn danger" id="atlas-clear-prog" data-i18n-attr="title:clear_t" title="Limpiar (Esc)" style="margin-left:auto" data-i18n="clear">Limpiar</button>
+        <button class="btn" id="atlas-send-bt" data-i18n-attr="title:sendbt_t" title="Abrir esta progresión en el módulo de backing tracks" style="margin-left:6px" data-i18n="send_bt">→ Backing track</button>
       </div>
 
       <div id="atlas-palette-libre" class="palette-pane">
@@ -218,36 +218,36 @@
             <option>G#</option><option>A</option><option>A#</option><option>B</option>
           </select>
           <select id="atlas-new-quality" style="flex:1">
-            <option value="maj7">Mayor 7  · 1 3 5 7</option>
-            <option value="min7">menor 7  · 1 b3 5 b7</option>
-            <option value="dom7">Dominante 7  · 1 3 5 b7</option>
-            <option value="dim7">Disminuido  · 1 b3 b5 bb7</option>
-            <option value="m7b5">Semidisminuido  · 1 b3 b5 b7</option>
+            <option value="maj7" data-i18n="q_maj7">Mayor 7  · 1 3 5 7</option>
+            <option value="min7" data-i18n="q_min7">menor 7  · 1 b3 5 b7</option>
+            <option value="dom7" data-i18n="q_dom7">Dominante 7  · 1 3 5 b7</option>
+            <option value="dim7" data-i18n="q_dim7">Disminuido  · 1 b3 b5 bb7</option>
+            <option value="m7b5" data-i18n="q_m7b5">Semidisminuido  · 1 b3 b5 b7</option>
           </select>
-          <button class="btn primary" id="atlas-add">+ Agregar</button>
+          <button class="btn primary" id="atlas-add" data-i18n="add">+ Agregar</button>
         </div>
       </div>
 
       <div id="atlas-palette-diatonic" class="palette-pane" style="display:none">
         <div class="row">
-          <label>Tónica
+          <label><span data-i18n="tonic">Tónica</span>
             <select id="atlas-diat-key">
               <option>C</option><option>C#</option><option>D</option><option>D#</option>
               <option>E</option><option>F</option><option>F#</option><option>G</option>
               <option>G#</option><option>A</option><option>A#</option><option>B</option>
             </select>
           </label>
-          <label>Modo
+          <label><span data-i18n="mode">Modo</span>
             <select id="atlas-diat-mode">
-              <option value="major">Mayor</option>
-              <option value="minor">Menor natural</option>
+              <option value="major" data-i18n="mode_major">Mayor</option>
+              <option value="minor" data-i18n="mode_minor">Menor natural</option>
               <option value="dorian">Dorian</option>
               <option value="phrygian">Phrygian</option>
               <option value="lydian">Lydian</option>
               <option value="mixolydian">Mixolydian</option>
               <option value="locrian">Locrian</option>
-              <option value="harmonic_minor">Armónica menor</option>
-              <option value="melodic_minor">Melódica menor</option>
+              <option value="harmonic_minor" data-i18n="mode_harmonic">Armónica menor</option>
+              <option value="melodic_minor" data-i18n="mode_melodic">Melódica menor</option>
             </select>
           </label>
         </div>
@@ -255,12 +255,12 @@
       </div>
 
       <div class="row" style="margin-top:10px">
-        <button class="btn" id="atlas-presets-btn">📚 Presets</button>
-        <button class="btn" id="atlas-fav-save">★ Guardar</button>
+        <button class="btn" id="atlas-presets-btn" data-i18n="presets_btn">📚 Presets</button>
+        <button class="btn" id="atlas-fav-save" data-i18n="fav_save">★ Guardar</button>
       </div>
       <div id="atlas-favorites"></div>
 
-      <h3 style="margin-top:14px">Acorde activo</h3>
+      <h3 style="margin-top:14px" data-i18n="active_chord">Acorde activo</h3>
       <div id="atlas-info" class="empty-state">—</div>
     </div>
 
@@ -268,8 +268,8 @@
     <div class="modal-backdrop" id="atlas-presets-modal" style="display:none">
       <div class="modal">
         <div class="modal-header">
-          <h3>Presets por género</h3>
-          <button class="btn" id="atlas-presets-close">Cerrar</button>
+          <h3 data-i18n="presets_title">Presets por género</h3>
+          <button class="btn" id="atlas-presets-close" data-i18n="close">Cerrar</button>
         </div>
         <div class="modal-tabs" id="atlas-presets-tabs"></div>
         <div class="modal-list" id="atlas-presets-list"></div>
@@ -277,8 +277,9 @@
     </div>
   </div>
 
-  <button id="atlas-panel-show" type="button" title="Mostrar editor de progresión" aria-label="Mostrar editor">‹ Editor</button>
+  <button id="atlas-panel-show" type="button" data-i18n-attr="title:panelshow_t;aria-label:panelshow_aria" title="Mostrar editor de progresión" aria-label="Mostrar editor" data-i18n="panel_show">‹ Editor</button>
 
+  <script src="./i18n.js"></script>
   <script src="./shared/theory.js"></script>
   <script src="./shared/theory-modes.js"></script>
   <script src="./shared/fretboard.js"></script>
@@ -294,6 +295,227 @@
   <script src="./intervallic/atlas.js"></script>
 
   <script>
+    I18N.register({
+      es: {
+        back: '← Herramientas',
+        title: 'Interval Atlas',
+        subtitle: 'Intervalos del mástil sobre tu progresión, en todas las direcciones.',
+        play: '▶ Play',
+        play_pause: '❚❚ Pausa',
+        play_resume: '▶ Reanudar',
+        play_label: '▶ Play',
+        tap_t: 'Tap tempo (T): clickeá al ritmo',
+        meter: 'Compás',
+        meter_t: 'Compás: clicks por barra antes de acentuar el 1',
+        beatmeter_t: 'Posición en el compás',
+        dir_all: 'Dirección: Todas',
+        dir_horizontal: 'Horizontal',
+        dir_vertical: 'Vertical',
+        dir_diagonal: 'Diagonal',
+        layers_summary: '▾ Capas y opciones',
+        layer_chord: 'Chord tones',
+        layer_scale: 'Escala asociada',
+        layer_tensions: 'Tensiones',
+        layer_approach: 'Próximo acorde',
+        layer_all: 'Todas las 12',
+        layer_names: 'Nombres de nota',
+        preroll: 'Pre-roll',
+        preroll_t: 'Conteo previo de 4 clicks antes de empezar',
+        muteclick: '🔇 Mute click',
+        muteclick_t: 'Silenciar click del metrónomo',
+        filters_summary: '▾ Filtros del mástil',
+        frets: 'Trastes',
+        strings: 'Cuerdas',
+        reset_filters: 'Reset filtros',
+        panelhide_t: 'Ocultar editor (más espacio para el diapasón)',
+        panelhide_aria: 'Ocultar editor',
+        panelshow_t: 'Mostrar editor de progresión',
+        panelshow_aria: 'Mostrar editor',
+        panel_show: '‹ Editor',
+        prog_editor: 'Editor de progresión',
+        mode_free: 'Libre',
+        mode_diatonic: 'Diatónico',
+        clear: 'Limpiar',
+        clear_t: 'Limpiar (Esc)',
+        send_bt: '→ Backing track',
+        sendbt_t: 'Abrir esta progresión en el módulo de backing tracks',
+        q_maj7: 'Mayor 7  · 1 3 5 7',
+        q_min7: 'menor 7  · 1 b3 5 b7',
+        q_dom7: 'Dominante 7  · 1 3 5 b7',
+        q_dim7: 'Disminuido  · 1 b3 b5 bb7',
+        q_m7b5: 'Semidisminuido  · 1 b3 b5 b7',
+        add: '+ Agregar',
+        tonic: 'Tónica',
+        mode: 'Modo',
+        mode_major: 'Mayor',
+        mode_minor: 'Menor natural',
+        mode_harmonic: 'Armónica menor',
+        mode_melodic: 'Melódica menor',
+        presets_btn: '📚 Presets',
+        fav_save: '★ Guardar',
+        active_chord: 'Acorde activo',
+        presets_title: 'Presets por género',
+        close: 'Cerrar',
+        // Strings generados en JS
+        prog_chord_t: 'Click: activar · × : borrar · doble click: editar · arrastrar: reordenar · ↑↓: ± compás',
+        pc_del_t: 'Borrar (Del)',
+        pc_del_aria: 'Borrar acorde',
+        bars_singular: 'compás',
+        bars_plural: 'compases',
+        edit_chord: 'Editar acorde #',
+        cancel: 'Cancelar',
+        save: 'Guardar',
+        add_chord: 'Agregar acorde · ',
+        fav_del_t: 'Borrar favorito',
+        fav_del_confirm: '¿Borrar "{name}"?',
+        fav_need_chords: 'Agregá acordes antes de guardar como favorito.',
+        fav_prompt: 'Nombre del favorito:',
+        fav_default_name: 'Mi progresión',
+        legend_hint: 'Leyenda — click para mostrar/ocultar:',
+        legend_hide_chord: 'Ocultar {i} · nota del acorde',
+        legend_show_chord: 'Mostrar {i} · nota del acorde',
+        legend_hide: 'Ocultar {i}',
+        legend_show: 'Mostrar {i}',
+        legend_reset: 'Reset',
+        legend_reset_t: 'Volver al acorde puro',
+        info_tensions: 'Tensiones disponibles: ',
+        info_scale: 'Escala asociada: ',
+        info_none: '—',
+        diat_notes: 'Notas: ',
+        // Géneros de presets
+        genre_jazz: 'Jazz',
+        genre_pop: 'Pop / Rock',
+        genre_blues: 'Blues',
+        genre_bossa: 'Bossa',
+        genre_funk: 'Funk',
+        // Nombres de presets
+        preset_jazz_ii_V_I_C: 'ii–V–I en C',
+        preset_jazz_ii_V_I_F: 'ii–V–I en F',
+        preset_jazz_ii_V_I_Bb: 'ii–V–I en B♭',
+        preset_jazz_autumn: 'Autumn Leaves (A)',
+        preset_jazz_blues_F: 'Blues mayor en F (12)',
+        preset_jazz_rhythm: 'Rhythm Changes A (Bb)',
+        preset_pop_axis: 'Axis I–V–vi–IV (C)',
+        preset_pop_50s: '50s I–vi–IV–V (C)',
+        preset_pop_pachelbel: 'Pachelbel (D)',
+        preset_blues_12_E: '12 bar blues en E',
+        preset_blues_slow_A: 'Slow blues en A',
+        preset_bossa_ii_V_I: 'Bossa ii–V–I (Bb)',
+        preset_bossa_girl_ipanema: 'Garota de Ipanema (F)',
+        preset_funk_vamp_Dm: 'Funk Im7–IV7 vamp (Dm)',
+        preset_funk_jb: 'JB vamp (E7#9)'
+      },
+      en: {
+        back: '← Tools',
+        title: 'Interval Atlas',
+        subtitle: 'Fretboard intervals over your progression, in every direction.',
+        play: '▶ Play',
+        play_pause: '❚❚ Pause',
+        play_resume: '▶ Resume',
+        play_label: '▶ Play',
+        tap_t: 'Tap tempo (T): tap to the beat',
+        meter: 'Meter',
+        meter_t: 'Meter: clicks per bar before accenting beat 1',
+        beatmeter_t: 'Position in the bar',
+        dir_all: 'Direction: All',
+        dir_horizontal: 'Horizontal',
+        dir_vertical: 'Vertical',
+        dir_diagonal: 'Diagonal',
+        layers_summary: '▾ Layers and options',
+        layer_chord: 'Chord tones',
+        layer_scale: 'Associated scale',
+        layer_tensions: 'Tensions',
+        layer_approach: 'Next chord',
+        layer_all: 'All 12',
+        layer_names: 'Note names',
+        preroll: 'Pre-roll',
+        preroll_t: 'Count-in of 4 clicks before starting',
+        muteclick: '🔇 Mute click',
+        muteclick_t: 'Mute the metronome click',
+        filters_summary: '▾ Fretboard filters',
+        frets: 'Frets',
+        strings: 'Strings',
+        reset_filters: 'Reset filters',
+        panelhide_t: 'Hide editor (more room for the fretboard)',
+        panelhide_aria: 'Hide editor',
+        panelshow_t: 'Show progression editor',
+        panelshow_aria: 'Show editor',
+        panel_show: '‹ Editor',
+        prog_editor: 'Progression editor',
+        mode_free: 'Free',
+        mode_diatonic: 'Diatonic',
+        clear: 'Clear',
+        clear_t: 'Clear (Esc)',
+        send_bt: '→ Backing track',
+        sendbt_t: 'Open this progression in the backing tracks module',
+        q_maj7: 'Major 7  · 1 3 5 7',
+        q_min7: 'minor 7  · 1 b3 5 b7',
+        q_dom7: 'Dominant 7  · 1 3 5 b7',
+        q_dim7: 'Diminished  · 1 b3 b5 bb7',
+        q_m7b5: 'Half-diminished  · 1 b3 b5 b7',
+        add: '+ Add',
+        tonic: 'Tonic',
+        mode: 'Mode',
+        mode_major: 'Major',
+        mode_minor: 'Natural minor',
+        mode_harmonic: 'Harmonic minor',
+        mode_melodic: 'Melodic minor',
+        presets_btn: '📚 Presets',
+        fav_save: '★ Save',
+        active_chord: 'Active chord',
+        presets_title: 'Presets by genre',
+        close: 'Close',
+        // Strings generated in JS
+        prog_chord_t: 'Click: activate · × : delete · double click: edit · drag: reorder · ↑↓: ± bar',
+        pc_del_t: 'Delete (Del)',
+        pc_del_aria: 'Delete chord',
+        bars_singular: 'bar',
+        bars_plural: 'bars',
+        edit_chord: 'Edit chord #',
+        cancel: 'Cancel',
+        save: 'Save',
+        add_chord: 'Add chord · ',
+        fav_del_t: 'Delete favorite',
+        fav_del_confirm: 'Delete "{name}"?',
+        fav_need_chords: 'Add chords before saving as a favorite.',
+        fav_prompt: 'Favorite name:',
+        fav_default_name: 'My progression',
+        legend_hint: 'Legend — click to show/hide:',
+        legend_hide_chord: 'Hide {i} · chord tone',
+        legend_show_chord: 'Show {i} · chord tone',
+        legend_hide: 'Hide {i}',
+        legend_show: 'Show {i}',
+        legend_reset: 'Reset',
+        legend_reset_t: 'Back to the plain chord',
+        info_tensions: 'Available tensions: ',
+        info_scale: 'Associated scale: ',
+        info_none: '—',
+        diat_notes: 'Notes: ',
+        // Preset genres
+        genre_jazz: 'Jazz',
+        genre_pop: 'Pop / Rock',
+        genre_blues: 'Blues',
+        genre_bossa: 'Bossa',
+        genre_funk: 'Funk',
+        // Preset names
+        preset_jazz_ii_V_I_C: 'ii–V–I in C',
+        preset_jazz_ii_V_I_F: 'ii–V–I in F',
+        preset_jazz_ii_V_I_Bb: 'ii–V–I in B♭',
+        preset_jazz_autumn: 'Autumn Leaves (A)',
+        preset_jazz_blues_F: 'Major blues in F (12)',
+        preset_jazz_rhythm: 'Rhythm Changes A (Bb)',
+        preset_pop_axis: 'Axis I–V–vi–IV (C)',
+        preset_pop_50s: '50s I–vi–IV–V (C)',
+        preset_pop_pachelbel: 'Pachelbel (D)',
+        preset_blues_12_E: '12 bar blues in E',
+        preset_blues_slow_A: 'Slow blues in A',
+        preset_bossa_ii_V_I: 'Bossa ii–V–I (Bb)',
+        preset_bossa_girl_ipanema: 'Garota de Ipanema (F)',
+        preset_funk_vamp_Dm: 'Funk Im7–IV7 vamp (Dm)',
+        preset_funk_jb: 'JB vamp (E7#9)'
+      }
+    });
+    I18N.init();
     window.IntervalAtlas.init();
   </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Escalas — Entrenador</title>
+  <title data-i18n="page_title">Escalas — Entrenador</title>
   <style>
     :root {
       --bg:#0e0e0e;--surface:#141414;--surface2:#1a1a1a;--border:#222;
@@ -173,21 +173,21 @@
 </head>
 <body>
 
-<a href="index.html" class="back">← Herramientas</a>
+<a href="index.html" class="back"><span data-i18n="back_tools">← Herramientas</span></a>
 
 <div class="header">
-  <div class="header-label">Escalas</div>
-  <h1>Escalas</h1>
+  <div class="header-label" data-i18n="header_label">Escalas</div>
+  <h1 data-i18n="header_title">Escalas</h1>
 </div>
 
 <div class="tabs">
-  <button class="tab active" data-mode="calc">🎸 Calcular</button>
-  <button class="tab" data-mode="quiz">🎯 Quiz</button>
-  <button class="tab" data-mode="edit">✏️ Editor</button>
+  <button class="tab active" data-mode="calc" data-i18n="tab_calc">🎸 Calcular</button>
+  <button class="tab" data-mode="quiz" data-i18n="tab_quiz">🎯 Quiz</button>
+  <button class="tab" data-mode="edit" data-i18n="tab_edit">✏️ Editor</button>
 </div>
 
 <div class="scale-section">
-  <div class="section-label">Seleccioná una escala</div>
+  <div class="section-label" data-i18n="select_scale">Seleccioná una escala</div>
   <div class="scale-grid" id="scale-grid"></div>
 </div>
 
@@ -203,15 +203,15 @@
 <div class="metro-bar" id="metro-bar">
   <button class="metro-btn" id="metro-play">▶ Metro</button>
   <div class="metro-bpm-row">
-    <button class="metro-bpm-btn" id="metro-down5" title="−5 BPM">−5</button>
-    <button class="metro-bpm-btn" id="metro-down1" title="−1 BPM">−</button>
+    <button class="metro-bpm-btn" id="metro-down5" data-i18n-attr="title:metro_down5_t">−5</button>
+    <button class="metro-bpm-btn" id="metro-down1" data-i18n-attr="title:metro_down1_t">−</button>
     <input class="metro-bpm-input" id="metro-bpm-val" type="number" min="40" max="220" value="80" aria-label="BPM">
-    <button class="metro-bpm-btn" id="metro-up1" title="+1 BPM">+</button>
-    <button class="metro-bpm-btn" id="metro-up5" title="+5 BPM">+5</button>
+    <button class="metro-bpm-btn" id="metro-up1" data-i18n-attr="title:metro_up1_t">+</button>
+    <button class="metro-bpm-btn" id="metro-up5" data-i18n-attr="title:metro_up5_t">+5</button>
     <span class="metro-lbl">BPM</span>
   </div>
-  <button class="metro-bpm-btn" id="metro-tap" title="Tocá al ritmo para fijar el tempo">TAP</button>
-  <label class="metro-lbl">Compás
+  <button class="metro-bpm-btn" id="metro-tap" data-i18n-attr="title:metro_tap_t">TAP</button>
+  <label class="metro-lbl"><span data-i18n="metro_compas">Compás</span>
     <select class="metro-sel" id="metro-compas">
       <option value="2">2/4</option>
       <option value="3">3/4</option>
@@ -221,19 +221,19 @@
       <option value="7">7/8</option>
     </select>
   </label>
-  <label class="metro-lbl">Figura
+  <label class="metro-lbl"><span data-i18n="metro_figura">Figura</span>
     <select class="metro-sel" id="metro-sub">
-      <option value="1">Negras</option>
-      <option value="2">Corcheas</option>
-      <option value="3">Tresillo</option>
-      <option value="4">Semicorcheas</option>
-      <option value="5">Cinquillo</option>
-      <option value="6">Sextillo</option>
-      <option value="8">Fusas</option>
+      <option value="1" data-i18n="metro_fig_negras">Negras</option>
+      <option value="2" data-i18n="metro_fig_corcheas">Corcheas</option>
+      <option value="3" data-i18n="metro_fig_tresillo">Tresillo</option>
+      <option value="4" data-i18n="metro_fig_semicorcheas">Semicorcheas</option>
+      <option value="5" data-i18n="metro_fig_cinquillo">Cinquillo</option>
+      <option value="6" data-i18n="metro_fig_sextillo">Sextillo</option>
+      <option value="8" data-i18n="metro_fig_fusas">Fusas</option>
     </select>
   </label>
-  <label class="metro-lbl" title="Silencia las subdivisiones: suena solo el pulso de cada tiempo">
-    <input type="checkbox" id="metro-submute"> Solo pulso
+  <label class="metro-lbl" data-i18n-attr="title:metro_submute_t">
+    <input type="checkbox" id="metro-submute"> <span data-i18n="metro_submute">Solo pulso</span>
   </label>
   <div class="metro-viz" id="metro-viz">
     <div class="metro-beats" id="metro-beats"></div>
@@ -246,8 +246,9 @@
 <div class="editor-panel" id="editor-panel" style="display:none;"></div>
 <div class="calc-panel" id="calc-panel" style="display:none;"></div>
 
-<footer>Afinación estándar · E A D G B e · Trastes 0–12 · <a href="index.html">← Herramientas</a></footer>
+<footer><span data-i18n="footer_tuning">Afinación estándar</span> · E A D G B e · <span data-i18n="footer_frets">Trastes 0–12</span> · <a href="index.html" data-i18n="footer_tools">← Herramientas</a></footer>
 
+<script src="i18n.js"></script>
 <script src="./shared/metronome.js"></script>
 <script>
 // ─── Data ────────────────────────────────────────────────────────────
@@ -564,13 +565,13 @@ function renderLegend(){
   leg.innerHTML=`
     <div class="legend-item">
       <div class="legend-dot" style="background:${scale.color};box-shadow:0 0 6px ${scale.color}55;"></div>
-      Raíz (${scale.root})
+      ${I18N.t('legend_root')} (${scale.root})
     </div>
     <div class="legend-item">
       <div class="legend-dot" style="background:${scale.color}88;"></div>
-      Otras notas
+      ${I18N.t('legend_other')}
     </div>
-    ${state.mode==='connect'&&scale.positions.length>1?`<div class="legend-item"><div class="legend-dot" style="background:${scale.color}22;border:1px dashed ${scale.color}55;"></div>Posición adyacente</div>`:''}
+    ${state.mode==='connect'&&scale.positions.length>1?`<div class="legend-item"><div class="legend-dot" style="background:${scale.color}22;border:1px dashed ${scale.color}55;"></div>${I18N.t('legend_adjacent')}</div>`:''}
   `;
 }
 
@@ -580,11 +581,11 @@ function renderPosNav(){
   const scale=SCALES[state.selectedScale];
   if(scale.positions.length<=1&&state.mode==='visual'){nav.style.display='none';return;}
   nav.style.display='flex';
-  nav.innerHTML='<span class="pos-label">Posición:</span>'+
+  nav.innerHTML=`<span class="pos-label">${I18N.t('pos_label')}:</span>`+
     scale.positions.map((_,i)=>
-      `<button class="pos-btn ${state.positionIdx===i?'active':''}" data-pos="${i}">Pos ${i+1}</button>`
+      `<button class="pos-btn ${state.positionIdx===i?'active':''}" data-pos="${i}">${I18N.t('pos_abbr')} ${i+1}</button>`
     ).join('')+
-    (state.mode==='connect'?'<span class="pos-label">· gris = posición conectada</span>':'');
+    (state.mode==='connect'?`<span class="pos-label">${I18N.t('pos_connected')}</span>`:'');
   nav.querySelectorAll('[data-pos]').forEach(btn=>{
     btn.addEventListener('click',()=>{
       state.positionIdx=parseInt(btn.dataset.pos);
@@ -599,10 +600,30 @@ function renderScaleInfo(){
   const scale=SCALES[state.selectedScale];
   info.style.display='block';
   info.innerHTML=`
-    <div class="scale-info-name" style="color:${scale.color}">${scale.name}</div>
-    <div class="scale-info-desc">${scale.desc}</div>
-    <div class="scale-info-notes">Notas: ${scale.notes.join(' — ')}</div>
+    <div class="scale-info-name" style="color:${scale.color}">${scaleText(state.selectedScale,'name')}</div>
+    <div class="scale-info-desc">${scaleText(state.selectedScale,'desc')}</div>
+    <div class="scale-info-notes">${I18N.t('lbl_notas')}: ${scale.notes.join(' — ')}</div>
   `;
+}
+
+// Devuelve el texto traducido (name/sub/desc) de una escala por su id,
+// con fallback al valor original en el objeto de datos.
+function scaleText(id, field){
+  const k='scale_'+id+'_'+field;
+  const v=I18N.t(k);
+  return v===k ? (SCALES[id] ? SCALES[id][field] : k) : v;
+}
+// Texto traducido de una fórmula (label/removedDegrees) por su tipo.
+function formulaText(type, field){
+  const k='formula_'+type+'_'+field;
+  const v=I18N.t(k);
+  return v===k ? (FORMULAS[type] ? FORMULAS[type][field] : k) : v;
+}
+// Texto traducido de un modo (name/sound) por su índice.
+function modeText(idx, field){
+  const k='mode_'+idx+'_'+field;
+  const v=I18N.t(k);
+  return v===k ? (MODES[idx] ? MODES[idx][field] : k) : v;
 }
 
 // ─── Quiz ─────────────────────────────────────────────────────────────
@@ -615,7 +636,7 @@ function generateQuiz(){
     pos = state.calcPositions;
   }
   if(!pos){
-    document.getElementById('quiz-panel').innerHTML='<p style="text-align:center;color:var(--text-dim);font-size:12px;">Seleccioná una escala o calculá una para hacer el quiz</p>';
+    document.getElementById('quiz-panel').innerHTML=`<p style="text-align:center;color:var(--text-dim);font-size:12px;">${I18N.t('quiz_empty')}</p>`;
     document.getElementById('quiz-panel').style.display='block';
     return;
   }
@@ -635,15 +656,16 @@ function generateQuiz(){
 
   const panel=document.getElementById('quiz-panel');
   panel.style.display='block';
+  const fretLabel=item.fret===0?('0 ('+I18N.t('quiz_open')+')'):item.fret;
   panel.innerHTML=`
     <div class="quiz-question">
-      ¿Qué nota es el traste <strong>${item.fret===0?'0 (al aire)':item.fret}</strong> de la cuerda <strong>${strLabel}</strong>?
+      ${I18N.t('quiz_q_pre')} <strong>${fretLabel}</strong> ${I18N.t('quiz_q_mid')} <strong>${strLabel}</strong>?
     </div>
     <div class="quiz-options">
       ${shuffled.map(n=>`<button class="quiz-opt" data-note="${n}">${n}</button>`).join('')}
     </div>
     <div class="quiz-feedback" id="quiz-feedback"></div>
-    <div class="quiz-score">Puntaje: ${state.quizScore} / ${state.quizTotal}</div>
+    <div class="quiz-score">${I18N.t('quiz_score')}: ${state.quizScore} / ${state.quizTotal}</div>
   `;
   panel.querySelectorAll('.quiz-opt').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -657,16 +679,16 @@ function generateQuiz(){
         panel.querySelector(`[data-note="${correctNote}"]`)?.classList.add('correct');
       }
       document.getElementById('quiz-feedback').innerHTML=
-        correct?'<span style="color:var(--accent)">✓ Correcto!</span>':'<span style="color:#e74c3c">✗ Era '+correctNote+'</span>';
+        correct?`<span style="color:var(--accent)">${I18N.t('quiz_correct')}</span>`:`<span style="color:#e74c3c">${I18N.t('quiz_wrong')} ${correctNote}</span>`;
       document.getElementById('quiz-feedback').insertAdjacentHTML('afterend',
-        `<button class="quiz-next" id="quiz-next-btn">Siguiente pregunta →</button>`);
+        `<button class="quiz-next" id="quiz-next-btn">${I18N.t('quiz_next')}</button>`);
       document.getElementById('quiz-next-btn')?.addEventListener('click',generateQuiz);
     });
   });
 }
 
 // ─── Calc mode ───────────────────────────────────────────────────────
-function stepLabel(s){ return s===1?'S': s===2?'T':'m3'; }
+function stepLabel(s){ return s===1?I18N.t('step_half'): s===2?I18N.t('step_whole'):'m3'; }
 
 function buildDiagonalPath(scaleNotes){
   const BASE = [0,5,10,15,19,24]; // semitones from low E: E A D G B e
@@ -771,30 +793,30 @@ function renderCalcPanel(){
   }
 
   const formulaLabel=(activeMode&&state.calcModeIdx>0)
-    ?(displayNotes?`${displayNotes[0]} ${activeMode.name}`:activeMode.name)+` · ${activeMode.sound}`
-    :formula.label;
+    ?(displayNotes?`${displayNotes[0]} ${modeText(state.calcModeIdx,'name')}`:modeText(state.calcModeIdx,'name'))+` · ${modeText(state.calcModeIdx,'sound')}`
+    :formulaText(state.calcType,'label');
 
   const pentaNote=formula.isPenta
-    ? `<div style="font-size:11px;color:#666;margin-top:6px;">Escala natural sin el ${formula.removedDegrees} · ${formula.steps.length} notas</div>`
+    ? `<div style="font-size:11px;color:#666;margin-top:6px;">${I18N.t('calc_penta_pre')} ${formulaText(state.calcType,'removedDegrees')} · ${formula.steps.length} ${I18N.t('lbl_notas_low')}</div>`
     : '';
 
   const diagBtn=formula.isPenta?`
-      <label class="ios-toggle" style="margin-left:auto;" title="Diagonal">
+      <label class="ios-toggle" style="margin-left:auto;" title="${I18N.t('calc_diagonal_t')}">
         <input type="checkbox" id="calc-diagonal-toggle" ${state.calcDiagonal?'checked':''} ${!state.calcRoot?'disabled':''}>
         <span class="ios-slider"></span>
       </label>`:'';
 
   const modeViewToggle=(state.calcModeIdx>0&&majorScaleNotes)?`
     <div class="mode-view-toggle">
-      <button class="mode-view-btn${!state.calcModeFromRoot?' active':''}" data-from-root="0">Dentro de la clave</button>
-      <button class="mode-view-btn${state.calcModeFromRoot?' active':''}" data-from-root="1">${activeMode?activeMode.name:''} desde ${state.calcRoot.note}</button>
+      <button class="mode-view-btn${!state.calcModeFromRoot?' active':''}" data-from-root="0">${I18N.t('calc_in_key')}</button>
+      <button class="mode-view-btn${state.calcModeFromRoot?' active':''}" data-from-root="1">${activeMode?modeText(state.calcModeIdx,'name'):''} ${I18N.t('calc_from')} ${state.calcRoot.note}</button>
     </div>
   `:'';
 
   const modesSection=(state.calcType==='major'&&majorScaleNotes)?`
     <div class="calc-modes-section">
       <div class="calc-modes-header">
-        <div class="calc-modes-label">Modos de ${state.calcRoot.note} Mayor</div>
+        <div class="calc-modes-label">${I18N.t('calc_modes_of')} ${state.calcRoot.note} ${I18N.t('calc_major_word')}</div>
         ${modeViewToggle}
       </div>
       <div class="calc-modes-row">
@@ -804,8 +826,8 @@ function renderCalcPanel(){
           return `<button class="calc-mode-btn${isActive?' active':''}" data-mode-idx="${i}" style="--mode-color:${m.color}">
             <span class="mode-degree">${m.degreeOffset+1}°</span>
             <span class="mode-note">${modeRoot}</span>
-            <span class="mode-name">${m.name}</span>
-            <span class="mode-sound">${m.sound}</span>
+            <span class="mode-name">${modeText(i,'name')}</span>
+            <span class="mode-sound">${modeText(i,'sound')}</span>
           </button>`;
         }).join('')}
       </div>
@@ -814,20 +836,20 @@ function renderCalcPanel(){
 
   panel.innerHTML=`
     <div class="calc-type-row" style="flex-wrap:wrap;align-items:center;">
-      <button class="calc-type-btn major${state.calcType==='major'?' active':''}" data-type="major">Mayor</button>
-      <button class="calc-type-btn pmajor${state.calcType==='pmajor'?' active':''}" data-type="pmajor">Pentatónica Mayor</button>
-      <button class="calc-type-btn minor${state.calcType==='minor'?' active':''}" data-type="minor">Menor</button>
-      <button class="calc-type-btn pminor${state.calcType==='pminor'?' active':''}" data-type="pminor">Pentatónica Menor</button>
+      <button class="calc-type-btn major${state.calcType==='major'?' active':''}" data-type="major">${I18N.t('type_major')}</button>
+      <button class="calc-type-btn pmajor${state.calcType==='pmajor'?' active':''}" data-type="pmajor">${I18N.t('type_pmajor')}</button>
+      <button class="calc-type-btn minor${state.calcType==='minor'?' active':''}" data-type="minor">${I18N.t('type_minor')}</button>
+      <button class="calc-type-btn pminor${state.calcType==='pminor'?' active':''}" data-type="pminor">${I18N.t('type_pminor')}</button>
       ${diagBtn}
     </div>
     <div class="calc-formula-box">
       <div class="calc-formula-label" style="color:${displayColor}99;">${formulaLabel}</div>
       <div class="calc-formula-steps" id="calc-formula-steps">${formulaHTML}</div>
-      ${displayNotes?`<div class="calc-result-notes">Notas: ${displayNotes.join(' · ')}</div>`:''}
+      ${displayNotes?`<div class="calc-result-notes">${I18N.t('lbl_notas')}: ${displayNotes.join(' · ')}</div>`:''}
       ${pentaNote}
     </div>
     ${modesSection}
-    ${!state.calcRoot?'<div class="calc-hint">Hacé click en cualquier nota del diapasón para calcular desde esa raíz</div>':''}
+    ${!state.calcRoot?`<div class="calc-hint">${I18N.t('calc_hint')}</div>`:''}
   `;
 
   panel.querySelectorAll('.calc-type-btn').forEach(btn=>{
@@ -991,21 +1013,21 @@ function renderEditorPanel(){
 
   panel.innerHTML=`
     <div class="editor-row">
-      <span class="editor-label">Escala</span>
+      <span class="editor-label">${I18N.t('editor_scale')}</span>
       <select class="editor-select" id="edit-scale-sel">
-        ${Object.entries(SCALES).map(([id,s])=>`<option value="${id}"${id===state.editScaleId?' selected':''}>${s.name}</option>`).join('')}
+        ${Object.entries(SCALES).map(([id,s])=>`<option value="${id}"${id===state.editScaleId?' selected':''}>${scaleText(id,'name')}</option>`).join('')}
       </select>
     </div>
     <div class="editor-row">
-      <span class="editor-label">Grado</span>
+      <span class="editor-label">${I18N.t('editor_degree')}</span>
       ${[1,2,3,4,5,6,7].map(d=>`<button class="deg-btn${state.editDegree===d?' active':''}" data-deg="${d}" style="--edit-color:${scale.color}">${d}</button>`).join('')}
     </div>
-    <div class="editor-hint">Hacé <strong>click</strong> en el diapasón para agregar notas. Click en un punto existente para borrarlo.</div>
+    <div class="editor-hint">${I18N.t('editor_hint')}</div>
     <div class="editor-actions">
-      <button class="btn-save" id="btn-save-scale">Guardar cambios</button>
-      <button class="btn-clear" id="btn-clear-pos">Limpiar todo</button>
-      <button class="btn-reset" id="btn-reset-scale">Restablecer default</button>
-      <span class="editor-saved" id="editor-saved">✓ Guardado</span>
+      <button class="btn-save" id="btn-save-scale">${I18N.t('editor_save')}</button>
+      <button class="btn-clear" id="btn-clear-pos">${I18N.t('editor_clear')}</button>
+      <button class="btn-reset" id="btn-reset-scale">${I18N.t('editor_reset')}</button>
+      <span class="editor-saved" id="editor-saved">${I18N.t('editor_saved')}</span>
     </div>
   `;
 
@@ -1125,9 +1147,14 @@ function buildScaleButtons(){
   grid.innerHTML='';
   Object.entries(SCALES).forEach(([id,scale])=>{
     const btn=document.createElement('button');
-    btn.className='scale-btn'+(state.selectedScale===id?' active':'');
-    btn.innerHTML=`${scale.name}<span class="scale-sub">${scale.sub}</span>`;
+    btn.dataset.scaleId=id;
     btn.style.setProperty('--accent',scale.color);
+    btn.innerHTML=`${scaleText(id,'name')}<span class="scale-sub">${scaleText(id,'sub')}</span>`;
+    const active=state.selectedScale===id;
+    btn.className='scale-btn'+(active?' active':'');
+    btn.style.borderColor=active?scale.color:'#2a2a2a';
+    btn.style.background=active?scale.color+'22':'#1a1a1a';
+    btn.style.color=active?scale.color:'#666';
     btn.addEventListener('click',()=>{
       state.selectedScale=state.selectedScale===id?null:id;
       state.positionIdx=0;
@@ -1136,21 +1163,6 @@ function buildScaleButtons(){
       render();
     });
     grid.appendChild(btn);
-  });
-  // Active button styles
-  grid.querySelectorAll('.scale-btn').forEach(btn=>{
-    const id=Object.keys(SCALES).find(k=>SCALES[k].name===btn.querySelector('.scale-sub')?.previousSibling?.textContent);
-  });
-  // Re-apply active styles
-  Object.entries(SCALES).forEach(([id,scale])=>{
-    const btns=[...grid.querySelectorAll('.scale-btn')];
-    const btn=btns.find(b=>b.innerHTML.includes(scale.name));
-    if(!btn)return;
-    const active=state.selectedScale===id;
-    btn.classList.toggle('active',active);
-    btn.style.borderColor=active?scale.color:'#2a2a2a';
-    btn.style.background=active?scale.color+'22':'#1a1a1a';
-    btn.style.color=active?scale.color:'#666';
   });
 }
 
@@ -1255,14 +1267,14 @@ function startMetro(){
   state.metroPlaying = true;
   const btn = document.getElementById('metro-play');
   btn.className = 'metro-btn metro-on';
-  btn.textContent = '⏹ Metro';
+  btn.textContent = I18N.t('metro_stop');
 }
 function stopMetro(){
   if(metro) metro.stop();
   state.metroPlaying = false;
   const btn = document.getElementById('metro-play');
   btn.className = 'metro-btn';
-  btn.textContent = '▶ Metro';
+  btn.textContent = I18N.t('metro_play');
   metroClearViz();
 }
 
@@ -1325,6 +1337,232 @@ document.getElementById('fretboard').addEventListener('click',function(e){
 
 buildScaleButtons();
 render();
+
+// ─── i18n ─────────────────────────────────────────────────────────────
+I18N.register({
+  es: {
+    page_title: 'Escalas — Entrenador',
+    back_tools: '← Herramientas',
+    header_label: 'Escalas',
+    header_title: 'Escalas',
+    tab_calc: '🎸 Calcular',
+    tab_quiz: '🎯 Quiz',
+    tab_edit: '✏️ Editor',
+    select_scale: 'Seleccioná una escala',
+    // Metrónomo
+    metro_play: '▶ Metro',
+    metro_stop: '⏹ Metro',
+    metro_down5_t: '−5 BPM',
+    metro_down1_t: '−1 BPM',
+    metro_up1_t: '+1 BPM',
+    metro_up5_t: '+5 BPM',
+    metro_tap_t: 'Tocá al ritmo para fijar el tempo',
+    metro_compas: 'Compás',
+    metro_figura: 'Figura',
+    metro_fig_negras: 'Negras',
+    metro_fig_corcheas: 'Corcheas',
+    metro_fig_tresillo: 'Tresillo',
+    metro_fig_semicorcheas: 'Semicorcheas',
+    metro_fig_cinquillo: 'Cinquillo',
+    metro_fig_sextillo: 'Sextillo',
+    metro_fig_fusas: 'Fusas',
+    metro_submute: 'Solo pulso',
+    metro_submute_t: 'Silencia las subdivisiones: suena solo el pulso de cada tiempo',
+    // Footer
+    footer_tuning: 'Afinación estándar',
+    footer_frets: 'Trastes 0–12',
+    footer_tools: '← Herramientas',
+    // Etiquetas comunes
+    lbl_notas: 'Notas',
+    lbl_notas_low: 'notas',
+    // Leyenda
+    legend_root: 'Raíz',
+    legend_other: 'Otras notas',
+    legend_adjacent: 'Posición adyacente',
+    // Navegación de posiciones
+    pos_label: 'Posición',
+    pos_abbr: 'Pos',
+    pos_connected: '· gris = posición conectada',
+    // Quiz
+    quiz_empty: 'Seleccioná una escala o calculá una para hacer el quiz',
+    quiz_open: 'al aire',
+    quiz_q_pre: '¿Qué nota es el traste',
+    quiz_q_mid: 'de la cuerda',
+    quiz_score: 'Puntaje',
+    quiz_correct: '✓ Correcto!',
+    quiz_wrong: '✗ Era',
+    quiz_next: 'Siguiente pregunta →',
+    // Fórmula / pasos
+    step_half: 'S',
+    step_whole: 'T',
+    // Calc
+    type_major: 'Mayor',
+    type_pmajor: 'Pentatónica Mayor',
+    type_minor: 'Menor',
+    type_pminor: 'Pentatónica Menor',
+    calc_penta_pre: 'Escala natural sin el',
+    calc_diagonal_t: 'Diagonal',
+    calc_in_key: 'Dentro de la clave',
+    calc_from: 'desde',
+    calc_modes_of: 'Modos de',
+    calc_major_word: 'Mayor',
+    calc_hint: 'Hacé click en cualquier nota del diapasón para calcular desde esa raíz',
+    // Fórmulas (label + grados removidos)
+    formula_major_label: 'Mayor Natural',
+    formula_pmajor_label: 'Pentatónica Mayor',
+    formula_minor_label: 'Menor Natural',
+    formula_pminor_label: 'Pentatónica Menor',
+    formula_pmajor_removedDegrees: '4° y 7°',
+    formula_pminor_removedDegrees: '2° y 6°',
+    // Modos (name + sound)
+    mode_0_name: 'Jónico',     mode_0_sound: 'Mayor puro',
+    mode_1_name: 'Dórico',     mode_1_sound: 'Menor · funky',
+    mode_2_name: 'Frigio',     mode_2_sound: 'Menor · exótico',
+    mode_3_name: 'Lidio',      mode_3_sound: 'Mayor · soñador',
+    mode_4_name: 'Mixolidio',  mode_4_sound: 'Mayor · bluesy',
+    mode_5_name: 'Eólico',     mode_5_sound: 'Menor natural',
+    mode_6_name: 'Locrio',     mode_6_sound: 'Disminuido',
+    // Editor
+    editor_scale: 'Escala',
+    editor_degree: 'Grado',
+    editor_hint: 'Hacé <strong>click</strong> en el diapasón para agregar notas. Click en un punto existente para borrarlo.',
+    editor_save: 'Guardar cambios',
+    editor_clear: 'Limpiar todo',
+    editor_reset: 'Restablecer default',
+    editor_saved: '✓ Guardado',
+    // Escalas (name / sub / desc por id)
+    scale_ionian_G_name: 'Sol Mayor — Jónica',
+    scale_ionian_G_sub: 'La que ya conocés · Pos. 1',
+    scale_ionian_G_desc: 'La escala mayor. El punto de partida de todo. 7 notas, patrón W-W-H-W-W-W-H. Usala para improvisar sobre backing tracks en Sol Mayor.',
+    scale_penta_minor_A_name: 'La Menor Pentatónica',
+    scale_penta_minor_A_sub: 'Posición 1 · Traste 5',
+    scale_penta_minor_A_desc: 'La escala del rock, blues y todo lo que suena "intuitivo". Solo 5 notas, 2 por cuerda. Casi cualquier combinación sobre un backing track en Am suena bien.',
+    scale_penta_major_G_ladder_name: 'Sol Mayor Pentatónica',
+    scale_penta_major_G_ladder_sub: 'Escalera diagonal',
+    scale_penta_major_G_ladder_desc: 'La escalera pentatónica diagonal. Tocás las mismas notas que la posición vertical pero en diagonal, usando slides. Conecta todo el mástil. Usá dedos 1 y 3.',
+    scale_penta_minor_G_name: 'Sol Menor Pentatónica',
+    scale_penta_minor_G_sub: 'Posición 1 · Traste 3',
+    scale_penta_minor_G_desc: 'La pentatónica menor en Sol. Usala para improvisar sobre backing tracks en Gm. Mismo patrón que Am, desplazado 2 trastes.'
+  },
+  en: {
+    page_title: 'Scales — Trainer',
+    back_tools: '← Tools',
+    header_label: 'Scales',
+    header_title: 'Scales',
+    tab_calc: '🎸 Calculate',
+    tab_quiz: '🎯 Quiz',
+    tab_edit: '✏️ Editor',
+    select_scale: 'Pick a scale',
+    // Metronome
+    metro_play: '▶ Metro',
+    metro_stop: '⏹ Metro',
+    metro_down5_t: '−5 BPM',
+    metro_down1_t: '−1 BPM',
+    metro_up1_t: '+1 BPM',
+    metro_up5_t: '+5 BPM',
+    metro_tap_t: 'Tap to the beat to set the tempo',
+    metro_compas: 'Meter',
+    metro_figura: 'Note value',
+    metro_fig_negras: 'Quarter notes',
+    metro_fig_corcheas: 'Eighth notes',
+    metro_fig_tresillo: 'Triplet',
+    metro_fig_semicorcheas: 'Sixteenth notes',
+    metro_fig_cinquillo: 'Quintuplet',
+    metro_fig_sextillo: 'Sextuplet',
+    metro_fig_fusas: 'Thirty-second notes',
+    metro_submute: 'Pulse only',
+    metro_submute_t: 'Mute subdivisions: only the beat pulse sounds',
+    // Footer
+    footer_tuning: 'Standard tuning',
+    footer_frets: 'Frets 0–12',
+    footer_tools: '← Tools',
+    // Common labels
+    lbl_notas: 'Notes',
+    lbl_notas_low: 'notes',
+    // Legend
+    legend_root: 'Root',
+    legend_other: 'Other notes',
+    legend_adjacent: 'Adjacent position',
+    // Position nav
+    pos_label: 'Position',
+    pos_abbr: 'Pos',
+    pos_connected: '· gray = connected position',
+    // Quiz
+    quiz_empty: 'Pick a scale or calculate one to start the quiz',
+    quiz_open: 'open',
+    quiz_q_pre: 'What note is fret',
+    quiz_q_mid: 'on the string',
+    quiz_score: 'Score',
+    quiz_correct: '✓ Correct!',
+    quiz_wrong: '✗ It was',
+    quiz_next: 'Next question →',
+    // Formula / steps
+    step_half: 'H',
+    step_whole: 'W',
+    // Calc
+    type_major: 'Major',
+    type_pmajor: 'Major Pentatonic',
+    type_minor: 'Minor',
+    type_pminor: 'Minor Pentatonic',
+    calc_penta_pre: 'Natural scale without the',
+    calc_diagonal_t: 'Diagonal',
+    calc_in_key: 'Within the key',
+    calc_from: 'from',
+    calc_modes_of: 'Modes of',
+    calc_major_word: 'Major',
+    calc_hint: 'Click any note on the fretboard to calculate from that root',
+    // Formulas (label + removed degrees)
+    formula_major_label: 'Natural Major',
+    formula_pmajor_label: 'Major Pentatonic',
+    formula_minor_label: 'Natural Minor',
+    formula_pminor_label: 'Minor Pentatonic',
+    formula_pmajor_removedDegrees: '4th and 7th',
+    formula_pminor_removedDegrees: '2nd and 6th',
+    // Modes (name + sound)
+    mode_0_name: 'Ionian',     mode_0_sound: 'Pure major',
+    mode_1_name: 'Dorian',     mode_1_sound: 'Minor · funky',
+    mode_2_name: 'Phrygian',   mode_2_sound: 'Minor · exotic',
+    mode_3_name: 'Lydian',     mode_3_sound: 'Major · dreamy',
+    mode_4_name: 'Mixolydian', mode_4_sound: 'Major · bluesy',
+    mode_5_name: 'Aeolian',    mode_5_sound: 'Natural minor',
+    mode_6_name: 'Locrian',    mode_6_sound: 'Diminished',
+    // Editor
+    editor_scale: 'Scale',
+    editor_degree: 'Degree',
+    editor_hint: '<strong>Click</strong> on the fretboard to add notes. Click an existing dot to remove it.',
+    editor_save: 'Save changes',
+    editor_clear: 'Clear all',
+    editor_reset: 'Reset to default',
+    editor_saved: '✓ Saved',
+    // Scales (name / sub / desc by id)
+    scale_ionian_G_name: 'G Major — Ionian',
+    scale_ionian_G_sub: 'The one you already know · Pos. 1',
+    scale_ionian_G_desc: 'The major scale. The starting point of everything. 7 notes, W-W-H-W-W-W-H pattern. Use it to improvise over backing tracks in G Major.',
+    scale_penta_minor_A_name: 'A Minor Pentatonic',
+    scale_penta_minor_A_sub: 'Position 1 · Fret 5',
+    scale_penta_minor_A_desc: 'The scale of rock, blues and everything that sounds "intuitive". Just 5 notes, 2 per string. Almost any combination over a backing track in Am sounds good.',
+    scale_penta_major_G_ladder_name: 'G Major Pentatonic',
+    scale_penta_major_G_ladder_sub: 'Diagonal ladder',
+    scale_penta_major_G_ladder_desc: 'The diagonal pentatonic ladder. You play the same notes as the vertical position but diagonally, using slides. It connects the whole fretboard. Use fingers 1 and 3.',
+    scale_penta_minor_G_name: 'G Minor Pentatonic',
+    scale_penta_minor_G_sub: 'Position 1 · Fret 3',
+    scale_penta_minor_G_desc: 'The minor pentatonic in G. Use it to improvise over backing tracks in Gm. Same shape as Am, shifted 2 frets.'
+  }
+});
+
+// Refresca todo lo que se genera por JS al cambiar el idioma.
+function i18nRefresh(){
+  document.getElementById('metro-play').textContent =
+    state.metroPlaying ? I18N.t('metro_stop') : I18N.t('metro_play');
+  buildScaleButtons();
+  render();
+}
+window.addEventListener('i18n:changed', i18nRefresh);
+
+// Estado inicial del botón del metrónomo (idioma actual).
+document.getElementById('metro-play').textContent = I18N.t('metro_play');
+
+I18N.init();
 
 // Progress
 const p=JSON.parse(localStorage.getItem('maru_progress_escalas')||'{}');

@@ -275,9 +275,21 @@
     const T = Tone();
     const rawCtx = T.getContext().rawContext;
     if (typeof W.WebAudioFontPlayer === 'undefined') {
-      console.warn('[backing-track] WebAudioFontPlayer no cargado — pieza muda');
-      // Fallback silencioso: noise piece corto para no romper el kit.
-      return new T.NoiseSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0 } });
+      console.warn('[backing-track] WebAudioFontPlayer no cargado — pieza con ruido corto');
+      // Fallback: NoiseSynth envuelto con la MISMA interfaz que la pieza WAF
+      // real (note, dur, time, velocity). Sin el wrapper, createDrumkit pasaba
+      // el midi como duración → triggerAttackRelease(75, '16n', time, vel)
+      // creaba una ráfaga de ~75s con time como velocity. Acá ignoramos el
+      // midi y damos un tick de ruido corto con la firma correcta de Tone.
+      const noise = new T.NoiseSynth({ envelope: { attack: 0.001, decay: 0.05, sustain: 0 } });
+      return {
+        connect: function (target) { noise.connect(target); },
+        triggerAttackRelease: function (_note, dur, time, velocity) {
+          const v = Number.isFinite(velocity) ? velocity : 0.8;
+          try { noise.triggerAttackRelease(dur || '16n', time, v); } catch (e) {}
+        },
+        dispose: function () { try { noise.dispose(); } catch (e) {} },
+      };
     }
     const player = new W.WebAudioFontPlayer();
     const out = new T.Gain();
@@ -327,7 +339,7 @@
   // semitones es 0 o falsy, devuelve el original sin tocar.
   function shiftNoteSemitones(noteName, semitones) {
     if (!semitones) return noteName;
-    const m = /^([A-G]#?)(-?\d+)$/.exec(String(noteName));
+    const m = /^([A-G][#b]?)(-?\d+)$/.exec(String(noteName));
     if (!m) return noteName;
     const pc = NOTE_INDEX[m[1]];
     if (pc === undefined) return noteName;
@@ -428,12 +440,16 @@
   const NOTE_INDEX = {
     'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
     'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11,
+    // Bemoles: el bajo y las progresiones transponibles emiten Eb/Ab/Bb/Db/Gb
+    // en tonalidades de bemoles. Sin estas claves el note caía al fallback 60.
+    'Db': 1, 'Eb': 3, 'Fb': 4, 'Gb': 6, 'Ab': 8, 'Bb': 10, 'Cb': 11,
   };
-  // Nota con octava ("C#3") → número MIDI (C4 = 60).
+  // Nota con octava ("C#3" o "Eb3") → número MIDI (C4 = 60).
   function noteToMidi(name) {
-    const m = /^([A-G]#?)(-?\d+)$/.exec(String(name));
+    const m = /^([A-G][#b]?)(-?\d+)$/.exec(String(name));
     if (!m) return 60;
-    return (NOTE_INDEX[m[1]] || 0) + (parseInt(m[2], 10) + 1) * 12;
+    const pc = NOTE_INDEX[m[1]];
+    return (pc === undefined ? 0 : pc) + (parseInt(m[2], 10) + 1) * 12;
   }
 
   // Construye un instrumento WebAudioFont: carga su soundfont GM desde
