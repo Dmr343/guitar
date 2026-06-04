@@ -41,7 +41,7 @@
   /* Texto cálido (identidad conservada) */
   --text:      #ece3cf;
   --text-mid:  #a39d90;
-  --text-dim:  #6a655c;
+  --text-dim:  #8a857a;
 
   /* Dorado de marca + acento por defecto */
   --gold:      #e0b24a;
@@ -109,6 +109,14 @@ body {
 ::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); color: #fff; }
 
 a { color: var(--accent); text-decoration: none; }
+
+/* ── Foco accesible por teclado (global, sobrescribible por cada tool) ── */
+a:focus-visible, button:focus-visible, select:focus-visible,
+input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
 
 /* ── Header / back-link compartidos ── */
 .header { text-align: center; }

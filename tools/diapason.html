@@ -212,7 +212,7 @@
   </label>
   <label class="toggle-label">
     <div class="toggle-track" id="tog-exercise"><div class="toggle-thumb"></div></div>
-    <span data-i18n="tog_exercise">Modo Ejercicio 🎸</span>
+    <span data-i18n="tog_exercise">Modo Ejercicio</span>
   </label>
 </div>
 
@@ -268,7 +268,7 @@ I18N.register({
     clear_btn: '✕ Limpiar selección',
     tog_all: 'Mostrar todas las notas',
     tog_labels: 'Nombres en los puntos',
-    tog_exercise: 'Modo Ejercicio 🎸',
+    tog_exercise: 'Modo Ejercicio',
     ex_hint_default: 'Seleccione una nota para comenzar el ejercicio',
     dir_asc: '↑ Asc',
     dir_desc: '↓ Desc',
@@ -294,7 +294,7 @@ I18N.register({
     clear_btn: '✕ Clear selection',
     tog_all: 'Show all notes',
     tog_labels: 'Names on the dots',
-    tog_exercise: 'Practice Mode 🎸',
+    tog_exercise: 'Practice Mode',
     ex_hint_default: 'Select a note to start the exercise',
     dir_asc: '↑ Asc',
     dir_desc: '↓ Desc',
@@ -696,11 +696,21 @@ function setToggle(id, value) {
 }
 
 function bindToggle(id, key, callback) {
-  document.getElementById(id).addEventListener('click', () => {
+  const elx = document.getElementById(id);
+  // Accesible por teclado: switch enfocable con Enter/Espacio.
+  elx.setAttribute('role', 'switch');
+  elx.setAttribute('tabindex', '0');
+  elx.setAttribute('aria-checked', String(!!state[key]));
+  const fire = () => {
     state[key] = !state[key];
     setToggle(id, state[key]);
+    elx.setAttribute('aria-checked', String(!!state[key]));
     if (callback) callback();
     render();
+  };
+  elx.addEventListener('click', fire);
+  elx.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); fire(); }
   });
 }
 

@@ -80,12 +80,13 @@
     var css =
       '.i18n-toggle{position:fixed;top:14px;right:14px;z-index:9999;' +
       'min-width:42px;height:34px;padding:0 12px;' +
-      "font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:13px;font-weight:700;" +
-      'letter-spacing:0.08em;color:#e8d5b0;background:rgba(20,20,20,0.92);' +
-      'border:1px solid #333;border-radius:8px;cursor:pointer;' +
+      'font-family:var(--font-mono),monospace;font-size:13px;font-weight:700;' +
+      'letter-spacing:0.08em;color:var(--text,#ece3cf);background:var(--surface2,rgba(20,20,20,0.92));' +
+      'border:1px solid var(--border2,#34343d);border-radius:8px;cursor:pointer;' +
       'transition:border-color .2s,color .2s,transform .15s;' +
       'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}' +
-      '.i18n-toggle:hover{border-color:#d4a847;color:#d4a847;transform:translateY(-1px);}' +
+      '.i18n-toggle:hover{border-color:var(--gold,#e0b24a);color:var(--gold,#e0b24a);transform:translateY(-1px);}' +
+      '.i18n-toggle:focus-visible{outline:2px solid var(--gold,#e0b24a);outline-offset:2px;}' +
       '.i18n-toggle:active{transform:translateY(0);}' +
       '@media(max-width:520px){.i18n-toggle{top:10px;right:10px;height:32px;}}';
     var s = doc.createElement('style');
