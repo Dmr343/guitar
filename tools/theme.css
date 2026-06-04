@@ -167,6 +167,15 @@ footer { color: var(--text-dim); }
   box-shadow: 0 8px 22px rgba(0,0,0,0.4);
 }
 
+/* ── Ícono inline (reemplaza emojis en botones/labels) ── */
+.ico {
+  width: 1.05em; height: 1.05em;
+  flex: none;
+  vertical-align: -0.16em;
+  stroke: currentColor;
+  fill: none;
+}
+
 /* ── Toggle EN/ES (la posición/tamaño base lo fija i18n.js) ── */
 .i18n-toggle { font-family: var(--font-mono) !important; }
 
