@@ -78,7 +78,7 @@
     if (styleInjected) return;
     var doc = W.document;
     var css =
-      '.i18n-toggle{position:fixed;top:14px;right:14px;z-index:90;' +
+      '.i18n-toggle{position:absolute;top:14px;right:14px;z-index:90;' +
       'min-width:42px;height:34px;padding:0 12px;' +
       'font-family:var(--font-mono),monospace;font-size:13px;font-weight:700;' +
       'letter-spacing:0.08em;color:var(--text,#ece3cf);background:var(--surface2,rgba(20,20,20,0.92));' +
@@ -118,9 +118,33 @@
     return btn;
   }
 
+  // Alinea verticalmente el toggle con el link "← Herramientas" del header
+  // (su centro con el centro de la flecha). Mide en px de CSS vía la cadena de
+  // offsetTop, así es agnóstico al zoom y al padding propio de cada herramienta.
+  // Si la página no tiene link .back, deja el top del CSS (14px).
+  function alignToggle() {
+    if (!btn) return;
+    var back = W.document.querySelector('.back, a.back, .back-link');
+    if (!back || !back.offsetParent) { btn.style.top = ''; return; }
+    var y = 0, el = back;
+    while (el) { y += el.offsetTop; el = el.offsetParent; }
+    var center = y + back.offsetHeight / 2;
+    btn.style.top = Math.round(center - btn.offsetHeight / 2) + 'px';
+  }
+
+  var alignBound = false;
   function init() {
     injectButton();
     apply();
+    alignToggle();
+    if (!alignBound) {
+      alignBound = true;
+      try {
+        W.addEventListener('load', alignToggle);
+        W.addEventListener('resize', alignToggle);
+        W.addEventListener('i18n:changed', alignToggle);
+      } catch (e) {}
+    }
     // Re-render de contenido generado dinámicamente: las herramientas registran
     // el diccionario al final del body, después de que su JS ya construyó la UI
     // con I18N.t(). Disparar este evento hace que sus listeners 'i18n:changed'
