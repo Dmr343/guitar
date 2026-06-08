@@ -1,8 +1,9 @@
 .claude/
-pdfs/
-transcript/
 
-# Media y zips
+# Material de estudio personal (transcripciones — no se despliega)
+study/lessons/transcripts/
+
+# Media y binarios (en cualquier ruta)
 *.mp3
 *.zip
 *.pdf

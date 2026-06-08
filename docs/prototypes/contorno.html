@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototipo — Contorno de octavas</title>
+<style>
+  @font-face{font-family:'Space Grotesk';font-weight:500;font-display:swap;src:url('../tools/assets/fonts/SpaceGrotesk-Medium.woff2') format('woff2')}
+  @font-face{font-family:'Space Grotesk';font-weight:700;font-display:swap;src:url('../tools/assets/fonts/SpaceGrotesk-Bold.woff2') format('woff2')}
+  @font-face{font-family:'JetBrains Mono';font-weight:500;font-display:swap;src:url('../tools/assets/fonts/JetBrainsMono-Medium.woff2') format('woff2')}
+  @font-face{font-family:'JetBrains Mono';font-weight:700;font-display:swap;src:url('../tools/assets/fonts/JetBrainsMono-Bold.woff2') format('woff2')}
+  :root{
+    --bg:#0a0a0b; --surface:#121215; --surface2:#17171b; --surface3:#1e1e23;
+    --border:#26262d; --border2:#34343d; --text:#ece3cf; --text-mid:#a39d90; --text-dim:#8a857a;
+    --accent:#f0865f; /* acento backing track (coral) */
+    --base:#f0865f; --reflex:#4aa3f0;
+    --disp:'Space Grotesk',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(1100px 600px at 50% -10%, color-mix(in srgb,var(--accent) 9%,transparent),transparent 60%),var(--bg);
+    color:var(--text);font-family:var(--disp);line-height:1.55;padding:32px 20px 56px;min-height:100vh
+  }
+  .wrap{max-width:860px;margin:0 auto}
+  .label{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim)}
+  h1{font-size:clamp(24px,4vw,34px);font-weight:700;letter-spacing:-.01em;margin:8px 0 6px;
+     background:linear-gradient(165deg,#fff 8%,var(--accent) 62%,#9c4f33 100%);
+     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .sub{color:var(--text-mid);font-size:14px;margin-bottom:22px;max-width:60ch}
+  .panel{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--border);
+         border-radius:14px;box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 10px 30px rgba(0,0,0,.5);padding:18px 18px 8px}
+  .controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;margin-bottom:16px}
+  .ctl{display:flex;flex-direction:column;gap:5px}
+  .ctl > span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim)}
+  .seg{display:flex;gap:0;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:var(--surface3)}
+  .seg button{background:transparent;border:0;color:var(--text-mid);font-family:var(--disp);font-size:13px;
+    padding:7px 12px;cursor:pointer;transition:background .18s,color .18s}
+  .seg button:hover{color:var(--text)}
+  .seg button.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+  .stepper{display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:var(--surface3)}
+  .stepper button{background:transparent;border:0;color:var(--text-mid);font-family:var(--mono);font-size:15px;width:30px;height:34px;cursor:pointer}
+  .stepper button:hover{color:var(--accent)}
+  .stepper span{font-family:var(--mono);font-size:14px;color:var(--text);min-width:64px;text-align:center}
+  input[type=text]{background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);
+    font-size:14px;padding:7px 10px;border-radius:9px;width:150px;letter-spacing:.08em}
+  input[type=text]:focus{outline:none;border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
+  .btn{background:var(--surface3);border:1px solid var(--border);color:var(--text);font-family:var(--disp);font-size:13px;
+    padding:8px 15px;border-radius:9px;cursor:pointer;transition:border-color .18s,color .18s,transform .12s}
+  .btn:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--border));color:var(--accent);transform:translateY(-1px)}
+  .btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 92%,#fff),var(--accent));color:#160a05;font-weight:700;border-color:var(--accent)}
+  svg{display:block;width:100%;height:auto;touch-action:none}
+  .gridline{stroke:var(--border);stroke-width:1}
+  .octlabel{fill:var(--text-dim);font-family:var(--mono);font-size:11px}
+  .chordlabel{fill:var(--text);font-family:var(--disp);font-weight:700;font-size:15px}
+  .bound{fill:color-mix(in srgb,#000 35%,transparent)}
+  .boundtxt{fill:var(--text-dim);font-family:var(--mono);font-size:9px;letter-spacing:.1em}
+  .axis{stroke:var(--text-mid);stroke-width:1.5;stroke-dasharray:5 5}
+  .axis-grab{stroke:transparent;stroke-width:18;cursor:ns-resize}
+  .axis-tag{fill:var(--text-mid);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+  .connector{stroke:var(--reflex);stroke-width:1.2;stroke-dasharray:3 3;opacity:.5}
+  .dot-base{fill:var(--base);cursor:grab}
+  .dot-base.drag{cursor:grabbing}
+  .dot-reflex{fill:none;stroke:var(--reflex);stroke-width:2}
+  .dot-txt{fill:#160a05;font-family:var(--mono);font-weight:700;font-size:11px;pointer-events:none}
+  .dot-rtxt{fill:var(--reflex);font-family:var(--mono);font-weight:700;font-size:10px;pointer-events:none}
+  .out{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-family:var(--mono);font-size:14px}
+  .out b{color:var(--text-dim);font-weight:500;letter-spacing:.1em;font-size:11px;text-transform:uppercase;margin-right:8px}
+  .out .c1{color:var(--base)} .out .c2{color:var(--reflex)}
+  .legend{display:flex;gap:18px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--text-mid);flex-wrap:wrap}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+  .hint{color:var(--text-dim);font-size:12px;margin-top:10px;font-style:italic}
+  .compbadge{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-left:10px}
+  .compbadge b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="label">Backing Track · Prototipo</div>
+  <h1>Contorno de octavas</h1>
+  <p class="sub">Arrastrá cada acorde para fijar su octava (modo manual), movés la línea punteada para elegir el <b>eje del espejo</b>, y con ▶ ves cómo el contorno se <b>invierte cada N compases</b> (la "respiración"). Las formas Auto rellenan el contorno por vos.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="ctl"><span>Progresión</span>
+        <input type="text" id="prog" value="C A G E D">
+      </div>
+      <div class="ctl"><span>Forma (auto)</span>
+        <div class="seg" id="shape">
+          <button data-s="asc">Asc</button>
+          <button data-s="desc">Desc</button>
+          <button data-s="updown">Sube-baja</button>
+          <button data-s="manual" class="on">Manual</button>
+        </div>
+      </div>
+      <div class="ctl"><span>Piso · más grave</span>
+        <div class="stepper"><button data-step="piso-">−</button><span id="piso">oct 2</span><button data-step="piso+">+</button></div>
+      </div>
+      <div class="ctl"><span>Techo · más agudo</span>
+        <div class="stepper"><button data-step="techo-">−</button><span id="techo">oct 5</span><button data-step="techo+">+</button></div>
+      </div>
+      <div class="ctl"><span>Espejo · eje</span>
+        <div class="stepper"><button data-step="axis-">−</button><span id="axisv">oct 3</span><button data-step="axis+">+</button></div>
+      </div>
+      <div class="ctl"><span>Invertir cada</span>
+        <div class="stepper"><button data-step="cyc-">−</button><span id="cyc">1 comp.</span><button data-step="cyc+">+</button></div>
+      </div>
+      <div class="ctl"><span>&nbsp;</span>
+        <button class="btn primary" id="play">▶ Animar</button>
+      </div>
+    </div>
+
+    <svg id="chart" viewBox="0 0 700 360" preserveAspectRatio="xMidYMid meet"></svg>
+
+    <div class="legend">
+      <span><i style="background:var(--base)"></i>Forma base (compás impar)</span>
+      <span><i style="border:2px solid var(--reflex);background:transparent"></i>Reflejo (compás par)</span>
+      <span>┄ línea punteada = eje del espejo (arrastrable)</span>
+    </div>
+
+    <div class="out">
+      <div><b>Compás 1</b><span class="c1" id="o1">—</span></div>
+      <div><b>Compás 2 (espejo)</b><span class="c2" id="o2">—</span></div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var PCNAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  var PC={C:0,'C#':1,DB:1,D:2,'D#':3,EB:3,E:4,F:5,'F#':6,GB:6,G:7,'G#':8,AB:8,A:9,'A#':10,BB:10,B:11};
+  function pcOf(n){n=n.trim().toUpperCase().replace('♭','B').replace('♯','#');return PC[n]!=null?PC[n]:(PC[n[0]]!=null?PC[n[0]]:0);}
+
+  var state={
+    chords:[], shape:'manual', cycle:1, piso:2, techo:5, axis:3,
+    animating:false, comp:1
+  };
+  var OCT_MIN=1, OCT_MAX=6; // oct 0 es casi inaudible → fuera
+
+  function parseProg(){
+    var raw=document.getElementById('prog').value.trim();
+    var toks=raw.split(/[\s,|-]+/).filter(Boolean).slice(0,8);
+    if(!toks.length) toks=['C'];
+    var def={C:3,A:4,G:3,E:2,D:3}; // contorno de ejemplo inicial
+    state.chords=toks.map(function(t){
+      var pc=pcOf(t);
+      return {name:PCNAMES[pc], pc:pc, oct: (def[PCNAMES[pc]]!=null?def[PCNAMES[pc]]:3)};
+    });
+    clampAll();
+  }
+  function clampAll(){ state.chords.forEach(function(c){c.oct=Math.max(state.piso,Math.min(state.techo,c.oct));});
+    state.axis=Math.max(state.piso,Math.min(state.techo,state.axis)); }
+
+  function reflex(oct){ return Math.max(state.piso,Math.min(state.techo, 2*state.axis-oct)); }
+
+  function applyShape(s){
+    state.shape=s; if(s==='manual') return;
+    var n=state.chords.length, lo=state.piso, hi=state.techo, span=hi-lo;
+    state.chords.forEach(function(c,i){
+      var t = n>1 ? i/(n-1) : 0, v;
+      if(s==='asc') v=lo+span*t;
+      else if(s==='desc') v=hi-span*t;
+      else { var tt=t<=0.5? t*2 : (1-t)*2; v=lo+span*tt; } // updown
+      c.oct=Math.round(v);
+    });
+    clampAll();
+  }
+
+  // ── Geometría ──
+  var M={l:56,t:24,r:22,b:46};
+  function dims(){
+    var n=state.chords.length, nOct=state.techo-state.piso+1;
+    var colW=Math.max(64,(700-M.l-M.r)/Math.max(n,1));
+    var rowH=Math.max(40,(360-M.t-M.b)/Math.max(nOct,1));
+    return {n:n,nOct:nOct,colW:colW,rowH:rowH,W:M.l+colW*n+M.r,H:M.t+rowH*nOct+M.b};
+  }
+  function xFor(i,d){ return M.l + i*d.colW + d.colW/2; }
+  function yFor(oct,d){ return M.t + (state.techo-oct)*d.rowH; }
+  function octFromY(y,d){ return Math.round(state.techo - (y-M.t)/d.rowH); }
+
+  var svg=document.getElementById('chart');
+  function el(tag,attrs){var e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+  function render(){
+    var d=dims();
+    svg.setAttribute('viewBox','0 0 '+d.W+' '+d.H);
+    svg.innerHTML='';
+    // gridlines + octave labels
+    for(var o=state.piso;o<=state.techo;o++){
+      var y=yFor(o,d);
+      svg.appendChild(el('line',{x1:M.l,y1:y,x2:d.W-M.r,y2:y,class:'gridline'}));
+      var lab=el('text',{x:M.l-12,y:y+4,class:'octlabel','text-anchor':'end'});lab.textContent='oct '+o;
+      svg.appendChild(lab);
+    }
+    // chord columns + labels + connectors + reflex + base dots
+    state.chords.forEach(function(c,i){
+      var x=xFor(i,d);
+      var clab=el('text',{x:x,y:d.H-M.b+30,class:'chordlabel','text-anchor':'middle'});clab.textContent=c.name;
+      svg.appendChild(clab);
+      var yb=yFor(c.oct,d), rO=reflex(c.oct), yr=yFor(rO,d);
+      if(rO!==c.oct){
+        svg.appendChild(el('line',{x1:x,y1:yb,x2:x,y2:yr,class:'connector'}));
+        var rc=el('circle',{cx:x,cy:yr,r:13,class:'dot-reflex'}); svg.appendChild(rc);
+        var rt=el('text',{x:x,y:yr+4,class:'dot-rtxt','text-anchor':'middle'});rt.textContent=c.name+rO;svg.appendChild(rt);
+      }
+      var dot=el('circle',{cx:x,cy:yb,r:15,class:'dot-base','data-i':i}); svg.appendChild(dot);
+      var dt=el('text',{x:x,y:yb+4,class:'dot-txt','data-i':i,'text-anchor':'middle'});dt.textContent=c.name+c.oct;svg.appendChild(dt);
+    });
+    // mirror axis
+    var ay=yFor(state.axis,d);
+    svg.appendChild(el('line',{x1:M.l,y1:ay,x2:d.W-M.r,y2:ay,class:'axis'}));
+    var tag=el('text',{x:d.W-M.r,y:ay-7,class:'axis-tag','text-anchor':'end'});tag.textContent='espejo · oct '+state.axis;svg.appendChild(tag);
+    svg.appendChild(el('line',{x1:M.l,y1:ay,x2:d.W-M.r,y2:ay,class:'axis-grab','data-axis':'1'}));
+    updateOut();
+    refreshDisplays();
+    highlightComp();
+  }
+
+  function notesStr(useReflex){
+    return state.chords.map(function(c){var o=useReflex?reflex(c.oct):c.oct;return c.name+o;}).join('  ');
+  }
+  function updateOut(){
+    document.getElementById('o1').textContent=notesStr(false);
+    document.getElementById('o2').textContent=notesStr(true);
+    var moved=state.chords.filter(function(c){return reflex(c.oct)!==c.oct;}).map(function(c){return c.name;});
+    var fixed=state.chords.filter(function(c){return reflex(c.oct)===c.oct;}).map(function(c){return c.name;});
+    document.getElementById('hint').textContent=
+      'Pivotes (en el eje, no se mueven): '+(fixed.join(', ')||'—')+'.  Se espejan: '+(moved.join(', ')||'—')+'.';
+  }
+  function highlightComp(){
+    // Resalta el compás activo. En el compás del espejo (comp 2) los acordes
+    // PIVOTE (sobre el eje, que no se mueven) siguen encendidos: son parte de
+    // la progresión en TODOS los compases.
+    var on1=!state.animating||state.comp===1, on2=!state.animating||state.comp===2;
+    function isPivot(i){ var c=state.chords[i]; return reflex(c.oct)===c.oct; }
+    svg.querySelectorAll('.dot-base,.dot-txt').forEach(function(n){
+      var i=+n.getAttribute('data-i');
+      n.style.opacity=(on1 || isPivot(i)) ? 1 : .28;
+    });
+    svg.querySelectorAll('.dot-reflex,.dot-rtxt').forEach(function(n){
+      n.style.opacity=on2 ? 1 : .28;
+    });
+  }
+
+  // ── Drag ──
+  var drag=null;
+  function svgPoint(evt){
+    var pt=svg.createSVGPoint(); pt.x=evt.clientX; pt.y=evt.clientY;
+    var ctm=svg.getScreenCTM(); var p=pt.matrixTransform(ctm.inverse()); return p;
+  }
+  svg.addEventListener('pointerdown',function(e){
+    var t=e.target;
+    if(t.classList.contains('dot-base')){drag={type:'dot',i:+t.getAttribute('data-i')};t.classList.add('drag');state.shape='manual';syncShapeUI();}
+    else if(t.getAttribute('data-axis')){drag={type:'axis'};}
+    if(drag){svg.setPointerCapture(e.pointerId);}
+  });
+  svg.addEventListener('pointermove',function(e){
+    if(!drag)return; var d=dims(); var p=svgPoint(e); var o=Math.max(state.piso,Math.min(state.techo,octFromY(p.y,d)));
+    if(drag.type==='dot'){state.chords[drag.i].oct=o;}
+    else if(drag.type==='axis'){state.axis=o;}
+    render();
+  });
+  function endDrag(e){ if(drag){ if(drag.type==='dot'){} drag=null; render(); } }
+  svg.addEventListener('pointerup',endDrag);
+  svg.addEventListener('pointercancel',endDrag);
+
+  // ── Controles ──
+  function syncShapeUI(){document.querySelectorAll('#shape button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-s')===state.shape);});}
+  document.getElementById('shape').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return; var s=b.getAttribute('data-s');
+    applyShape(s); syncShapeUI(); render();
+  });
+  document.getElementById('prog').addEventListener('change',function(){parseProg();if(state.shape!=='manual')applyShape(state.shape);render();});
+  // Límites duros: piso ≥ OCT_MIN, techo ≤ OCT_MAX, piso < techo, eje dentro.
+  function setRange(){
+    state.techo=Math.max(OCT_MIN+1,Math.min(OCT_MAX,state.techo));
+    state.piso =Math.max(OCT_MIN,Math.min(state.techo-1,state.piso));
+    state.axis =Math.max(state.piso,Math.min(state.techo,state.axis));
+  }
+  function refreshDisplays(){
+    document.getElementById('piso').textContent='oct '+state.piso;
+    document.getElementById('techo').textContent='oct '+state.techo;
+    document.getElementById('axisv').textContent='oct '+state.axis;
+    document.getElementById('cyc').textContent=state.cycle+' comp.';
+  }
+  document.querySelector('.controls').addEventListener('click',function(e){
+    var b=e.target.closest('[data-step]'); if(!b)return; var s=b.getAttribute('data-step');
+    if(s==='piso-')state.piso--; else if(s==='piso+')state.piso++;
+    else if(s==='techo-')state.techo--; else if(s==='techo+')state.techo++;
+    else if(s==='axis-')state.axis--; else if(s==='axis+')state.axis++;
+    else if(s==='cyc-')state.cycle=Math.max(1,state.cycle-1);
+    else if(s==='cyc+')state.cycle=Math.min(8,state.cycle+1);
+    setRange();
+    if(state.shape!=='manual') applyShape(state.shape);
+    clampAll(); render();
+  });
+
+  var timer=null;
+  document.getElementById('play').addEventListener('click',function(){
+    state.animating=!state.animating;
+    this.textContent=state.animating?'⏸ Pausar':'▶ Animar';
+    this.classList.toggle('primary',!state.animating);
+    if(state.animating){ state.comp=1; var step=0;
+      timer=setInterval(function(){ step++; if(step%state.cycle===0){state.comp=state.comp===1?2:1;} highlightComp(); },650);
+    } else { clearInterval(timer); state.comp=1; highlightComp(); }
+  });
+
+  // init
+  parseProg(); setRange(); render();
+})();
+</script>
+</body>
+</html>
