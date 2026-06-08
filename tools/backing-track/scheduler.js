@@ -48,22 +48,60 @@
     return (W.BackingTrack && W.BackingTrack.voicing) || null;
   }
 
+  // ── Contorno de octavas ──────────────────────────────────────
+  // Asigna una octava a cada acorde de la progresión según una forma
+  // (ascendente / descendente / sube-baja), opcionalmente espejada sobre
+  // un eje cada N compases. Si track.contour no está o mode!=='auto',
+  // devuelve la octava fija de la pista (comportamiento histórico).
+  function defaultOct(track, role) {
+    if (Number.isFinite(track.octave)) return track.octave;
+    return role === 'bass' ? 2 : 3;
+  }
+  function shapeBase(shape, idx, n, lo, hi) {
+    const t = n > 1 ? idx / (n - 1) : 0;
+    let f;
+    if (shape === 'desc') f = 1 - t;
+    else if (shape === 'updown') f = (t <= 0.5 ? t * 2 : (1 - t) * 2);
+    else f = t; // 'asc'
+    return Math.round(lo + (hi - lo) * f);
+  }
+  // octava efectiva del acorde `idx` (de n) en el compás absoluto `absBar`.
+  function contourOctave(track, role, idx, n, absBar) {
+    const base = defaultOct(track, role);
+    const c = track && track.contour;
+    if (!c || c.mode !== 'auto') return base;
+    let lo = Number.isFinite(c.floor) ? c.floor : 2;
+    let hi = Number.isFinite(c.ceil) ? c.ceil : 5;
+    if (hi < lo) { const tmp = lo; lo = hi; hi = tmp; }
+    let oct = shapeBase(c.shape || 'asc', idx, n, lo, hi);
+    const cyc = Number.isFinite(c.cycle) ? c.cycle : 0;
+    if (cyc > 0 && Math.floor(absBar / cyc) % 2 === 1) {
+      const axis = Number.isFinite(c.axis) ? c.axis : Math.round((lo + hi) / 2);
+      oct = 2 * axis - oct;            // reflexión sobre el eje
+    }
+    return Math.max(lo, Math.min(hi, oct));
+  }
+
   // Notas de un acorde para una pista melódica (acordes / lead / pad).
-  function chordNotes(chord, track) {
+  // `octave` (opcional) sobreescribe la octava base — lo usa el contorno.
+  function chordNotes(chord, track, octave) {
     const v = voicingApi();
     if (!v) return [];
     return v.resolveChord(chord, {
-      octave:    Number.isFinite(track.octave) ? track.octave : 3,
+      octave:    Number.isFinite(octave) ? octave
+                 : (Number.isFinite(track.octave) ? track.octave : 3),
       voicing:   track.voicing,
       inversion: track.inversion,
     });
   }
 
   // Nota del bajo: la fundamental en octava grave.
-  function bassNotes(chord, track) {
+  function bassNotes(chord, track, octave) {
     const v = voicingApi();
     if (!v) return [];
-    const n = v.resolveBass(chord, Number.isFinite(track.octave) ? track.octave : 2);
+    const o = Number.isFinite(octave) ? octave
+              : (Number.isFinite(track.octave) ? track.octave : 2);
+    const n = v.resolveBass(chord, o);
     return n ? [n] : [];
   }
 
@@ -80,13 +118,17 @@
     if (!laneHits.length) return;
     const orderedSteps = laneHits.map(h => h.step);
 
+    const nChords = placed.length;
     placed.forEach(entry => {
-      const notes = role === 'bass'
-        ? bassNotes(entry.chord, track)
-        : chordNotes(entry.chord, track);
-      if (!notes.length) return;
       for (let b = 0; b < entry.bars; b++) {
-        const barStart = (entry.startBar + b) * STEPS_PER_BAR;
+        const absBar = entry.startBar + b;
+        // El contorno puede cambiar la octava compás a compás (la "respiración").
+        const oct = contourOctave(track, role, entry.index, nChords, absBar);
+        const notes = role === 'bass'
+          ? bassNotes(entry.chord, track, oct)
+          : chordNotes(entry.chord, track, oct);
+        if (!notes.length) continue;
+        const barStart = absBar * STEPS_PER_BAR;
         laneHits.forEach((hit, i) => {
           const nextStep = (i + 1 < orderedSteps.length)
             ? orderedSteps[i + 1] : STEPS_PER_BAR;
@@ -106,8 +148,11 @@
   // Pad: un acorde sostenido por toda la duración del acorde (ignora
   // el patrón rítmico).
   function schedulePad(track, placed, events) {
+    const nChords = placed.length;
     placed.forEach(entry => {
-      const notes = chordNotes(entry.chord, track);
+      // El pad sostiene; usa una sola octava por acorde (la de su 1er compás).
+      const oct = contourOctave(track, 'pad', entry.index, nChords, entry.startBar);
+      const notes = chordNotes(entry.chord, track, oct);
       if (!notes.length) return;
       events.push({
         trackId: track.id, type: 'note', role: 'pad',
@@ -196,5 +241,5 @@
   }
 
   W.BackingTrack = W.BackingTrack || {};
-  W.BackingTrack.scheduler = { schedule, STEPS_PER_BAR, ROLE_BY_TIPO };
+  W.BackingTrack.scheduler = { schedule, STEPS_PER_BAR, ROLE_BY_TIPO, contourOctave };
 })(typeof window !== 'undefined' ? window : globalThis);

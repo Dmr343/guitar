@@ -85,6 +85,7 @@ body.playing .header { opacity: 0.4; margin-bottom: 8px; }
 /* ════════════ ZONA DE TOQUE (héroe) ════════════ */
 .play-zone {
   position: relative;
+  isolation: isolate;          /* crea contexto propio: el glow queda detrás del contenido */
   overflow: hidden;
   background: linear-gradient(180deg, var(--surface3) 0%, var(--surface) 100%);
   border: 1px solid var(--border2);
@@ -104,10 +105,11 @@ body.playing .header { opacity: 0.4; margin-bottom: 8px; }
 .play-zone::after {
   content: '';
   position: absolute;
-  top: -40%; right: -25%;
-  width: 60%; height: 80%;
-  background: radial-gradient(circle, var(--glow), transparent 70%);
-  opacity: 0.5;
+  z-index: -1;                 /* detrás del contenido (BPM, sliders, etc.) */
+  top: -60%; right: -14%;
+  width: 44%; height: 150%;
+  background: radial-gradient(closest-side circle, var(--glow), transparent);
+  opacity: 0.22;
   pointer-events: none;
 }
 body.playing .play-zone {
@@ -765,6 +767,11 @@ body.playing .track .track-btn.danger { display: none; }
   font-size: 11px;
 }
 .arrange-track-head .track-tipo { min-width: 0; }
+.arrange-track-head .ctl-mini { display: inline-flex; flex-direction: column; gap: 3px; align-items: stretch; }
+.arrange-track-head .ctl-mini > span {
+  font-family: var(--font-mono); font-size: 8px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-dim); line-height: 1;
+}
 .arrange-track-head select {
   font-family: var(--font);
   font-size: 10px;

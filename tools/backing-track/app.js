@@ -1086,6 +1086,59 @@
   function octaveOpts(nums) {
     return nums.map(n => ({ id: String(n), nombre: t('octave_abbr') + ' ' + n }));
   }
+  // Contorno de octavas (por acorde). 'off' = octava fija (como siempre).
+  function contourOpts() {
+    return [
+      { id: 'off',    nombre: t('contour_off') },
+      { id: 'asc',    nombre: t('contour_asc') },
+      { id: 'desc',   nombre: t('contour_desc') },
+      { id: 'updown', nombre: t('contour_updown') },
+    ];
+  }
+  function cycleOpts() {
+    return [
+      { id: '0', nombre: t('invert_never') },
+      { id: '1', nombre: '1' }, { id: '2', nombre: '2' }, { id: '4', nombre: '4' },
+    ];
+  }
+  // Select compacto con etiqueta arriba (para los controles de contorno).
+  function miniSelect(labelKey, options, value, onChange) {
+    const wrap = document.createElement('label');
+    wrap.className = 'ctl-mini';
+    const span = document.createElement('span');
+    span.textContent = t(labelKey);
+    wrap.appendChild(span);
+    wrap.appendChild(makeArrangeSelect(options, value, onChange));
+    return wrap;
+  }
+  // Controles de contorno para una pista de acordes/lead/pad.
+  function contourControls(track) {
+    const c = track.contour || {};
+    const active = c.mode === 'auto';
+    const out = [];
+    function patch(p) {
+      // Defaults en oct 3-5: zona donde los acordes suenan parejos (oct 1-2
+      // se perciben muy flojos por las curvas de igual sonoridad).
+      const base = Object.assign(
+        { mode: 'auto', shape: 'asc', floor: 3, ceil: 5, axis: 4, cycle: 0 },
+        track.contour || {});
+      engine.updateTrack(track.id, { contour: Object.assign(base, p) });
+      renderArrange();
+    }
+    out.push(miniSelect('contour_label', contourOpts(), active ? (c.shape || 'asc') : 'off',
+      function (v) {
+        if (v === 'off') { engine.updateTrack(track.id, { contour: { mode: 'off' } }); renderArrange(); }
+        else patch({ mode: 'auto', shape: v });
+      }));
+    if (active) {
+      const O = octaveOpts([2, 3, 4, 5, 6]);   // oct 1 fuera: sub-grave inútil para acordes
+      out.push(miniSelect('floor_label', O, String(c.floor != null ? c.floor : 3), v => patch({ floor: Number(v) })));
+      out.push(miniSelect('ceil_label',  O, String(c.ceil  != null ? c.ceil  : 5), v => patch({ ceil:  Number(v) })));
+      out.push(miniSelect('axis_label',  O, String(c.axis  != null ? c.axis  : 4), v => patch({ axis:  Number(v) })));
+      out.push(miniSelect('invert_label', cycleOpts(), String(c.cycle != null ? c.cycle : 0), v => patch({ cycle: Number(v) })));
+    }
+    return out;
+  }
   let hideIndicator = false;
 
   function cycleCell(pattern, lane, step) {
@@ -1187,6 +1240,7 @@
         octaveOpts([2, 3, 4]),
         String(track.octave != null ? track.octave : 3),
         v => engine.updateTrack(track.id, { octave: Number(v) })));
+      contourControls(track).forEach(elx => head.appendChild(elx));
     }
 
     block.appendChild(head);

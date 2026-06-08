@@ -298,19 +298,23 @@
       if (!chord) return;
       const v = BT().voicing;
       if (!v || !v.resolveChord) return;
-      const notes = v.resolveChord(chord, {
-        octave: Number.isFinite(track.octave) ? track.octave : 3,
-        voicing: track.voicing || 'close',
-        inversion: track.inversion || 0,
-      });
-      if (!notes || !notes.length) return;
-      // Tiempo restante del acorde actual = chordEndSec - posición actual.
+      // Compás de inicio del acorde activo (para contorno y tiempo restante).
       const secsPerBar = (60 / tempo) * 4;
       let chordStartBar = 0;
       for (let i = 0; i < activeChordIndex; i++) {
         chordStartBar += (progression[i] && progression[i].bars > 0
                           ? progression[i].bars : 1);
       }
+      const sched = BT().scheduler;
+      const oct = (sched && sched.contourOctave)
+        ? sched.contourOctave(track, 'pad', activeChordIndex, progression.length, chordStartBar)
+        : (Number.isFinite(track.octave) ? track.octave : 3);
+      const notes = v.resolveChord(chord, {
+        octave: oct,
+        voicing: track.voicing || 'close',
+        inversion: track.inversion || 0,
+      });
+      if (!notes || !notes.length) return;
       const chordBars = (chord.bars > 0) ? chord.bars : 1;
       const chordEndSec = (chordStartBar + chordBars) * secsPerBar;
       const T = Tone();

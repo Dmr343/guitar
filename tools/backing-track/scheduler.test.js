@@ -179,6 +179,35 @@
     });
   });
 
+  T.describe('contourOctave — contorno de octavas', () => {
+    const tk = (contour) => ({ octave: 3, contour });
+    // octava de cada acorde idx (0..n-1), con absBar = idx (sin ciclo).
+    const seq = (c, n) => Array.from({ length: n }, (_, i) =>
+      scheduler.contourOctave(tk(c), 'pad', i, n, i));
+
+    T.it('asc recorre piso→techo', () => {
+      T.assertArrayEq(seq({ mode: 'auto', shape: 'asc', floor: 3, ceil: 5 }, 3), [3, 4, 5]);
+    });
+    T.it('desc recorre techo→piso', () => {
+      T.assertArrayEq(seq({ mode: 'auto', shape: 'desc', floor: 3, ceil: 5 }, 3), [5, 4, 3]);
+    });
+    T.it('updown sube y baja', () => {
+      T.assertArrayEq(seq({ mode: 'auto', shape: 'updown', floor: 3, ceil: 5 }, 5), [3, 4, 5, 4, 3]);
+    });
+    T.it('mode off / sin contorno usa la octava fija de la pista', () => {
+      T.assertEq(scheduler.contourOctave(tk({ mode: 'off' }), 'pad', 1, 3, 1), 3);
+      T.assertEq(scheduler.contourOctave(tk(null), 'pad', 1, 3, 1), 3);
+    });
+    T.it('ordena piso/techo si vienen invertidos', () => {
+      T.assertArrayEq(seq({ mode: 'auto', shape: 'asc', floor: 5, ceil: 3 }, 3), [3, 4, 5]);
+    });
+    T.it('espejo refleja sobre el eje en ciclos impares', () => {
+      const c = { mode: 'auto', shape: 'asc', floor: 3, ceil: 5, axis: 4, cycle: 1 };
+      T.assertEq(scheduler.contourOctave(tk(c), 'pad', 0, 3, 0), 3);   // compás par: sin reflejo
+      T.assertEq(scheduler.contourOctave(tk(c), 'pad', 0, 3, 1), 5);   // compás impar: 3 reflejado sobre 4 → 5
+    });
+  });
+
 })(
   (typeof window !== 'undefined' ? window : globalThis).GuitarShared,
   (typeof window !== 'undefined' ? window : globalThis)
