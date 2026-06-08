@@ -15,7 +15,6 @@
       --gold-dim:   var(--accent-dim);
     }
     *{box-sizing:border-box;margin:0;padding:0}
-    html{zoom:1.4}
     body{min-height:100vh;padding:clamp(16px,3vw,28px)}
     a.back{
       font-family:var(--font-mono);font-size:var(--fs-small);color:var(--text-mid);
@@ -35,7 +34,7 @@
     .panel-layout{display:grid;grid-template-columns:1fr 320px;gap:14px}
     .panel-layout.collapsed{grid-template-columns:1fr}
     .panel-layout.collapsed .side-panel{display:none}
-    .panel-layout.collapsed ~ #atlas-panel-show{display:flex}
+    .panel-layout.collapsed #atlas-panel-show{display:inline-flex}
     @media(max-width:1100px){.panel-layout{grid-template-columns:1fr}}
 
     .fretboard-wrap{
@@ -56,15 +55,10 @@
       transition:border-color var(--dur) var(--ease),color var(--dur) var(--ease),transform var(--dur-fast) var(--ease)
     }
     .panel-toggle:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
-    #atlas-panel-show{
-      display:none;position:fixed;top:14px;right:64px;
-      background:var(--surface2);border:1px solid var(--border);color:var(--text-mid);
-      font-family:var(--font-mono);font-size:var(--fs-small);letter-spacing:.08em;text-transform:uppercase;
-      padding:8px 13px;border-radius:var(--radius-sm);cursor:pointer;align-items:center;gap:6px;z-index:50;
-      box-shadow:var(--shadow-1);
-      transition:border-color var(--dur) var(--ease),color var(--dur) var(--ease),transform var(--dur-fast) var(--ease)
-    }
-    #atlas-panel-show:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+    /* Botón "Editor" (reabrir panel): vive inline en la fila del Play, pegado a
+       la derecha; visible solo cuando el panel está colapsado. Usa .btn para el
+       resto del estilo. */
+    #atlas-panel-show{display:none;margin-left:auto;align-items:center;gap:6px}
     .side-panel h3{
       font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:.18em;
       color:var(--text-dim);text-transform:uppercase;margin-bottom:12px
@@ -242,6 +236,7 @@
           <option value="vertical" data-i18n="dir_vertical">Vertical</option>
           <option value="diagonal" data-i18n="dir_diagonal">Diagonal</option>
         </select>
+        <button class="btn" id="atlas-panel-show" type="button" data-i18n-attr="title:panelshow_t;aria-label:panelshow_aria" title="Mostrar editor de progresión" aria-label="Mostrar editor" data-i18n="panel_show">‹ Editor</button>
       </div>
 
       <details id="atlas-options-block" class="filters-block" open>
@@ -363,8 +358,6 @@
       </div>
     </div>
   </div>
-
-  <button id="atlas-panel-show" type="button" data-i18n-attr="title:panelshow_t;aria-label:panelshow_aria" title="Mostrar editor de progresión" aria-label="Mostrar editor" data-i18n="panel_show">‹ Editor</button>
 
   <script src="./i18n.js"></script>
   <script src="./shared/theory.js"></script>
