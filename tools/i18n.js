@@ -78,7 +78,7 @@
     if (styleInjected) return;
     var doc = W.document;
     var css =
-      '.i18n-toggle{position:fixed;top:14px;right:14px;z-index:9999;' +
+      '.i18n-toggle{position:fixed;top:14px;right:14px;z-index:90;' +
       'min-width:42px;height:34px;padding:0 12px;' +
       'font-family:var(--font-mono),monospace;font-size:13px;font-weight:700;' +
       'letter-spacing:0.08em;color:var(--text,#ece3cf);background:var(--surface2,rgba(20,20,20,0.92));' +

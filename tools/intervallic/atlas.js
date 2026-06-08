@@ -64,7 +64,7 @@
       chordTones: true, scale: false, tensions: false,
       approach: false, allNotes: false,
     },
-    filter: { direction: 'all', stringRange: [1, 6], fretRange: [0, 22], focusString: 3, focusFret: 5 },
+    filter: { direction: 'all', stringRange: [1, 6], fretRange: [0, 15], focusString: 3, focusFret: 5 },
     showNoteNames: false,
     parentKey: 'C',
     parentMode: 'major',
@@ -73,6 +73,7 @@
     beatsPerCompas: 4,  // numerador del compás (3, 4, 6, 8…)
     filtersCollapsed: true,
     optionsCollapsed: false,
+    scalesCollapsed: true,
     sidePanelCollapsed: false,
     paletteMode: 'libre',
     diatonicKey: 'C',
@@ -93,6 +94,23 @@
       if (o.parentKey && !o.diatonicKey)  o.diatonicKey  = o.parentKey;
       if (o.parentMode && !o.diatonicMode) o.diatonicMode = o.parentMode;
       delete o.parentKey; delete o.parentMode;
+      return o;
+    },
+    // v1 → v2: el default de trastes pasó de 0–22 a 0–15. Solo reescribe si el
+    // usuario seguía con el viejo default completo — no pisa un rango elegido.
+    (s) => {
+      const o = Object.assign({}, s);
+      const fr = o.filter && o.filter.fretRange;
+      if (Array.isArray(fr) && fr[0] === 0 && fr[1] === 22) {
+        o.filter = Object.assign({}, o.filter, { fretRange: [0, 15] });
+      }
+      return o;
+    },
+    // v2 → v3: se retiraron de la UI las capas "Escala asociada" y "Tensiones".
+    // Forzarlas apagadas para quien las tuviera encendidas (ya no hay toggle).
+    (s) => {
+      const o = Object.assign({}, s);
+      o.layers = Object.assign({}, o.layers, { scale: false, tensions: false });
       return o;
     },
   ];
@@ -183,6 +201,7 @@
     drawInfo();
     drawBar();
     drawLegend();
+    drawScales();
   }
 
   let _prevChord = null;
@@ -706,14 +725,9 @@
     if (!c) { info.className = 'empty-state'; info.textContent = t('info_none'); return; }
     info.className = '';
     const tones = c.notes.map((n, i) => `${n}=${c.intervals[i]}`).join(' · ');
-    const FR = W.FretboardRenderer;
-    const ts = (FR && FR.TENSIONS_BY_QUALITY && FR.TENSIONS_BY_QUALITY[c.quality]) || [];
-    const scaleName = (FR && FR.SCALE_BY_QUALITY && FR.SCALE_BY_QUALITY[c.quality]) || 'major';
     info.innerHTML = `
       <div style="font-size:18px;font-weight:700;color:var(--gold);margin-bottom:4px">${chordName(c)}</div>
       <div style="font-size:11px;color:var(--text-mid);line-height:1.6">${tones}</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">${t('info_tensions')}${ts.length ? ts.join(', ') : t('info_none')}</div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${t('info_scale')}${scaleName}</div>
     `;
   }
 
@@ -722,6 +736,69 @@
   // arrancan apagadas y se encienden con un click. El acorde no cambia: es
   // pura ayuda visual para ubicar, por ej, la b6 en el mástil.
   const LEGEND_INTERVALS = ['1','b2','2','b3','3','4','b5','5','b6','6','b7','7'];
+
+  // Biblioteca de escalas para estudio. Cada fórmula se expresa con los mismos
+  // nombres de grado que la leyenda/mástil (un nombre por semitono: el semitono
+  // 6 se llama 'b5', así que el #4 del Lidio aparece como 'b5'). Autocontenida:
+  // no depende de buildScale — solo necesitamos los grados para encender la
+  // leyenda y mostrar la fórmula. 'key' sirve para la clave i18n 'scale_<key>'.
+  const SCALE_LIBRARY = [
+    { key: 'major',          intervals: ['1','2','3','4','5','6','7'] },
+    { key: 'dorian',         intervals: ['1','2','b3','4','5','6','b7'] },
+    { key: 'phrygian',       intervals: ['1','b2','b3','4','5','b6','b7'] },
+    { key: 'lydian',         intervals: ['1','2','3','b5','5','6','7'] },
+    { key: 'mixolydian',     intervals: ['1','2','3','4','5','6','b7'] },
+    { key: 'minor',          intervals: ['1','2','b3','4','5','b6','b7'] },
+    { key: 'locrian',        intervals: ['1','b2','b3','4','b5','b6','b7'] },
+    { key: 'harmonic_minor', intervals: ['1','2','b3','4','5','b6','7'] },
+    { key: 'melodic_minor',  intervals: ['1','2','b3','4','5','6','7'] },
+    { key: 'pent_minor',     intervals: ['1','b3','4','5','b7'] },
+    { key: 'pent_major',     intervals: ['1','2','3','5','6'] },
+    { key: 'blues',          intervals: ['1','b3','4','b5','5','b7'] },
+  ];
+
+  // Conjunto de grados actualmente VISIBLES en el mástil, relativo al acorde
+  // activo (misma regla que la leyenda: nota del acorde visible salvo oculta;
+  // nota ajena oculta salvo encendida a mano).
+  function visibleIntervals() {
+    const c = activeChord();
+    const chordTones = new Set(c ? c.intervals : []);
+    const hidden = new Set(state.hiddenIntervals || []);
+    const extra  = new Set(state.extraIntervals || []);
+    return LEGEND_INTERVALS.filter(i =>
+      chordTones.has(i) ? !hidden.has(i) : extra.has(i));
+  }
+
+  function sameSet(a, b) {
+    if (a.length !== b.length) return false;
+    const sb = new Set(b);
+    return a.every(x => sb.has(x));
+  }
+
+  // Enciende EXACTAMENTE los grados de una escala sobre la leyenda/mástil.
+  // Reusa el modelo de hiddenIntervals/extraIntervals (igual que un click de
+  // leyenda, pero en lote): nota del acorde dentro de la escala → visible;
+  // nota del acorde fuera → oculta; nota ajena dentro → encendida; fuera → apagada.
+  function applyScale(intervals) {
+    const c = activeChord();
+    if (!c) return;
+    const inScale = new Set(intervals);
+    const chordTones = new Set(c.intervals);
+    const hidden = [], extra = [];
+    LEGEND_INTERVALS.forEach(i => {
+      if (chordTones.has(i)) { if (!inScale.has(i)) hidden.push(i); }
+      else if (inScale.has(i)) extra.push(i);
+    });
+    state.hiddenIntervals = hidden;
+    state.extraIntervals = extra;
+    saveState(); render();
+  }
+
+  function clearScale() {
+    state.hiddenIntervals = [];
+    state.extraIntervals = [];
+    saveState(); render();
+  }
 
   function drawLegend() {
     const lg = $('atlas-legend');
@@ -786,6 +863,48 @@
       state.extraIntervals = Array.from(extra);
     }
     saveState(); render();
+  }
+
+  // Sección de escalas: una fila de botones (uno por escala). Al hacer click,
+  // enciende sus grados en el mástil reusando la leyenda; vuelve a hacer click
+  // en la activa para limpiar. Debajo, la fórmula de la escala activa con los
+  // mismos puntos de color del mástil.
+  function drawScales() {
+    const row = $('atlas-scales');
+    const formula = $('atlas-scale-formula');
+    if (!row) return;
+    row.innerHTML = '';
+    const c = activeChord();
+    if (!c) {
+      const hint = document.createElement('span');
+      hint.style.cssText = 'color:var(--text-dim);font-size:10px';
+      hint.textContent = t('scales_need_chord');
+      row.appendChild(hint);
+      if (formula) formula.innerHTML = '';
+      return;
+    }
+    const visible = visibleIntervals();
+    let activeKey = null;
+    SCALE_LIBRARY.forEach(sc => {
+      const on = sameSet(visible, sc.intervals);
+      if (on) activeKey = sc.key;
+      const btn = document.createElement('button');
+      btn.className = 'scale-btn' + (on ? ' active' : '');
+      btn.textContent = t('scale_' + sc.key);
+      btn.addEventListener('click', () => on ? clearScale() : applyScale(sc.intervals));
+      row.appendChild(btn);
+    });
+    if (formula) {
+      const sc = SCALE_LIBRARY.find(s => s.key === activeKey);
+      formula.innerHTML = sc ? scaleFormulaHTML(sc) : '';
+    }
+  }
+
+  function scaleFormulaHTML(sc) {
+    const dots = sc.intervals.map(i =>
+      `<span class="scale-deg"><span class="legend-dot" style="background:${INTERVAL_COLORS_FULL[i]}"></span>${i}</span>`
+    ).join('');
+    return `<span class="scale-name">${t('scale_' + sc.key)}</span><span class="scale-eq">=</span>${dots}`;
   }
 
   // Toggle directo de hiddenIntervals — usado por tests y consumidores.
@@ -933,8 +1052,6 @@
 
     // Capas
     bindLayer('atlas-l-chord', 'chordTones');
-    bindLayer('atlas-l-scale', 'scale');
-    bindLayer('atlas-l-tensions', 'tensions');
     bindLayer('atlas-l-approach', 'approach');
     bindLayer('atlas-l-all', 'allNotes');
     const cb = $('atlas-show-names');
@@ -945,8 +1062,6 @@
     // reflejar estado actual de layers en checkboxes
     Object.entries({
       'atlas-l-chord': 'chordTones',
-      'atlas-l-scale': 'scale',
-      'atlas-l-tensions': 'tensions',
       'atlas-l-approach': 'approach',
       'atlas-l-all': 'allNotes',
     }).forEach(([id, key]) => {
@@ -992,18 +1107,6 @@
     if (nxt) nxt.addEventListener('click', () => setActiveChord((state.activeIdx + 1) % state.progression.length));
     const clearProg = $('atlas-clear-prog');
     if (clearProg) clearProg.addEventListener('click', clearProgression);
-    // Hook opcional: enviar la progresión al módulo de backing tracks.
-    // Acoplamiento mínimo — solo escribe un JSON en una clave conocida.
-    const sendBT = $('atlas-send-bt');
-    if (sendBT) sendBT.addEventListener('click', () => {
-      try {
-        const prog = state.progression.map(c =>
-          ({ root: c.root, quality: c.quality, bars: c.bars }));
-        localStorage.setItem('backing_track_handoff',
-          JSON.stringify({ progression: prog }));
-      } catch (e) {}
-      window.open('backing-track/index.html', '_blank');
-    });
     document.addEventListener('keydown', handleKeydown);
 
     // Transporte
@@ -1102,6 +1205,14 @@
         saveState();
       });
     }
+    const scalesBlock = $('atlas-scales-block');
+    if (scalesBlock) {
+      scalesBlock.open = !state.scalesCollapsed;
+      scalesBlock.addEventListener('toggle', () => {
+        state.scalesCollapsed = !scalesBlock.open;
+        saveState();
+      });
+    }
     const panelLayout = $('atlas-panel-layout');
     const panelHide   = $('atlas-panel-hide');
     const panelShow   = $('atlas-panel-show');
@@ -1125,8 +1236,8 @@
     const reset = $('atlas-reset');
     if (reset) reset.addEventListener('click', () => {
       state.filter = Object.assign({}, DEFAULT_STATE.filter, { stringSet: [1,2,3,4,5,6] });
-      ['atlas-fret-min'].forEach(i => { const el = $(i); if (el) el.value = 0; });
-      const fmax = $('atlas-fret-max'); if (fmax) fmax.value = 22;
+      const fmin = $('atlas-fret-min'); if (fmin) fmin.value = DEFAULT_STATE.filter.fretRange[0];
+      const fmax = $('atlas-fret-max'); if (fmax) fmax.value = DEFAULT_STATE.filter.fretRange[1];
       for (let s = 1; s <= 6; s++) { const cb = $('atlas-s-' + s); if (cb) cb.checked = true; }
       const dir = $('atlas-direction'); if (dir) dir.value = 'all';
       saveState(); reinitBoard(); render();
