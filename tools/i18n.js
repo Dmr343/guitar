@@ -88,7 +88,7 @@
       '.i18n-toggle:hover{border-color:var(--gold,#e0b24a);color:var(--gold,#e0b24a);transform:translateY(-1px);}' +
       '.i18n-toggle:focus-visible{outline:2px solid var(--gold,#e0b24a);outline-offset:2px;}' +
       '.i18n-toggle:active{transform:translateY(0);}' +
-      '@media(max-width:520px){.i18n-toggle{top:10px;right:10px;height:32px;}}';
+      '@media(max-width:760px){.i18n-toggle{top:10px;right:10px;height:32px;}}';
     var s = doc.createElement('style');
     s.setAttribute('data-i18n-style', '');
     s.appendChild(doc.createTextNode(css));

@@ -243,7 +243,7 @@
       'transition:border-color .2s,color .2s,transform .15s;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}' +
       '.help-btn:hover{border-color:var(--gold,#e0b24a);color:var(--gold,#e0b24a);transform:translateY(-1px);}' +
       '.help-btn:focus-visible{outline:2px solid var(--gold,#e0b24a);outline-offset:2px;}' +
-      '.help-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-start;justify-content:center;' +
+      '.help-modal{position:fixed;inset:0;z-index:1100;display:none;align-items:flex-start;justify-content:center;' +
       'padding:6vh 16px 16px;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);overflow-y:auto;}' +
       '.help-modal.open{display:flex;}' +
       '.help-card{width:100%;max-width:560px;background:linear-gradient(180deg,var(--surface2,#161616),var(--surface,#0f0f0f));' +
@@ -265,7 +265,7 @@
       'background:var(--surface3,#1d1d1d);border:1px solid var(--border,#2a2a2a);border-bottom-width:2px;border-radius:5px;padding:2px 7px;white-space:nowrap;}' +
       '.help-keys span{font-size:13px;color:var(--text-mid,#bdb29a);}' +
       '.help-hint{margin-top:18px;font-size:11px;color:var(--text-dim,#777);text-align:center;}' +
-      '@media(max-width:520px){.help-btn{top:10px;right:56px;width:32px;height:32px;}.help-card{padding:18px;}}';
+      '@media(max-width:760px){.help-btn{top:10px;right:56px;width:32px;height:32px;}.help-card{padding:18px;}}';
     var s = D.createElement('style');
     s.setAttribute('data-help-style', '');
     s.appendChild(D.createTextNode(css));
@@ -288,8 +288,8 @@
   function render() {
     if (!modal || !KEY || !C[KEY]) return;
     var lg = lang(), data = C[KEY], lb = L();
-    var html = '<div class="help-card" role="dialog" aria-modal="true">'
-      + '<div class="help-head"><div class="help-title">' + esc(data.title[lg]) + '</div>'
+    var html = '<div class="help-card" role="dialog" aria-modal="true" aria-labelledby="help-title">'
+      + '<div class="help-head"><div class="help-title" id="help-title">' + esc(data.title[lg]) + '</div>'
       + '<button class="help-x" type="button" aria-label="' + lb.close + '">×</button></div>'
       + '<p class="help-intro">' + data.intro[lg] + '</p>'
       + '<div class="help-h">' + lb.do + '</div>'
@@ -304,13 +304,29 @@
     modal.querySelector('.help-x').addEventListener('click', close);
   }
 
-  function open() {
-    if (!modal) return;
-    render();
-    try { W.scrollTo(0, 0); } catch (e) {}   // el modal cubre desde arriba
-    modal.classList.add('open');
+  // Foco al botón × (único foco dentro del modal). preventScroll evita que el
+  // navegador scrollee la página para "traer a la vista" el elemento enfocado.
+  function focusModal() {
+    var x = modal && modal.querySelector('.help-x');
+    if (x) try { x.focus({ preventScroll: true }); } catch (e) { x.focus(); }
   }
-  function close() { if (modal) modal.classList.remove('open'); }
+
+  var prevFocus = null;
+  function open() {
+    if (!modal || isOpen()) return;
+    prevFocus = D.activeElement;                 // para devolver el foco al cerrar
+    render();
+    // NO scrolleamos ni tocamos overflow: el modal es position:fixed y cubre el
+    // viewport tal cual, conservando la posición de scroll del usuario.
+    modal.classList.add('open');
+    focusModal();
+  }
+  function close() {
+    if (!modal || !isOpen()) return;
+    modal.classList.remove('open');
+    var back = (prevFocus && prevFocus.focus) ? prevFocus : btn;
+    if (back) try { back.focus({ preventScroll: true }); } catch (e) { back.focus(); }
+  }
   function isOpen() { return modal && modal.classList.contains('open'); }
 
   function injectButton() {
@@ -330,8 +346,14 @@
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
     (D.body || D.documentElement).appendChild(modal);
 
+    // Con el modal abierto, capturamos el teclado: Esc cierra, Tab atrapa el
+    // foco, y cualquier otra tecla NO llega al handler de la herramienta detrás
+    // (si no, Space/P/flechas/Supr disparaban play, navegaban o borraban acordes).
     D.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && isOpen()) { close(); e.stopPropagation(); }
+      if (!isOpen()) return;
+      if (e.key === 'Escape') { close(); e.preventDefault(); e.stopPropagation(); return; }
+      if (e.key === 'Tab') { focusModal(); e.preventDefault(); e.stopPropagation(); return; }
+      e.stopPropagation();
     }, true);
 
     align();
@@ -354,6 +376,7 @@
   W.addEventListener('resize', align);
   W.addEventListener('i18n:changed', function () {
     if (btn) btn.setAttribute('aria-label', L().help);
-    if (isOpen()) render();
+    align();                                  // re-alinear con la flecha (igual que i18n.js)
+    if (isOpen()) { render(); focusModal(); } // re-render destruye el ×; recuperar foco
   });
 })(window);
