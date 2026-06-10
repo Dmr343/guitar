@@ -179,6 +179,15 @@ footer { color: var(--text-dim); }
 /* ── Toggle EN/ES (la posición/tamaño base lo fija i18n.js) ── */
 .i18n-toggle { font-family: var(--font-mono) !important; }
 
+/* ── Responsive móvil: que el contenido entre en pantallas chicas ──
+   En celular usamos escala 1×; el zoom:1.4 de las herramientas es para
+   desktop y ahí apretaba el layout (el Atlas se desbordaba). El contenido
+   ancho (el mástil) scrollea dentro de su propio contenedor. */
+@media (max-width: 760px) {
+  html { zoom: 1 !important; }
+  body { overflow-x: hidden; }
+}
+
 /* ── Reduce motion global ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
