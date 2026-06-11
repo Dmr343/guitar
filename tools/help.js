@@ -351,9 +351,11 @@
     // (si no, Space/P/flechas/Supr disparaban play, navegaban o borraban acordes).
     D.addEventListener('keydown', function (e) {
       if (!isOpen()) return;
-      if (e.key === 'Escape') { close(); e.preventDefault(); e.stopPropagation(); return; }
-      if (e.key === 'Tab') { focusModal(); e.preventDefault(); e.stopPropagation(); return; }
-      e.stopPropagation();
+      // stopImmediatePropagation: frena también cualquier otro listener en
+      // fase de captura, no solo los de la herramienta en burbuja.
+      if (e.key === 'Escape') { close(); e.preventDefault(); e.stopImmediatePropagation(); return; }
+      if (e.key === 'Tab') { focusModal(); e.preventDefault(); e.stopImmediatePropagation(); return; }
+      e.stopImmediatePropagation();
     }, true);
 
     align();
