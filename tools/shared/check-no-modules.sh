@@ -21,18 +21,19 @@ if [ -n "$hits" ]; then
   fail=1
 fi
 
-# 2. No top-level `import ... from` in shared/*.js
-hits=$(grep -nE '^import .* from ' tools/shared/*.js || true)
+# 2. No top-level `import ... from` in los scripts compartidos (tools/ raíz +
+#    shared/): i18n.js y help.js viven en tools/ raíz, no solo en shared/.
+hits=$(grep -nE '^import .* from ' tools/*.js tools/shared/*.js || true)
 if [ -n "$hits" ]; then
-  echo "✗ Found ES module 'import' in shared/*.js — breaks file://"
+  echo "✗ Found ES module 'import' in shared JS — breaks file://"
   echo "$hits"
   fail=1
 fi
 
-# 3. No top-level `export ` keyword in shared/*.js
-hits=$(grep -nE '^export ' tools/shared/*.js || true)
+# 3. No top-level `export ` keyword in los scripts compartidos.
+hits=$(grep -nE '^export ' tools/*.js tools/shared/*.js || true)
 if [ -n "$hits" ]; then
-  echo "✗ Found ES module 'export' in shared/*.js — breaks file://"
+  echo "✗ Found ES module 'export' in shared JS — breaks file://"
   echo "$hits"
   fail=1
 fi

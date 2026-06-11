@@ -283,14 +283,21 @@
     btn.style.top = Math.round(y + back.offsetHeight / 2 - btn.offsetHeight / 2) + 'px';
   }
 
-  function esc(s) { return String(s); } // contenido es de confianza (literal del módulo)
+  // Escapa para texto/atributos. Se aplica a campos de texto plano (título,
+  // teclas, aria-label). Los items de intro/do NO pasan por acá: llevan <b> a
+  // propósito y se inyectan como HTML.
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
 
   function render() {
     if (!modal || !KEY || !C[KEY]) return;
     var lg = lang(), data = C[KEY], lb = L();
     var html = '<div class="help-card" role="dialog" aria-modal="true" aria-labelledby="help-title">'
       + '<div class="help-head"><div class="help-title" id="help-title">' + esc(data.title[lg]) + '</div>'
-      + '<button class="help-x" type="button" aria-label="' + lb.close + '">×</button></div>'
+      + '<button class="help-x" type="button" aria-label="' + esc(lb.close) + '">×</button></div>'
       + '<p class="help-intro">' + data.intro[lg] + '</p>'
       + '<div class="help-h">' + lb.do + '</div>'
       + '<ul class="help-list">' + data.do[lg].map(function (d) { return '<li>' + d + '</li>'; }).join('') + '</ul>';
