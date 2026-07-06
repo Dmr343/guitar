@@ -987,6 +987,63 @@
     return true;
   }
 
+  // ─── Compartir (estado en URL) ───────────────────────────────────────────
+  // La progresión viaja en el hash (#p=Dm7-G7-Cmaj7*2&b=120&c=3): funciona
+  // igual en file:// y en producción. Ver shared/url-state.js.
+  function buildCurrentShareUrl(href) {
+    const US = G.urlState;
+    if (!US) return null;
+    const p = US.encodeProgression(state.progression);
+    if (!p) return null;
+    return US.buildShareUrl(href, {
+      p,
+      b: state.bpm !== DEFAULT_STATE.bpm ? state.bpm : null,
+      c: (state.beatsPerCompas || 4) !== DEFAULT_STATE.beatsPerCompas ? state.beatsPerCompas : null,
+    });
+  }
+
+  // Carga el estado compartido del hash, si trae una progresión válida.
+  // Pisa la progresión guardada: quien abre un link compartido espera ver ESO.
+  function applyHashState(hash) {
+    const US = G.urlState;
+    if (!US || !hash) return false;
+    const params = US.parseHash(hash);
+    const chords = US.decodeProgression(params.p);
+    if (!chords) return false;
+    const m = ensureModel();
+    if (!m) return false;
+    const b = Number(params.b);
+    if (b >= 40 && b <= 220) state.bpm = b;
+    const c = Number(params.c);
+    if (c >= 1 && c <= 12) state.beatsPerCompas = c;
+    m.loadProgression(chords);
+    return true;
+  }
+
+  let _shareFlashTimer = null;
+  function shareProgression() {
+    const US = G.urlState;
+    if (!US) return;
+    if (!state.progression.length) { alert(t('share_need_chords')); return; }
+    const url = buildCurrentShareUrl(W.location ? W.location.href : '');
+    if (!url) return;
+    US.shareOrCopy(url, 'Interval Atlas — harmonic').then(res => {
+      if (res === 'copied') flashShareBtn();
+    }).catch(() => { if (W.prompt) W.prompt(t('share_prompt'), url); });
+  }
+
+  // Feedback: el botón muestra "✓ Copiado" un instante y vuelve a su texto.
+  function flashShareBtn() {
+    const span = document.querySelector('#atlas-share span');
+    if (!span) return;
+    span.textContent = t('share_copied');
+    if (_shareFlashTimer) clearTimeout(_shareFlashTimer);
+    _shareFlashTimer = setTimeout(() => {
+      span.textContent = t('share');
+      _shareFlashTimer = null;
+    }, 1600);
+  }
+
   function changeActiveBars(delta) {
     const m = ensureModel(); if (m) m.changeActiveBars(delta);
   }
@@ -1047,6 +1104,8 @@
   function init() {
     loadState();
     ensureModel();
+    // Link compartido: si el hash trae una progresión, pisa el estado guardado.
+    if (W.location && W.location.hash) applyHashState(W.location.hash);
     svg = $('atlas-fretboard');
     if (svg) reinitBoard();
 
@@ -1260,6 +1319,8 @@
     });
     const favSave = $('atlas-fav-save');
     if (favSave) favSave.addEventListener('click', promptSaveFavorite);
+    const shareBtn = $('atlas-share');
+    if (shareBtn) shareBtn.addEventListener('click', shareProgression);
 
     drawLegend();
     renderPalette();
@@ -1522,5 +1583,7 @@
     _toggleHiddenCell: toggleHiddenCellAt,
     _handleBoardClick: handleBoardClick,
     _addChordFromBoard: addChordFromBoard,
+    _applyHashState: applyHashState,
+    _buildCurrentShareUrl: buildCurrentShareUrl,
   };
 })(window.GuitarShared, window);

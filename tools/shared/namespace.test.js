@@ -50,6 +50,16 @@
     T.it('KEYS.IMPROV is correct',  () => T.assertEq(G.storage.KEYS.IMPROV, 'guitar_improv_state'));
   });
 
+  T.describe('urlState exports — minimum surface', () => {
+    const required = [
+      'encodeProgression', 'decodeProgression',
+      'parseHash', 'buildHash', 'buildShareUrl', 'shareOrCopy',
+    ];
+    required.forEach(key => {
+      T.it(`urlState.${key} exists`, () => T.assert(typeof G.urlState[key] === 'function'));
+    });
+  });
+
   T.describe('metronome exports', () => {
     T.it('Metronome class attached', () => T.assertEq(typeof G.metronome.Metronome, 'function'));
     T.it('Metronome instance has start/stop', () => {

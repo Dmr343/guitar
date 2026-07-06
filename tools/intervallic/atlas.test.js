@@ -467,4 +467,45 @@
 
   // makePseudoVoicing eliminado junto con el audio de bloque del acorde.
 
+  T.describe('URL compartible (hash)', () => {
+    T.it('applyHashState carga progresión, bpm y compás', () => {
+      const ok = A._applyHashState('#p=Dm7-G7-Cmaj7*2&b=120&c=3');
+      T.assert(ok, 'debe reportar que aplicó el hash');
+      const s = A.getState();
+      T.assertEq(s.progression.length, 3);
+      T.assertEq(s.progression[0].root, 'D');
+      T.assertEq(s.progression[0].quality, 'min7');
+      T.assertEq(s.progression[2].bars, 2);
+      T.assertEq(s.bpm, 120);
+      T.assertEq(s.beatsPerCompas, 3);
+    });
+    T.it('hash sin progresión válida no toca el estado', () => {
+      A.setProgression([{ root: 'C', quality: 'maj7', bars: 1 }]);
+      T.assertEq(A._applyHashState('#x=1'), false);
+      T.assertEq(A._applyHashState(''), false);
+      T.assertEq(A.getState().progression.length, 1);
+    });
+    T.it('bpm fuera de rango se ignora', () => {
+      A.getState().bpm = 80;
+      A._applyHashState('#p=C7&b=999');
+      T.assertEq(A.getState().bpm, 80);
+    });
+    T.it('buildCurrentShareUrl serializa el estado actual', () => {
+      A._applyHashState('#p=Dm7-G7-Cmaj7*2&b=120&c=4');
+      T.assertEq(
+        A._buildCurrentShareUrl('https://x.com/intervallic.html'),
+        'https://x.com/intervallic.html#p=Dm7-G7-Cmaj7*2&b=120');
+    });
+    T.it('bpm y compás default no viajan en el link', () => {
+      A._applyHashState('#p=C7');
+      const s = A.getState();
+      s.bpm = 80; s.beatsPerCompas = 4;
+      T.assertEq(A._buildCurrentShareUrl('https://x.com/i.html'), 'https://x.com/i.html#p=C7');
+    });
+    T.it('sin progresión no hay link', () => {
+      A.setProgression([]);
+      T.assertEq(A._buildCurrentShareUrl('https://x.com/i.html'), null);
+    });
+  });
+
 })(window.GuitarShared, window);

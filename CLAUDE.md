@@ -9,7 +9,8 @@ A collection of interactive guitar-practice web tools (Spanish-first, ES/EN i18n
 Each tool is a standalone HTML page in `tools/` (`diapason.html`, `escalas.html`, `acordes.html`, `intervallic.html`, `improvisar.html`, plus the `backing-track/` module). `tools/index.html` is the portal linking them.
 
 Non-deployed top-level folders:
-- `docs/` — dev documentation: `BITACORA.md` (changelog), `mejoras_futuras.md` (ideas), `prompts/` (PRDs/specs used to build the tools), `prototypes/` (design prototypes).
+- `docs/prompts/` — PRDs/specs used to build the tools (`INTERVAL_ATLAS_SPEC.md`, `PRD-backing-track.md`).
+- `prompts/` — `PLAN-DE-ACCION-harmonic.md`, the active improvement roadmap for the suite (phases A–F: shareable URL state, pitch detection, WAV export, SEO/PWA, etc.).
 - `study/` — personal learning material: `guides/` (markdown guides, tracked), `lessons/transcripts/` + `lessons/pdfs/` (lesson material, git-ignored), `media/`.
 - `gear/` — guitar hardware notes (comparativas, calibration guide).
 - `archive/` — old exports/backups.
