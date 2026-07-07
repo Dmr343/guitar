@@ -79,7 +79,7 @@
       const glue = new T.Compressor({
         threshold: -16, ratio: 2.5, attack: 0.01, release: 0.2, knee: 12,
       });
-      masterGain = new T.Gain(masterVol);
+      masterGain = new T.Gain(perceptualGain(masterVol));
       masterGain.chain(glue, limiter, T.getDestination());
       // decay 5s + preDelay 30ms → cola con "espacio" pero no exagerada.
       // Antes con 8s + send ×2.5 la suma dry+wet superaba 1.0 y saturaba
@@ -188,10 +188,19 @@
       return track.customPreset || resolvePreset(track.presetId);
     }
 
-    // Ganancia efectiva de una pista: 0 si está muteada, su volumen si no.
+    // Ganancia perceptual: el oído es logarítmico — con un mapeo lineal
+    // todo el cambio audible se concentra arriba del slider y la mitad
+    // inferior no hace casi nada. La curva cuadrática (v²) reparte el
+    // control: 50% del slider ≈ −12 dB. Los snapshots guardan la
+    // POSICIÓN del slider; storage.js migra los volúmenes v1 (que eran
+    // ganancia lineal) con √v para que las mezclas guardadas suenen igual.
+    function perceptualGain(v) { return v * v; }
+
+    // Ganancia efectiva de una pista: 0 si está muteada; si no, la
+    // posición del slider pasada por la curva perceptual.
     function trackGainValue(track) {
       if (track.enabled === false) return 0;
-      return Number.isFinite(track.volumen) ? track.volumen : 0.8;
+      return perceptualGain(Number.isFinite(track.volumen) ? track.volumen : 0.8);
     }
 
     function buildInstrument(track) {
@@ -686,7 +695,9 @@
         presetId: cfg.presetId || def.presetId,
         patternId: cfg.patternId || def.patternId,
         enabled: cfg.enabled !== false,
-        volumen: Number.isFinite(cfg.volumen) ? cfg.volumen : 0.8,
+        // 0.9 en la escala perceptual ≈ el 0.8 lineal de antes: una
+        // pista nueva queda pareja con las migradas (√0.8 ≈ 0.89).
+        volumen: Number.isFinite(cfg.volumen) ? cfg.volumen : 0.9,
         voicing: cfg.voicing || 'close',
         inversion: Number.isFinite(cfg.inversion) ? cfg.inversion : 0,
         octave: Number.isFinite(cfg.octave)
@@ -758,7 +769,7 @@
     // ─── API: transporte ───
     function setMasterVolume(v) {
       masterVol = Math.max(0, Math.min(1, Number(v) || 0));
-      if (masterGain) masterGain.gain.value = masterVol;
+      if (masterGain) masterGain.gain.value = perceptualGain(masterVol);
       emit('state');
     }
     function getMasterVolume() { return masterVol; }
@@ -992,7 +1003,7 @@
         const glue = new T.Compressor({
           threshold: -16, ratio: 2.5, attack: 0.01, release: 0.2, knee: 12,
         });
-        const master = new T.Gain(masterVol);
+        const master = new T.Gain(perceptualGain(masterVol));
         master.chain(glue, limiter, T.getDestination());
         const reverb = new T.Reverb({ decay: 5, preDelay: 0.03, wet: 1 });
         reverb.connect(master);

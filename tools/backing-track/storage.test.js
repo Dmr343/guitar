@@ -132,6 +132,56 @@
     });
   });
 
+  T.describe('storage — migración v1→v2 (volumen perceptual)', () => {
+    function v1Snap(vol) {
+      return {
+        progression: [{ root: 'C', quality: 'maj7', bars: 1 }],
+        tempo: 100,
+        tracks: [{ id: 't1', tipo: 'bajo', volumen: vol }],
+      };
+    }
+    T.it('sesión v1: volumen 0.64 (ganancia) → 0.8 (slider, √v)', () => {
+      const adapter = memAdapter();
+      adapter._m['backing_track_session'] = JSON.stringify({
+        __v: 1, session: v1Snap(0.64),
+      });
+      const s = BT.createStorage({ storage: adapter });
+      const vol = s.loadSession().tracks[0].volumen;
+      T.assert(Math.abs(vol - 0.8) < 1e-9, 'volumen ' + vol);
+    });
+    T.it('proyectos v1 también migran', () => {
+      const adapter = memAdapter();
+      adapter._m['backing_track_projects'] = JSON.stringify({
+        __v: 1, projects: [{ id: 'a', nombre: 'V', data: v1Snap(0.25) }],
+      });
+      const s = BT.createStorage({ storage: adapter });
+      T.assertEq(s.loadProject('a').tracks[0].volumen, 0.5);
+    });
+    T.it('datos v2 no se tocan', () => {
+      const adapter = memAdapter();
+      adapter._m['backing_track_session'] = JSON.stringify({
+        __v: 2, session: v1Snap(0.64),
+      });
+      const s = BT.createStorage({ storage: adapter });
+      T.assertEq(s.loadSession().tracks[0].volumen, 0.64);
+    });
+    T.it('lo que se guarda queda marcado v2 y no re-migra', () => {
+      const adapter = memAdapter();
+      const s = BT.createStorage({ storage: adapter });
+      s.saveSession(v1Snap(0.5));   // guardado nuevo = ya en escala slider
+      T.assertEq(s.loadSession().tracks[0].volumen, 0.5);
+      T.assertEq(JSON.parse(adapter._m['backing_track_session']).__v, 2);
+    });
+    T.it('pistas sin volumen numérico quedan intactas', () => {
+      const adapter = memAdapter();
+      const snap = v1Snap(0.64);
+      snap.tracks.push({ id: 't2', tipo: 'pad' });
+      adapter._m['backing_track_session'] = JSON.stringify({ __v: 1, session: snap });
+      const s = BT.createStorage({ storage: adapter });
+      T.assertEq(s.loadSession().tracks[1].volumen, undefined);
+    });
+  });
+
 })(
   (typeof window !== 'undefined' ? window : globalThis).GuitarShared,
   (typeof window !== 'undefined' ? window : globalThis)

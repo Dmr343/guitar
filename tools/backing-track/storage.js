@@ -18,16 +18,36 @@
 (function (W) {
   'use strict';
 
-  const VERSION = 1;
+  const VERSION = 2;
   const LIB_KEY = 'backing_track_library';
   const PROJ_KEY = 'backing_track_projects';
   const SESSION_KEY = 'backing_track_session';
 
+  // v1 → v2: el volumen de pista pasó de ganancia lineal a posición de
+  // slider con curva perceptual (ganancia = v²). √v conserva la
+  // ganancia audible: una mezcla guardada en v1 suena exactamente igual.
+  function migrateSnapshotVolumes(snap) {
+    if (!snap || !Array.isArray(snap.tracks)) return;
+    snap.tracks.forEach(function (t) {
+      if (t && Number.isFinite(t.volumen)) {
+        t.volumen = Math.sqrt(Math.max(0, Math.min(1, t.volumen)));
+      }
+    });
+  }
+
   // migrate — lleva datos de versiones viejas al formato actual.
-  // Hoy solo asegura __v; es el punto de extensión para el futuro.
   function migrate(data) {
     data = data || {};
-    if (!data.__v || data.__v < 1) data.__v = 1;
+    const from = data.__v || 1;
+    if (from < 2) {
+      if (data.session) migrateSnapshotVolumes(data.session);
+      if (Array.isArray(data.projects)) {
+        data.projects.forEach(function (p) {
+          migrateSnapshotVolumes(p && p.data);
+        });
+      }
+    }
+    data.__v = VERSION;
     return data;
   }
 
