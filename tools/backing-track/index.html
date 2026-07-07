@@ -22,6 +22,9 @@
 
       <div class="transport">
         <button id="btn-play" class="btn btn-primary btn-play">▶&nbsp; Play</button>
+        <button id="btn-rec" class="btn btn-secondary btn-rec"
+                data-i18n-attr="title:rec_title"
+                title="Grabar su solo sobre la pista (use auriculares para que el micrófono no capture los parlantes)">● Rec</button>
         <span id="status" class="status" data-i18n="status_stopped">Detenido</span>
         <div class="transport-ctls">
           <div class="ctl">
@@ -37,6 +40,11 @@
           <label class="ctl-loop">
             <input type="checkbox" id="ctl-loop" checked>
             <span data-i18n="loop">Loop</span>
+          </label>
+          <label class="ctl-loop" data-i18n-attr="title:rec_mic_title"
+                 title="Incluir el micrófono en la grabación (desmarcado: solo la pista)">
+            <input type="checkbox" id="rec-mic" checked>
+            <span data-i18n="rec_mic">Mic</span>
           </label>
           <div class="ctl trainer-ctl" data-i18n-attr="title:trainer_title"
                title="Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope">
@@ -57,6 +65,8 @@
                   title="Copiar link con esta progresión"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-3.9M8.6 13.3l6.8 3.9"/></svg> <span data-i18n="btn_share">Compartir</span></button>
         </div>
       </div>
+
+      <audio id="rec-player" class="rec-player" controls hidden></audio>
 
       <div class="now-playing">
         <div class="chord-now">
@@ -233,6 +243,7 @@
   <script src="./export-audio.js"></script>
   <script src="./export-midi.js"></script>
   <script src="./song.js"></script>
+  <script src="./recorder.js"></script>
   <script src="./instruments.js"></script>
   <script src="./presets.js"></script>
   <script src="./patterns.js"></script>
@@ -353,6 +364,15 @@
         status_rendering: 'Renderizando WAV…',
         trainer: 'Trainer',
         trainer_title: 'Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope',
+        rec: '● Rec',
+        rec_title: 'Grabar su solo sobre la pista (use auriculares para que el micrófono no capture los parlantes)',
+        rec_mic: 'Mic',
+        rec_mic_title: 'Incluir el micrófono en la grabación (desmarcado: solo la pista)',
+        status_rec: 'Grabando… ● Rec detiene y descarga',
+        status_rec_processing: 'Procesando la grabación…',
+        status_rec_done: 'Solo descargado (WAV) — escúchelo abajo',
+        status_rec_mic_error: 'Sin acceso al micrófono — se graba solo la pista',
+        status_rec_error: 'La grabación falló:',
         song_label: 'Canción',
         song_mode: 'Modo canción (secciones)',
         song_mode_title: 'Estructura por secciones (Intro/A/B/…) con repeticiones y dinámica por pista',
@@ -560,6 +580,15 @@
         status_rendering: 'Rendering WAV…',
         trainer: 'Trainer',
         trainer_title: 'Raises the tempo by itself: +N BPM every M loop passes, up to the cap',
+        rec: '● Rec',
+        rec_title: 'Record your solo over the track (use headphones so the mic does not pick up the speakers)',
+        rec_mic: 'Mic',
+        rec_mic_title: 'Include the microphone in the recording (unchecked: track only)',
+        status_rec: 'Recording… ● Rec stops and downloads',
+        status_rec_processing: 'Processing the recording…',
+        status_rec_done: 'Solo downloaded (WAV) — listen below',
+        status_rec_mic_error: 'No microphone access — recording track only',
+        status_rec_error: 'Recording failed:',
         song_label: 'Song',
         song_mode: 'Song mode (sections)',
         song_mode_title: 'Section structure (Intro/A/B/…) with repeats and per-track dynamics',

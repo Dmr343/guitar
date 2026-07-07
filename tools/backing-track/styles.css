@@ -212,6 +212,15 @@ body.playing .play-zone {
 .song-mutes label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .song-mutes input { accent-color: var(--accent); }
 
+/* ─── Grabación de solo ─── */
+.btn-rec.recording {
+  background: #e74c3c; color: #fff; border-color: #e74c3c;
+  animation: rec-pulse 1s ease-in-out infinite;
+  font-family: var(--font-mono);
+}
+@keyframes rec-pulse { 50% { opacity: 0.72; } }
+.rec-player { width: 100%; height: 34px; margin-top: 10px; }
+
 /* ─── Acorde actual / siguiente + metrónomo ─── */
 .now-playing {
   display: flex;

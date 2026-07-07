@@ -24,6 +24,9 @@
   const ctlVolume = el('ctl-volume');
   const valVolume = el('val-volume');
   const ctlLoop = el('ctl-loop');
+  const btnRec = el('btn-rec');
+  const recMicCb = el('rec-mic');
+  const recPlayer = el('rec-player');
   const songOn = el('song-on');
   const songPanel = el('song-panel');
   const nowSection = el('now-section');
@@ -1452,6 +1455,103 @@
       .catch(function () { if (W.prompt) W.prompt(t('share_prompt'), url); });
   }
 
+  // ─── Grabación ("grabá tu solo encima") ───
+  // El tap del motor entrega la pista; el micrófono (opcional) se
+  // conecta SOLO al tap — nunca a los parlantes, así no hay acople.
+  // El crudo (webm/opus) se convierte a WAV con recorder.blobToWav.
+  let recRecorder = null;
+  let recTimer = null;
+  let recStart = 0;
+  let recMicStream = null;
+  let recMicSource = null;
+  let recPlayerUrl = null;
+
+  function cleanupMic() {
+    try { if (recMicSource) recMicSource.disconnect(); } catch (e) {}
+    if (recMicStream) {
+      recMicStream.getTracks().forEach(function (tr) {
+        try { tr.stop(); } catch (e) {}
+      });
+    }
+    recMicSource = null;
+    recMicStream = null;
+  }
+
+  async function toggleRec() {
+    const R = BT.recorder;
+    if (!R) return;
+    if (recRecorder && recRecorder.isRecording()) { await stopRec(); return; }
+    // La pista tiene que estar sonando: si no, se arranca sola.
+    if (!engine.isPlaying()) {
+      try { await engine.play(); }
+      catch (err) {
+        setStatus(t('status_audio_error') + ' ' + err.message, 'error');
+        return;
+      }
+    }
+    const tap = engine.getRecordTap();
+    if (recMicCb && recMicCb.checked && navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia) {
+      try {
+        // Sin procesamiento: la guitarra quiere fidelidad, no voz de llamada.
+        recMicStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        });
+        recMicSource = tap.context.createMediaStreamSource(recMicStream);
+        recMicSource.connect(tap);
+      } catch (err) {
+        cleanupMic();
+        setStatus(t('status_rec_mic_error'), 'error');
+      }
+    }
+    recRecorder = R.createRecorder();
+    if (!recRecorder.start(tap.stream)) {
+      recRecorder = null;
+      cleanupMic();
+      setStatus(t('status_rec_error') + ' MediaRecorder', 'error');
+      return;
+    }
+    recStart = Date.now();
+    btnRec.classList.add('recording');
+    btnRec.textContent = '■ 0:00';
+    setStatus(t('status_rec'), 'playing');
+    recTimer = setInterval(function () {
+      btnRec.textContent = '■ ' + R.formatTime((Date.now() - recStart) / 1000);
+    }, 500);
+  }
+
+  async function stopRec() {
+    const R = BT.recorder;
+    if (recTimer) { clearInterval(recTimer); recTimer = null; }
+    btnRec.classList.remove('recording');
+    btnRec.textContent = t('rec');
+    cleanupMic();
+    if (!recRecorder) return;
+    const rec = recRecorder;
+    recRecorder = null;
+    try {
+      setStatus(t('status_rec_processing'));
+      const blob = await rec.stop();
+      const tap = engine.getRecordTap();
+      const wavAb = await R.blobToWav(blob, tap.context);
+      const wavBlob = new Blob([wavAb], { type: 'audio/wav' });
+      downloadBlob(BT.exportAudio.wavFilename(
+        ((projName.value || '').trim() || 'solo') + '-solo'), wavBlob);
+      if (recPlayer) {
+        if (recPlayerUrl) URL.revokeObjectURL(recPlayerUrl);
+        recPlayerUrl = URL.createObjectURL(wavBlob);
+        recPlayer.src = recPlayerUrl;
+        recPlayer.hidden = false;
+      }
+      setStatus(t('status_rec_done'));
+    } catch (err) {
+      setStatus(t('status_rec_error') + ' ' +
+        (err && err.message ? err.message : err), 'error');
+    }
+  }
+
+  if (btnRec) btnRec.addEventListener('click', toggleRec);
+
   // ─── Canción (secciones) ───
   // El motor es el dueño de las secciones; el modelo/editor de abajo
   // siempre muestra la SECCIÓN ACTIVA (en modo canción, engine.
@@ -1966,7 +2066,11 @@
   });
   engine.onTransport(function (ev) {
     if (ev === 'play') setPlayUI(true);
-    else if (ev === 'stop') setPlayUI(false);
+    else if (ev === 'stop') {
+      setPlayUI(false);
+      // Parar la pista corta también la toma (queda descargada).
+      if (recRecorder && recRecorder.isRecording()) stopRec();
+    }
   });
   // Si cambia la librería del usuario, refrescar dropdowns y persistir.
   BT.userLibrary.onChange(function () {

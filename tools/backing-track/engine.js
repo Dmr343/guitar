@@ -58,6 +58,8 @@
     // antes de tiempo — eso disparaba warnings al cargar la página.
     let masterGain = null;
     let sharedReverb = null;
+    let masterLimiter = null;   // referencia para el tap de grabación
+    let recordTap = null;       // MediaStreamDestination (lazy)
     let masterVol = 0.85;
 
     // Crea el grafo de audio una sola vez. masterGain → destino, y un
@@ -71,6 +73,7 @@
       // varios instrumentos suenan con reverb/chorus encima. -1dB ceiling
       // es transparente para audio normal y solo actúa en picos.
       const limiter = new T.Limiter(-1);
+      masterLimiter = limiter;
       // Compresor suave de bus ("glue") antes del limiter: cuando bajo,
       // acordes, batería y pad suenan a la vez, empareja los picos entre
       // pistas y la mezcla se percibe como un conjunto, no instrumentos
@@ -1101,6 +1104,23 @@
       }, duration);
     }
 
+    // ─── API: grabación ───
+    // getRecordTap — nodo de captura post-limiter: la MISMA señal que
+    // va a los parlantes, disponible como MediaStream para grabar. Se
+    // crea a demanda y persiste; sin grabación activa no cuesta nada.
+    // app.js puede además conectar el micrófono a este nodo (solo al
+    // tap — nunca a los parlantes, así no hay acople).
+    function getRecordTap() {
+      ensureAudioGraph();
+      if (!recordTap) {
+        const T = Tone();
+        recordTap = T.getContext().rawContext.createMediaStreamDestination();
+        try { masterLimiter.connect(recordTap); }
+        catch (e) { try { T.connect(masterLimiter, recordTap); } catch (e2) {} }
+      }
+      return recordTap;
+    }
+
     // ─── API: canción (secciones) ───
     function setSectionChords(idx, chords) {
       const sec = song.sections[idx];
@@ -1349,7 +1369,7 @@
       getChordLocation, sectionChordIndex, getPlaybackProgression,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
-      renderToWav, exportMidiData,
+      renderToWav, exportMidiData, getRecordTap,
       snapshot, restore, dispose,
       onChordChange: function (fn) { on('chord', fn); },
       onStateChange: function (fn) { on('state', fn); },
