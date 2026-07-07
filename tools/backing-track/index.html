@@ -180,6 +180,9 @@
             <button id="btn-export-wav" class="btn btn-secondary icon-btn"
                     data-i18n-attr="title:btn_export_wav_title"
                     title="Renderizar la pista a un archivo WAV">⭳ WAV</button>
+            <button id="btn-export-midi" class="btn btn-secondary icon-btn"
+                    data-i18n-attr="title:btn_export_midi_title"
+                    title="Exportar la progresión y los patrones a MIDI (para su DAW)">⭳ MIDI</button>
           </div>
         </div>
 
@@ -212,6 +215,7 @@
   <script src="./scheduler.js"></script>
   <script src="./humanize.js"></script>
   <script src="./export-audio.js"></script>
+  <script src="./export-midi.js"></script>
   <script src="./instruments.js"></script>
   <script src="./presets.js"></script>
   <script src="./patterns.js"></script>
@@ -326,6 +330,8 @@
         btn_del_proj_title: 'Borrar proyecto seleccionado',
         btn_export_title: 'Exportar respaldo JSON',
         btn_export_wav_title: 'Renderizar la pista a un archivo WAV',
+        btn_export_midi_title: 'Exportar la progresión y los patrones a MIDI (para su DAW)',
+        status_midi_done: 'MIDI descargado',
         wav_reps_title: 'Cuántas vueltas del loop lleva el archivo',
         status_rendering: 'Renderizando WAV…',
         trainer: 'Trainer',
@@ -517,6 +523,8 @@
         btn_del_proj_title: 'Delete selected project',
         btn_export_title: 'Export JSON backup',
         btn_export_wav_title: 'Render the track to a WAV file',
+        btn_export_midi_title: 'Export the progression and patterns as MIDI (for your DAW)',
+        status_midi_done: 'MIDI downloaded',
         wav_reps_title: 'How many loop passes the file contains',
         status_rendering: 'Rendering WAV…',
         trainer: 'Trainer',

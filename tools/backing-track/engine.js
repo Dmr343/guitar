@@ -1023,6 +1023,42 @@
       }, duration);
     }
 
+    // ─── Export MIDI ───
+    // exportMidiData — arma el payload para exportMidi.encodeMidi: una
+    // pasada del loop con la grilla derecha (sin swing ni humanize; en
+    // el DAW se quiere material editable sobre la grilla) + metadatos
+    // por pista (laneMidi de los kits WAF → notas GM reales).
+    function exportMidiData() {
+      if (!progression.length) throw new Error('progresión vacía');
+      const active = tracks.filter(t => t.enabled !== false);
+      if (!active.length) throw new Error('sin pistas activas');
+      const patterns = {};
+      const schedTracks = tracks.map(t => {
+        const pat = effectivePattern(t);
+        if (!pat) return Object.assign({}, t);
+        const pid = '__p_' + t.id;
+        patterns[pid] = pat;
+        return Object.assign({}, t, { patternId: pid });
+      });
+      const result = BT().scheduler.schedule({
+        progression: progression, tempo: tempo,
+        tracks: schedTracks, patterns: patterns,
+      });
+      const meta = active.map(t => {
+        const preset = effectivePreset(t);
+        const laneMidi = {};
+        const pieces = preset && preset.config && preset.config.pieces;
+        if (pieces) {
+          Object.keys(pieces).forEach(lane => {
+            const n = pieces[lane] && pieces[lane].note;
+            if (typeof n === 'number') laneMidi[lane] = n;
+          });
+        }
+        return { id: t.id, tipo: t.tipo, laneMidi: laneMidi };
+      });
+      return { tempo: tempo, events: result.events, tracks: meta };
+    }
+
     // ─── Persistencia (usada por storage.js, #60) ───
     function snapshot() {
       return {
@@ -1092,7 +1128,7 @@
       setFocusChord, jumpToChord,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
-      renderToWav,
+      renderToWav, exportMidiData,
       snapshot, restore, dispose,
       onChordChange: function (fn) { on('chord', fn); },
       onStateChange: function (fn) { on('state', fn); },

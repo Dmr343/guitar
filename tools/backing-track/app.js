@@ -49,6 +49,7 @@
   const btnDelProj = el('btn-del-proj');
   const btnShare = el('btn-share');
   const btnExportWav = el('btn-export-wav');
+  const btnExportMidi = el('btn-export-midi');
   const wavReps = el('wav-reps');
   const btnExport = el('btn-export');
   const btnImport = el('btn-import');
@@ -1402,6 +1403,27 @@
       .catch(function () { if (W.prompt) W.prompt(t('share_prompt'), url); });
   }
 
+  // ─── Export MIDI ───
+  // Una pasada del loop con la grilla derecha (ver engine.exportMidiData)
+  // → .mid multipista para el DAW. Sincrónico: no hay render de audio.
+  function exportMidiFile() {
+    if (!model.progression.length || !engine.getTracks().length) {
+      setStatus(t('status_render_empty'), 'error');
+      return;
+    }
+    try {
+      const data = engine.exportMidiData();
+      const ab = BT.exportMidi.encodeMidi(data);
+      const name = BT.exportMidi.midiFilename(
+        (projName.value || '').trim() || factoryProgState.id || '');
+      downloadBlob(name, new Blob([ab], { type: 'audio/midi' }));
+      setStatus(t('status_midi_done'));
+    } catch (err) {
+      setStatus(t('status_render_error') + ' ' +
+        (err && err.message ? err.message : err), 'error');
+    }
+  }
+
   // ─── Proyectos y persistencia ───
   //
   // takeSnapshot — extiende engine.snapshot() con el estado de la
@@ -1702,6 +1724,7 @@
 
   if (btnShare) btnShare.addEventListener('click', shareCurrent);
   if (btnExportWav) btnExportWav.addEventListener('click', exportWav);
+  if (btnExportMidi) btnExportMidi.addEventListener('click', exportMidiFile);
 
   // Exportar / importar
   btnExport.addEventListener('click', function () {
