@@ -71,8 +71,16 @@
       // varios instrumentos suenan con reverb/chorus encima. -1dB ceiling
       // es transparente para audio normal y solo actúa en picos.
       const limiter = new T.Limiter(-1);
+      // Compresor suave de bus ("glue") antes del limiter: cuando bajo,
+      // acordes, batería y pad suenan a la vez, empareja los picos entre
+      // pistas y la mezcla se percibe como un conjunto, no instrumentos
+      // sueltos. Ratio bajo y knee ancho → nunca "bombea"; el limiter
+      // queda solo como red de seguridad de picos.
+      const glue = new T.Compressor({
+        threshold: -16, ratio: 2.5, attack: 0.01, release: 0.2, knee: 12,
+      });
       masterGain = new T.Gain(masterVol);
-      masterGain.chain(limiter, T.getDestination());
+      masterGain.chain(glue, limiter, T.getDestination());
       // decay 5s + preDelay 30ms → cola con "espacio" pero no exagerada.
       // Antes con 8s + send ×2.5 la suma dry+wet superaba 1.0 y saturaba
       // el output → calidad audible degradada. Estos valores se quedan
@@ -98,6 +106,7 @@
     let loopEnabled = true;
     let mode = 'practica';
     let humanizeAmount = 0;        // 0..1 — intensidad de humanización
+    let swingAmount = 0;           // 0..1 — swing de corchea (1 = tresillo)
     let loopRangeIdx = null;       // [a,b] índices de acorde, o null (loop completo)
     let focusChordIndex = -1;      // acorde con foco (-1 = sin foco → arranca en el inicio del loop); punto de reinicio al editar en vivo
     let subdivision = 'negra';     // subdivisión del indicador de compás
@@ -457,18 +466,26 @@
         patterns: patterns,
       });
 
-      // Humanización: micro-offsets de timing/velocity sobre los
-      // eventos. Con humanización activa se agenda en segundos
-      // (tiempo absoluto); sin ella, en tiempo musical (el BPM
-      // reescala solo).
+      // Swing y humanización: offsets de timing (y velocity) sobre los
+      // eventos. Con cualquiera de los dos activos se agenda en segundos
+      // (tiempo absoluto); sin ellos, en tiempo musical (el BPM
+      // reescala solo). El swing va primero: define la grilla "sentida"
+      // sobre la que la humanización agrega su jitter.
       let events = result.events;
+      const swung = swingAmount > 0 && BT().humanize &&
+        BT().humanize.applySwing;
+      if (swung) {
+        events = BT().humanize.applySwing(events,
+          { amount: swingAmount, stepSeconds: result.stepSeconds });
+      }
       const humanized = humanizeAmount > 0 && BT().humanize;
       if (humanized) {
         events = BT().humanize.apply(events,
           { amount: humanizeAmount, seed: 1 });
       }
+      const timeBased = !!(swung || humanized);
       const noteEvents = events.map(ev => ({
-        time: humanized ? ev.time : stepToBBS(ev.step), ev: ev,
+        time: timeBased ? ev.time : stepToBBS(ev.step), ev: ev,
       }));
       notePart = new T.Part(function (time, value) {
         dispatchEvent(time, value.ev);
@@ -526,6 +543,16 @@
       pendingRebuild = false;
       ensureInstruments();
       rebuildSchedule();
+      // El rebuild silencia todo. Las pistas melódicas retoman en su
+      // próximo hit (fracción de compás), pero el pad no dispara nada
+      // hasta el PRÓXIMO acorde — con acordes de 2+ compases, cambiar
+      // octava/voicing/inversión de un pad dejaba silencio y parecía
+      // que el control no funcionaba. Re-disparamos el acorde actual en
+      // cada pad con la duración restante para que la edición se
+      // escuche al instante.
+      tracks.forEach(function (track) {
+        refireCurrentPadIfNeeded(track, runtime[track.id]);
+      });
     }
 
     // ─── API: progresión / tempo ───
@@ -556,9 +583,9 @@
       if (next === tempo) return;     // idempotente
       tempo = next;
       applyTransport();           // cambio en vivo, sin reprogramar
-      // Con humanización los eventos van en segundos: hay que
+      // Con humanización o swing los eventos van en segundos: hay que
       // reprogramarlos al cambiar el tempo (cuantizado al loop).
-      if (playing && humanizeAmount > 0) refreshIfPlaying();
+      if (playing && (humanizeAmount > 0 || swingAmount > 0)) refreshIfPlaying();
       emit('state');
     }
     function getTempo() { return tempo; }
@@ -573,6 +600,17 @@
       emit('state');
     }
     function getHumanize() { return humanizeAmount; }
+
+    function setSwing(amount) {
+      amount = Number(amount);
+      const next = Number.isFinite(amount)
+        ? Math.max(0, Math.min(1, amount)) : 0;
+      if (next === swingAmount) return;     // idempotente
+      swingAmount = next;
+      refreshIfPlaying();
+      emit('state');
+    }
+    function getSwing() { return swingAmount; }
 
     // ─── API: pistas ───
     function patternTipoFor(tipo) { return PATTERN_TIPO[tipo] || null; }
@@ -853,6 +891,7 @@
         loopEnabled: loopEnabled,
         mode: mode,
         humanize: humanizeAmount,
+        swing: swingAmount,
         loopRange: getLoopRange(),
         subdivision: subdivision,
         tracks: getTracks(),
@@ -869,6 +908,8 @@
       loopEnabled = state.loopEnabled !== false;
       mode = state.mode === 'arreglo' ? 'arreglo' : 'practica';
       humanizeAmount = Number.isFinite(state.humanize) ? state.humanize : 0;
+      swingAmount = Number.isFinite(state.swing)
+        ? Math.max(0, Math.min(1, state.swing)) : 0;
       loopRangeIdx = Array.isArray(state.loopRange) ? state.loopRange.slice() : null;
       subdivision = SUBDIVISIONS[state.subdivision] ? state.subdivision : 'negra';
       Object.keys(runtime).forEach(disposeRuntime);
@@ -899,6 +940,7 @@
       applyTrackPreset, getTrackPreset,
       getTrackPattern, setTrackPattern, setTrackVariant,
       setHumanize, getHumanize,
+      setSwing, getSwing,
       setMasterVolume, getMasterVolume,
       setLoop, getLoop,
       setLoopRange, getLoopRange,

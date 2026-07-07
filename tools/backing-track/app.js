@@ -43,6 +43,7 @@
   const projSelect = el('proj-select');
   const btnLoadProj = el('btn-load-proj');
   const btnDelProj = el('btn-del-proj');
+  const btnShare = el('btn-share');
   const btnExport = el('btn-export');
   const btnImport = el('btn-import');
   const importFile = el('import-file');
@@ -1271,6 +1272,28 @@
     humRow.appendChild(humVal);
     arrangePanel.appendChild(humRow);
 
+    // Swing (corcheas a contratiempo hacia el tresillo).
+    const swRow = document.createElement('div');
+    swRow.className = 'control-row';
+    swRow.title = t('arr_swing_title');
+    const swCap = document.createElement('label');
+    swCap.textContent = t('arr_swing');
+    const swSlider = fld('input');
+    swSlider.type = 'range';
+    swSlider.min = '0'; swSlider.max = '100'; swSlider.step = '1';
+    swSlider.value = String(Math.round(engine.getSwing() * 100));
+    const swVal = document.createElement('span');
+    swVal.className = 'value';
+    swVal.textContent = swSlider.value + '%';
+    swSlider.addEventListener('input', function () {
+      engine.setSwing(Number(swSlider.value) / 100);
+      swVal.textContent = swSlider.value + '%';
+    });
+    swRow.appendChild(swCap);
+    swRow.appendChild(swSlider);
+    swRow.appendChild(swVal);
+    arrangePanel.appendChild(swRow);
+
     // Ocultar indicador de acorde (entrenamiento de oído).
     const hideRow = document.createElement('div');
     hideRow.className = 'control-row';
@@ -1324,6 +1347,53 @@
     if (groove.tempo) engine.setTempo(groove.tempo);
     syncControls();
     refreshTracks();
+  }
+
+  // ─── Compartir (estado en URL) ───
+  // La progresión y el tempo viajan en el hash (#p=Dm7-G7-Cmaj7*2&b=120),
+  // igual que en el Interval Atlas. Ver shared/url-state.js.
+  function urlStateApi() {
+    return (W.GuitarShared && W.GuitarShared.urlState) || null;
+  }
+
+  // Lee el hash compartido. Devuelve { progression, tempo|null } o null.
+  // Normaliza raíces con bemol a sostenidos (el traductor del handoff
+  // valida contra la grafía de sostenidos) y las calidades no soportadas
+  // por el motor a su aproximación más cercana.
+  function readShareHash() {
+    const US = urlStateApi();
+    if (!US || !W.location || !W.location.hash) return null;
+    const params = US.parseHash(W.location.hash);
+    const chords = US.decodeProgression(params.p);
+    if (!chords) return null;
+    const CHROM = theory && theory.CHROMATIC;
+    const normalized = chords.map(function (c) {
+      const pc = theory && theory.pitchClass ? theory.pitchClass(c.root) : -1;
+      return {
+        root: (pc >= 0 && CHROM) ? CHROM[pc] : c.root,
+        quality: c.quality, bars: c.bars,
+      };
+    });
+    const prog = BT.integration.translateAtlasProgression(normalized);
+    if (!prog.length) return null;
+    const tempo = Number(params.b);
+    return {
+      progression: prog,
+      tempo: (tempo >= 40 && tempo <= 240) ? tempo : null,
+    };
+  }
+
+  function shareCurrent() {
+    const US = urlStateApi();
+    if (!US) return;
+    const p = US.encodeProgression(model.progression);
+    if (!p) { setStatus(t('status_share_empty'), 'error'); return; }
+    const url = US.buildShareUrl(W.location.href, { p, b: engine.getTempo() });
+    US.shareOrCopy(url, 'Backing Track — harmonic')
+      .then(function (res) {
+        if (res === 'copied') setStatus(t('status_link_copied'));
+      })
+      .catch(function () { if (W.prompt) W.prompt(t('share_prompt'), url); });
   }
 
   // ─── Proyectos y persistencia ───
@@ -1571,6 +1641,8 @@
     refreshProjects();
   });
 
+  if (btnShare) btnShare.addEventListener('click', shareCurrent);
+
   // Exportar / importar
   btnExport.addEventListener('click', function () {
     downloadJSON('backing-track-respaldo.json', storage.exportAll());
@@ -1635,9 +1707,17 @@
   fillSelect(newQuality, QUALITIES, 'v', qualityLabel);
 
   storage.loadLibrary();              // librería de presets del usuario
+  const sharedLink = readShareHash();
   const handoff = BT.integration && BT.integration.readHandoff();
   const session = storage.loadSession();
-  if (handoff) {
+  if (sharedLink) {
+    // Link compartido: quien lo abre espera ver ESA progresión — tiene
+    // prioridad sobre el handoff y la sesión guardada.
+    setupDefaultTracks();
+    model.loadProgression(sharedLink.progression);
+    unbindFromCatalog();
+    if (sharedLink.tempo) engine.setTempo(sharedLink.tempo);
+  } else if (handoff) {
     // Progresión enviada desde el Intervalic Atlas: pistas por
     // defecto + la progresión recibida.
     setupDefaultTracks();
@@ -1656,7 +1736,14 @@
   syncControls();
   subdivSelect.value = engine.getSubdivision();
   buildBeatMeter(SUBDIV_COUNT[engine.getSubdivision()] || 4);
-  setStatus(handoff ? t('status_handoff') : t('status_stopped'));
+  // Diferido: el diccionario i18n se registra DESPUÉS de app.js y su
+  // init() re-traduce el span de estado (data-i18n="status_stopped"),
+  // pisando cualquier texto puesto acá de forma sincrónica. Con el
+  // setTimeout el mensaje entra tras el init y con t() ya operativo.
+  setTimeout(function () {
+    if (sharedLink) setStatus(t('status_shared_link'));
+    else if (handoff) setStatus(t('status_handoff'));
+  }, 0);
 
   // Re-render dinámico al cambiar de idioma: las partes generadas por JS
   // (acordes, editor, pistas, modo arreglo, controles de tonalidad y el

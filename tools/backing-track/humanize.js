@@ -68,6 +68,39 @@
     });
   }
 
+  // applySwing — desplaza las corcheas a contratiempo hacia el tercer
+  // tresillo del pulso. amount 0..1: 0 = recto, 1 = swing de tresillo
+  // completo (la contra cae en 2/3 del pulso en vez de 1/2).
+  //
+  // Trabaja sobre e.time (segundos) usando la posición e.step: la contra
+  // de corchea es la 3ª semicorchea de cada pulso (step % 4 === 2).
+  // Desplazamiento máximo = 2/3 de semicorchea. Pura: no muta la entrada.
+  //
+  // opts:
+  //   amount       intensidad 0..1 (default 0)
+  //   stepSeconds  duración de una semicorchea en segundos (requerido)
+  function applySwing(events, opts) {
+    opts = opts || {};
+    const list = Array.isArray(events) ? events : [];
+    const amount = clamp01(opts.amount, 0);
+    const stepSeconds = Number(opts.stepSeconds);
+    if (amount <= 0 || !(stepSeconds > 0)) {
+      return list.map(e => Object.assign({}, e));
+    }
+    const shift = amount * (2 / 3) * stepSeconds;
+    return list.map(e => {
+      const out = Object.assign({}, e);
+      const isOffbeat8th = Number.isFinite(out.step) &&
+        ((out.step % 4) + 4) % 4 === 2;
+      if (isOffbeat8th && Number.isFinite(out.time)) {
+        out.time = out.time + shift;
+      }
+      return out;
+    });
+  }
+
   W.BackingTrack = W.BackingTrack || {};
-  W.BackingTrack.humanize = { apply, DEFAULT_TIME_RANGE, DEFAULT_VELOCITY_RANGE };
+  W.BackingTrack.humanize = {
+    apply, applySwing, DEFAULT_TIME_RANGE, DEFAULT_VELOCITY_RANGE,
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

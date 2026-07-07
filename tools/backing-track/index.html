@@ -38,6 +38,9 @@
             <input type="checkbox" id="ctl-loop" checked>
             <span data-i18n="loop">Loop</span>
           </label>
+          <button id="btn-share" class="btn btn-secondary icon-btn"
+                  data-i18n-attr="title:btn_share_title"
+                  title="Copiar link con esta progresión"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-3.9M8.6 13.3l6.8 3.9"/></svg> <span data-i18n="btn_share">Compartir</span></button>
         </div>
       </div>
 
@@ -174,6 +177,7 @@
 
   <!-- Dependencias compartidas del repo -->
   <script src="../shared/theory.js"></script>
+  <script src="../shared/url-state.js"></script>
   <!-- Modelo de progresión reutilizado del Intervalic Atlas (read-only) -->
   <script src="../intervallic/progression-model.js"></script>
 
@@ -224,6 +228,12 @@
         status_playing: 'Sonando',
         status_audio_error: 'Error al iniciar el audio:',
         status_handoff: 'Progresión recibida del Intervalic Atlas',
+        status_shared_link: 'Progresión cargada desde el link compartido',
+        status_link_copied: 'Link copiado al portapapeles',
+        status_share_empty: 'Agregue acordes antes de compartir.',
+        share_prompt: 'Copie este link:',
+        btn_share: 'Compartir',
+        btn_share_title: 'Copiar link con esta progresión y tempo',
         status_proj_saved_a: 'Proyecto',
         status_proj_saved_b: 'guardado',
         status_proj_loaded: 'Proyecto cargado',
@@ -330,6 +340,8 @@
         arr_choose_groove: '(elegir un groove…)',
         arr_humanize: 'Humanización',
         arr_intensity: 'Intensidad',
+        arr_swing: 'Swing',
+        arr_swing_title: 'Desplaza las corcheas a contratiempo hacia el tresillo (100% = swing de tresillo)',
         arr_hide_chord: 'Ocultar acorde',
         arr_groove_voicings: 'Groove y voicings por pista',
         arr_add_tracks_hint: 'Agregue pistas para editar sus grooves.',
@@ -396,6 +408,12 @@
         status_playing: 'Playing',
         status_audio_error: 'Failed to start audio:',
         status_handoff: 'Progression received from the Interval Atlas',
+        status_shared_link: 'Progression loaded from the shared link',
+        status_link_copied: 'Link copied to clipboard',
+        status_share_empty: 'Add chords before sharing.',
+        share_prompt: 'Copy this link:',
+        btn_share: 'Share',
+        btn_share_title: 'Copy a link with this progression and tempo',
         status_proj_saved_a: 'Project',
         status_proj_saved_b: 'saved',
         status_proj_loaded: 'Project loaded',
@@ -502,6 +520,8 @@
         arr_choose_groove: '(choose a groove…)',
         arr_humanize: 'Humanize',
         arr_intensity: 'Intensity',
+        arr_swing: 'Swing',
+        arr_swing_title: 'Shifts offbeat eighths toward the triplet (100% = full triplet swing)',
         arr_hide_chord: 'Hide chord',
         arr_groove_voicings: 'Groove and voicings per track',
         arr_add_tracks_hint: 'Add tracks to edit their grooves.',
