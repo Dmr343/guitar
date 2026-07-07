@@ -130,6 +130,46 @@
       listeners[kind].forEach(fn => { try { fn(payload); } catch (e) {} });
     }
 
+    // ─── Tempo trainer ───
+    // Sube el tempo solo: +incBpm cada everyLoops vueltas del loop,
+    // hasta maxBpm. La forma clásica de trabajar un pasaje difícil:
+    // arrancar cómodo y que la pista te vaya exigiendo de a poco.
+    const TRAINER_DEFAULTS = { enabled: false, incBpm: 2, everyLoops: 4, maxBpm: 180 };
+    function sanitizeTrainer(obj, base) {
+      const src = obj || {};
+      const out = Object.assign({}, base || TRAINER_DEFAULTS);
+      if ('enabled' in src) out.enabled = !!src.enabled;
+      const clamp = (v, min, max) => {
+        v = Math.round(Number(v));
+        return Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : null;
+      };
+      if ('incBpm' in src) { const v = clamp(src.incBpm, 1, 20); if (v !== null) out.incBpm = v; }
+      if ('everyLoops' in src) { const v = clamp(src.everyLoops, 1, 16); if (v !== null) out.everyLoops = v; }
+      if ('maxBpm' in src) { const v = clamp(src.maxBpm, 40, 240); if (v !== null) out.maxBpm = v; }
+      return out;
+    }
+    let trainer = Object.assign({}, TRAINER_DEFAULTS);
+    let trainerCount = 0;   // vueltas del loop desde el último aumento
+
+    // El Transport de Tone emite 'loop' en cada vuelta (transport.loop=true).
+    transport.on('loop', function () {
+      if (!playing || !trainer.enabled) return;
+      trainerCount++;
+      if (trainerCount < trainer.everyLoops) return;
+      trainerCount = 0;
+      if (tempo >= trainer.maxBpm) return;
+      setTempo(Math.min(tempo + trainer.incBpm, trainer.maxBpm));
+    });
+
+    function setTrainer(patch) {
+      const next = sanitizeTrainer(patch, trainer);
+      if (JSON.stringify(next) === JSON.stringify(trainer)) return;  // idempotente
+      trainer = next;
+      trainerCount = 0;
+      emit('state');
+    }
+    function getTrainer() { return Object.assign({}, trainer); }
+
     // ─── Resolución de datos de fábrica ───
     function resolvePreset(id) {
       const fp = BT().factoryPresets;
@@ -839,6 +879,7 @@
       barRebuildId = transport.scheduleRepeat(function () {
         onBarBoundary();
       }, '1m', '64n');
+      trainerCount = 0;                          // el trainer cuenta desde cero
       transport.start();
       playing = true;
       emit('transport', 'play');
@@ -991,6 +1032,7 @@
         mode: mode,
         humanize: humanizeAmount,
         swing: swingAmount,
+        trainer: getTrainer(),
         loopRange: getLoopRange(),
         subdivision: subdivision,
         tracks: getTracks(),
@@ -1009,6 +1051,8 @@
       humanizeAmount = Number.isFinite(state.humanize) ? state.humanize : 0;
       swingAmount = Number.isFinite(state.swing)
         ? Math.max(0, Math.min(1, state.swing)) : 0;
+      trainer = sanitizeTrainer(state.trainer, TRAINER_DEFAULTS);
+      trainerCount = 0;
       loopRangeIdx = Array.isArray(state.loopRange) ? state.loopRange.slice() : null;
       subdivision = SUBDIVISIONS[state.subdivision] ? state.subdivision : 'negra';
       Object.keys(runtime).forEach(disposeRuntime);
@@ -1040,6 +1084,7 @@
       getTrackPattern, setTrackPattern, setTrackVariant,
       setHumanize, getHumanize,
       setSwing, getSwing,
+      setTrainer, getTrainer,
       setMasterVolume, getMasterVolume,
       setLoop, getLoop,
       setLoopRange, getLoopRange,

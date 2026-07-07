@@ -38,6 +38,20 @@
             <input type="checkbox" id="ctl-loop" checked>
             <span data-i18n="loop">Loop</span>
           </label>
+          <div class="ctl trainer-ctl" data-i18n-attr="title:trainer_title"
+               title="Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope">
+            <label class="ctl-loop">
+              <input type="checkbox" id="trainer-on">
+              <span data-i18n="trainer">Trainer</span>
+            </label>
+            <span>+</span><input type="number" id="trainer-inc" min="1" max="20" value="2">
+            <span>BPM</span>
+            <span data-i18n="trainer_every">cada</span>
+            <input type="number" id="trainer-every" min="1" max="16" value="4">
+            <span data-i18n="trainer_loops">vueltas</span>
+            <span data-i18n="trainer_upto">hasta</span>
+            <input type="number" id="trainer-max" min="40" max="240" value="180">
+          </div>
           <button id="btn-share" class="btn btn-secondary icon-btn"
                   data-i18n-attr="title:btn_share_title"
                   title="Copiar link con esta progresión"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-3.9M8.6 13.3l6.8 3.9"/></svg> <span data-i18n="btn_share">Compartir</span></button>
@@ -314,6 +328,11 @@
         btn_export_wav_title: 'Renderizar la pista a un archivo WAV',
         wav_reps_title: 'Cuántas vueltas del loop lleva el archivo',
         status_rendering: 'Renderizando WAV…',
+        trainer: 'Trainer',
+        trainer_title: 'Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope',
+        trainer_every: 'cada',
+        trainer_loops: 'vueltas',
+        trainer_upto: 'hasta',
         status_render_done: 'WAV descargado',
         status_render_error: 'No se pudo renderizar:',
         status_render_empty: 'Agregue acordes y pistas antes de exportar.',
@@ -500,6 +519,11 @@
         btn_export_wav_title: 'Render the track to a WAV file',
         wav_reps_title: 'How many loop passes the file contains',
         status_rendering: 'Rendering WAV…',
+        trainer: 'Trainer',
+        trainer_title: 'Raises the tempo by itself: +N BPM every M loop passes, up to the cap',
+        trainer_every: 'every',
+        trainer_loops: 'loops',
+        trainer_upto: 'up to',
         status_render_done: 'WAV downloaded',
         status_render_error: 'Could not render:',
         status_render_empty: 'Add chords and tracks before exporting.',

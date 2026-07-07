@@ -177,6 +177,17 @@ body.playing .play-zone {
 }
 .ctl-loop input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
 
+/* Tempo trainer: fila compacta dentro del transporte */
+.trainer-ctl { gap: 5px; flex-wrap: wrap; }
+.trainer-ctl label { min-width: 0; }
+.trainer-ctl input[type="number"] {
+  width: 52px; padding: 3px 5px;
+  background: var(--surface3, #1c1c1c); color: var(--text, #eee);
+  border: 1px solid var(--border, #333); border-radius: 6px;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.trainer-ctl input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
 /* ─── Acorde actual / siguiente + metrónomo ─── */
 .now-playing {
   display: flex;

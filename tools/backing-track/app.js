@@ -24,6 +24,10 @@
   const ctlVolume = el('ctl-volume');
   const valVolume = el('val-volume');
   const ctlLoop = el('ctl-loop');
+  const trainerOn = el('trainer-on');
+  const trainerInc = el('trainer-inc');
+  const trainerEvery = el('trainer-every');
+  const trainerMax = el('trainer-max');
   const statusEl = el('status');
   const chordStrip = el('chord-strip');
   const chordEditor = el('chord-editor');
@@ -1518,6 +1522,13 @@
     ctlVolume.value = String(vol);
     valVolume.textContent = vol + '%';
     ctlLoop.checked = engine.getLoop();
+    const tr = engine.getTrainer();
+    if (trainerOn) {
+      trainerOn.checked = tr.enabled;
+      trainerInc.value = String(tr.incBpm);
+      trainerEvery.value = String(tr.everyLoops);
+      trainerMax.value = String(tr.maxBpm);
+    }
   }
 
   // ─── Transporte: botón único Play / Detener ───
@@ -1568,6 +1579,20 @@
   });
 
   ctlLoop.addEventListener('change', () => engine.setLoop(ctlLoop.checked));
+
+  // Tempo trainer: cualquier cambio en la fila arma un patch al motor;
+  // el motor clampa los valores y re-emite 'state' (que re-sincroniza
+  // los inputs con lo aceptado).
+  if (trainerOn) {
+    trainerOn.addEventListener('change',
+      () => engine.setTrainer({ enabled: trainerOn.checked }));
+    trainerInc.addEventListener('change',
+      () => engine.setTrainer({ incBpm: trainerInc.value }));
+    trainerEvery.addEventListener('change',
+      () => engine.setTrainer({ everyLoops: trainerEvery.value }));
+    trainerMax.addEventListener('change',
+      () => engine.setTrainer({ maxBpm: trainerMax.value }));
+  }
 
   subdivSelect.addEventListener('change', function () {
     engine.setSubdivision(subdivSelect.value);
@@ -1717,6 +1742,9 @@
   // localStorage en cada tick de un slider (eso traba el audio).
   let saveTimer = null;
   engine.onStateChange(function () {
+    // Refleja cambios que nacen en el motor (p. ej. el tempo trainer
+    // subiendo el BPM en vivo, o el clamp de un valor del trainer).
+    syncControls();
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveTimer = null;
