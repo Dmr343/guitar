@@ -24,6 +24,10 @@
   const ctlVolume = el('ctl-volume');
   const valVolume = el('val-volume');
   const ctlLoop = el('ctl-loop');
+  const songOn = el('song-on');
+  const songPanel = el('song-panel');
+  const nowSection = el('now-section');
+  const nowSectionName = el('now-section-name');
   const trainerOn = el('trainer-on');
   const trainerInc = el('trainer-inc');
   const trainerEvery = el('trainer-every');
@@ -410,11 +414,17 @@
       chip.appendChild(del);
       chip.title = t('chip_title');
       chip.addEventListener('click', (e) => {
-        if (e.shiftKey) handleLoopClick(i);
-        else {
-          model.setActiveChord(i);
-          engine.jumpToChord(i);   // si está sonando, salta al instante
+        if (e.shiftKey) {
+          // A–B por acordes es del modo simple; en canción se ignora.
+          if (!engine.isSongEnabled()) handleLoopClick(i);
+          return;
         }
+        model.setActiveChord(i);
+        // En modo canción, el salto va al índice aplanado (1ª pasada
+        // de la sección activa).
+        const j = engine.isSongEnabled()
+          ? engine.sectionChordIndex(engine.getSong().activeSection, i) : i;
+        if (j >= 0) engine.jumpToChord(j);   // si está sonando, salta al instante
       });
       // Reordenar por arrastre → model.moveChord(origen, destino).
       chip.addEventListener('dragstart', (e) => {
@@ -453,23 +463,48 @@
   // el chip activo. Eso unifica el feedback visual y hace que el editor
   // de abajo muestre el acorde que escuchás ahora.
   function highlightChord(idx) {
+    // En modo canción el motor emite índices del APLANADO; la tira
+    // muestra la sección activa. Se traduce y, si la canción pasó a
+    // otra sección, la vista la sigue.
+    let stripIdx = idx;
+    if (idx >= 0 && engine.isSongEnabled()) {
+      const loc = engine.getChordLocation(idx);
+      if (loc) {
+        const sg = engine.getSong();
+        if (loc.sectionIdx !== sg.activeSection) activateSection(loc.sectionIdx);
+        stripIdx = loc.chordIdx;
+        if (nowSectionName) {
+          const sec = engine.getSong().sections[loc.sectionIdx];
+          const reps = sec ? sec.repeats : 1;
+          nowSectionName.textContent = (sec ? sec.name : '—') +
+            (reps > 1 ? ' ' + (loc.repeat + 1) + '/' + reps : '');
+        }
+      }
+    }
     Array.prototype.forEach.call(chordStrip.children, chip => {
-      chip.classList.toggle('active', Number(chip.dataset.idx) === idx);
+      chip.classList.toggle('active', Number(chip.dataset.idx) === stripIdx);
     });
     renderHeroChords(idx);
-    if (idx >= 0 && engine.isPlaying() && idx !== model.activeIdx) {
-      model.setActiveChord(idx);
+    if (stripIdx >= 0 && engine.isPlaying() && stripIdx !== model.activeIdx) {
+      model.setActiveChord(stripIdx);
     }
   }
-  // Acorde grande "actual" + "siguiente" del panel de toque.
+  // Acorde grande "actual" + "siguiente" del panel de toque. En modo
+  // canción trabaja sobre el aplanado (así "sigue" cruza secciones).
   function renderHeroChords(idx) {
-    const prog = model.progression;
+    const songMode = engine.isSongEnabled();
+    const prog = songMode ? engine.getPlaybackProgression() : model.progression;
     if (!prog.length) {
       nowChord.textContent = '—';
       nextChord.textContent = '—';
       return;
     }
-    const cur = (idx != null && idx >= 0) ? idx : (model.activeIdx || 0);
+    let cur = (idx != null && idx >= 0) ? idx : (model.activeIdx || 0);
+    if (songMode && (idx == null || idx < 0)) {
+      const f = engine.sectionChordIndex(
+        engine.getSong().activeSection, model.activeIdx || 0);
+      cur = f >= 0 ? f : 0;
+    }
     nowChord.textContent = chordLabel(prog[cur % prog.length]);
     nextChord.textContent = chordLabel(prog[(cur + 1) % prog.length]);
   }
@@ -1352,6 +1387,7 @@
   function refreshTracks() {
     renderTracks();
     renderArrange();
+    renderSong();   // los checkboxes "Suena:" listan las pistas vivas
   }
 
   // Aplica un groove de estilo: pone el patrón que le corresponde a
@@ -1416,11 +1452,126 @@
       .catch(function () { if (W.prompt) W.prompt(t('share_prompt'), url); });
   }
 
+  // ─── Canción (secciones) ───
+  // El motor es el dueño de las secciones; el modelo/editor de abajo
+  // siempre muestra la SECCIÓN ACTIVA (en modo canción, engine.
+  // loadProgression escribe en ella). Cambiar de sección = cargar sus
+  // acordes en el modelo.
+  function activateSection(idx) {
+    engine.setActiveSection(idx);
+    const sec = engine.getSong().sections[idx];
+    if (sec) model.loadProgression(sec.chords);
+    renderSong();
+  }
+
+  function renderSong() {
+    if (!songPanel) return;
+    const sg = engine.getSong();
+    songOn.checked = sg.enabled;
+    songPanel.hidden = !sg.enabled;
+    if (nowSection) nowSection.hidden = !sg.enabled;
+    if (!sg.enabled) return;
+    songPanel.innerHTML = '';
+
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = t('song_hint');
+    songPanel.appendChild(hint);
+
+    // Fila de secciones (chips) + agregar.
+    const chips = document.createElement('div');
+    chips.className = 'song-chips';
+    sg.sections.forEach((sec, i) => {
+      const chip = document.createElement('button');
+      chip.className = 'song-chip' + (i === sg.activeSection ? ' active' : '');
+      chip.textContent = sec.name + (sec.repeats > 1 ? ' ×' + sec.repeats : '');
+      chip.addEventListener('click', () => activateSection(i));
+      chips.appendChild(chip);
+    });
+    chips.appendChild(mkBtn('btn btn-secondary', t('song_add'), function () {
+      engine.addSection();
+      activateSection(engine.getSong().activeSection);
+    }));
+    songPanel.appendChild(chips);
+
+    // Editor de la sección activa: nombre, repeticiones, mover, borrar.
+    const sec = sg.sections[sg.activeSection];
+    if (!sec) return;
+    const row = document.createElement('div');
+    row.className = 'control-row song-edit';
+    const nameCap = document.createElement('label');
+    nameCap.textContent = t('song_name');
+    const nameIn = fld('input');
+    nameIn.type = 'text';
+    nameIn.value = sec.name;
+    nameIn.addEventListener('change', function () {
+      engine.updateSection(sg.activeSection, { name: nameIn.value });
+      renderSong();
+    });
+    const repCap = document.createElement('label');
+    repCap.textContent = t('song_repeats');
+    const repIn = fld('input');
+    repIn.type = 'number';
+    repIn.min = '1'; repIn.max = '8';
+    repIn.value = String(sec.repeats);
+    repIn.addEventListener('change', function () {
+      engine.updateSection(sg.activeSection, { repeats: repIn.value });
+      renderSong();
+    });
+    const left = mkBtn('btn btn-secondary icon-btn', '◀', function () {
+      engine.moveSection(sg.activeSection, -1);
+      renderSong();
+    });
+    left.title = t('song_move_left_title');
+    const right = mkBtn('btn btn-secondary icon-btn', '▶', function () {
+      engine.moveSection(sg.activeSection, 1);
+      renderSong();
+    });
+    right.title = t('song_move_right_title');
+    const del = mkBtn('btn btn-danger icon-btn', '×', function () {
+      engine.removeSection(sg.activeSection);
+      activateSection(engine.getSong().activeSection);
+    });
+    del.title = t('song_del_title');
+    del.disabled = sg.sections.length <= 1;
+    row.appendChild(nameCap); row.appendChild(nameIn);
+    row.appendChild(repCap); row.appendChild(repIn);
+    row.appendChild(left); row.appendChild(right); row.appendChild(del);
+    songPanel.appendChild(row);
+
+    // Dinámica: qué pistas suenan en esta sección.
+    const tracks = engine.getTracks();
+    if (tracks.length) {
+      const mutesRow = document.createElement('div');
+      mutesRow.className = 'control-row song-mutes';
+      const cap = document.createElement('span');
+      cap.textContent = t('song_sounds');
+      mutesRow.appendChild(cap);
+      tracks.forEach(track => {
+        const lab = document.createElement('label');
+        const cb = fld('input');
+        cb.type = 'checkbox';
+        cb.checked = sec.mutes[track.id] !== true;
+        cb.addEventListener('change', function () {
+          const m = Object.assign({}, engine.getSong().sections[sg.activeSection].mutes);
+          if (cb.checked) delete m[track.id];
+          else m[track.id] = true;
+          engine.updateSection(sg.activeSection, { mutes: m });
+        });
+        const txt = document.createElement('span');
+        txt.textContent = tipoLabel(track.tipo);
+        lab.appendChild(cb); lab.appendChild(txt);
+        mutesRow.appendChild(lab);
+      });
+      songPanel.appendChild(mutesRow);
+    }
+  }
+
   // ─── Export MIDI ───
   // Una pasada del loop con la grilla derecha (ver engine.exportMidiData)
   // → .mid multipista para el DAW. Sincrónico: no hay render de audio.
   function exportMidiFile() {
-    if (!model.progression.length || !engine.getTracks().length) {
+    if (!engine.getPlaybackProgression().length || !engine.getTracks().length) {
       setStatus(t('status_render_empty'), 'error');
       return;
     }
@@ -1458,6 +1609,18 @@
     if (!snap) return;
     if (editing) closeEditor();
     engine.restore(snap);
+    // Modo canción: el editor muestra la sección activa restaurada.
+    // El branch de factoryProg no aplica (escribiría sobre la sección).
+    if (engine.isSongEnabled()) {
+      const sg = engine.getSong();
+      const sec = sg.sections[sg.activeSection];
+      model.loadProgression(sec ? sec.chords : []);
+      unbindFromCatalog();
+      renderSong();
+      syncControls();
+      refreshTracks();
+      return;
+    }
     // Si el snapshot trae factoryProg (formato nuevo), re-realiza la
     // progresión desde el catálogo. Esto mantiene los grados como fuente
     // de verdad — si el catálogo se editó, la próxima carga aplica los
@@ -1526,7 +1689,7 @@
   // comparte los presets con el motor en vivo y así evitamos ediciones
   // a mitad de render.
   async function exportWav() {
-    if (!model.progression.length || !engine.getTracks().length) {
+    if (!engine.getPlaybackProgression().length || !engine.getTracks().length) {
       setStatus(t('status_render_empty'), 'error');
       return;
     }
@@ -1614,6 +1777,20 @@
   });
 
   ctlLoop.addEventListener('change', () => engine.setLoop(ctlLoop.checked));
+
+  if (songOn) songOn.addEventListener('change', function () {
+    engine.setSongEnabled(songOn.checked);
+    if (songOn.checked) {
+      // La progresión actual ya es la sección A (el motor la copió).
+      activateSection(engine.getSong().activeSection);
+    } else {
+      // Volver al modo simple con los acordes de la última sección vista.
+      const sg = engine.getSong();
+      const sec = sg.sections[sg.activeSection];
+      if (sec) model.loadProgression(sec.chords);
+      renderSong();
+    }
+  });
 
   // Tempo trainer: cualquier cambio en la fila arma un patch al motor;
   // el motor clampa los valores y re-emite 'state' (que re-sincroniza
@@ -1832,6 +2009,7 @@
   renderEditor();
   renderHeroChords();
   refreshTracks();
+  renderSong();
   syncControls();
   subdivSelect.value = engine.getSubdivision();
   buildBeatMeter(SUBDIV_COUNT[engine.getSubdivision()] || 4);
@@ -1859,7 +2037,7 @@
     refreshTracks();
     refreshProjects();
     setPlayUI(engine.isPlaying());
-  });
+  });   // renderSong ya corre dentro de refreshTracks
 
   // Handle para tests integrales y debug en consola (igual que
   // IntervalAtlas._getModel en el Atlas). No es API pública.

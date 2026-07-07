@@ -67,6 +67,10 @@
           <span class="chord-cap" data-i18n="chord_next_cap">Sigue</span>
           <span id="next-chord" class="chord-next-name">—</span>
         </div>
+        <div class="chord-next" id="now-section" hidden>
+          <span class="chord-cap" data-i18n="section_cap">Sección</span>
+          <span id="now-section-name" class="chord-next-name">—</span>
+        </div>
         <div class="metro">
           <div id="beat-meter" class="beat-meter"></div>
           <select id="subdiv-select" class="subdiv-select" data-i18n-attr="title:subdiv_title" title="Subdivisión del metrónomo">
@@ -122,6 +126,18 @@
         <div class="mode-toggle">
           <button id="mode-practica" class="mode-btn active" data-i18n="mode_practice">Práctica</button>
           <button id="mode-arreglo" class="mode-btn" data-i18n="mode_arrange">Arreglo</button>
+        </div>
+
+        <div class="cfg-section">
+          <div class="section-label" data-i18n="song_label">Canción</div>
+          <div class="control-row">
+            <label class="ctl-loop" data-i18n-attr="title:song_mode_title"
+                   title="Estructura por secciones (Intro/A/B/…) con repeticiones y dinámica por pista">
+              <input type="checkbox" id="song-on">
+              <span data-i18n="song_mode">Modo canción (secciones)</span>
+            </label>
+          </div>
+          <div id="song-panel" hidden></div>
         </div>
 
         <div class="cfg-section">
@@ -216,6 +232,7 @@
   <script src="./humanize.js"></script>
   <script src="./export-audio.js"></script>
   <script src="./export-midi.js"></script>
+  <script src="./song.js"></script>
   <script src="./instruments.js"></script>
   <script src="./presets.js"></script>
   <script src="./patterns.js"></script>
@@ -336,6 +353,18 @@
         status_rendering: 'Renderizando WAV…',
         trainer: 'Trainer',
         trainer_title: 'Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope',
+        song_label: 'Canción',
+        song_mode: 'Modo canción (secciones)',
+        song_mode_title: 'Estructura por secciones (Intro/A/B/…) con repeticiones y dinámica por pista',
+        song_hint: 'El editor de progresión de abajo edita la sección activa.',
+        song_add: '+ Sección',
+        song_name: 'Nombre',
+        song_repeats: 'Repite',
+        song_sounds: 'Suena:',
+        song_del_title: 'Borrar sección',
+        song_move_left_title: 'Mover sección a la izquierda',
+        song_move_right_title: 'Mover sección a la derecha',
+        section_cap: 'Sección',
         trainer_every: 'cada',
         trainer_loops: 'vueltas',
         trainer_upto: 'hasta',
@@ -531,6 +560,18 @@
         status_rendering: 'Rendering WAV…',
         trainer: 'Trainer',
         trainer_title: 'Raises the tempo by itself: +N BPM every M loop passes, up to the cap',
+        song_label: 'Song',
+        song_mode: 'Song mode (sections)',
+        song_mode_title: 'Section structure (Intro/A/B/…) with repeats and per-track dynamics',
+        song_hint: 'The progression editor below edits the active section.',
+        song_add: '+ Section',
+        song_name: 'Name',
+        song_repeats: 'Repeat',
+        song_sounds: 'Plays:',
+        song_del_title: 'Delete section',
+        song_move_left_title: 'Move section left',
+        song_move_right_title: 'Move section right',
+        section_cap: 'Section',
         trainer_every: 'every',
         trainer_loops: 'loops',
         trainer_upto: 'up to',

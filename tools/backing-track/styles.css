@@ -188,6 +188,30 @@ body.playing .play-zone {
 }
 .trainer-ctl input[type="number"]:focus { outline: none; border-color: var(--accent); }
 
+/* ─── Canción (secciones) ─── */
+.song-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.song-chip {
+  background: var(--surface3, #1c1c1c); color: var(--text-mid, #aaa);
+  border: 1px solid var(--border, #333); border-radius: 8px;
+  padding: 5px 12px; font-size: 12px; cursor: pointer;
+  font-family: var(--font-mono); letter-spacing: 0.03em;
+  transition: border-color 0.15s, color 0.15s;
+}
+.song-chip:hover { border-color: var(--accent); color: var(--text, #eee); }
+.song-chip.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface3, #1c1c1c)); }
+.song-chip.playing { box-shadow: 0 0 10px var(--glow, rgba(230,150,80,0.35)); }
+.song-edit, .song-mutes { font-size: 11px; color: var(--text-mid, #aaa); }
+.song-edit input[type="text"] { width: 90px; }
+.song-edit input[type="number"] { width: 52px; }
+.song-edit input[type="text"], .song-edit input[type="number"] {
+  padding: 3px 5px; background: var(--surface3, #1c1c1c); color: var(--text, #eee);
+  border: 1px solid var(--border, #333); border-radius: 6px;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.song-edit input:focus { outline: none; border-color: var(--accent); }
+.song-mutes label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.song-mutes input { accent-color: var(--accent); }
+
 /* ─── Acorde actual / siguiente + metrónomo ─── */
 .now-playing {
   display: flex;

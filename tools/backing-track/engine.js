@@ -114,6 +114,34 @@
     let trackCounter = 0;
     let tickCounter = -1;          // cuenta de subdivisiones del indicador
 
+    // ─── Canción (secciones) ───
+    // song.enabled=false → modo simple: se toca `progression` tal cual.
+    // enabled=true → se toca el APLANADO de las secciones (ver song.js);
+    // `progression` conserva la progresión del modo simple para poder
+    // alternar sin perder nada. Las ediciones del modelo (app.js) van
+    // a la sección activa vía loadProgression.
+    let song = { enabled: false, activeSection: 0, sections: [] };
+    let songCounter = 0;
+    let _flat = null;   // cache del aplanado + mutes; null = recomputar
+
+    function songApi() { return BT().song || null; }
+    function invalidateFlat() { _flat = null; }
+    function flatData() {
+      const S = songApi();
+      if (!song.enabled || !S || !song.sections.length) return null;
+      if (!_flat) {
+        const f = S.flatten(song.sections);
+        f.muteByTrack = S.muteSpans(song.sections, f.sectionSpans);
+        _flat = f;
+      }
+      return _flat;
+    }
+    // La progresión que realmente se toca (aplanado o modo simple).
+    function playbackProgression() {
+      const f = flatData();
+      return f ? f.chords : progression;
+    }
+
     // ─── Runtime (audio) ───
     const runtime = {};            // trackId → { instrument, gain, presetId }
     let notePart = null;
@@ -353,7 +381,8 @@
     function refireCurrentPadIfNeeded(track, rt) {
       if (!playing || activeChordIndex < 0 || !track || track.tipo !== 'pad') return;
       if (!rt || !rt.instrument || !rt.instrument.triggerNote) return;
-      const chord = progression[activeChordIndex];
+      const prog = playbackProgression();
+      const chord = prog[activeChordIndex];
       if (!chord) return;
       const v = BT().voicing;
       if (!v || !v.resolveChord) return;
@@ -367,9 +396,12 @@
       const secsPerBar = (60 / tempo) * 4;
       let chordStartBar = 0;
       for (let i = 0; i < activeChordIndex; i++) {
-        chordStartBar += (progression[i] && progression[i].bars > 0
-                          ? progression[i].bars : 1);
+        chordStartBar += (prog[i] && prog[i].bars > 0 ? prog[i].bars : 1);
       }
+      // Pad silenciado en esta sección: no re-disparar.
+      const f = flatData();
+      const S = songApi();
+      if (f && S && S.isMutedAt(f.muteByTrack, track.id, chordStartBar * STEPS_PER_BAR)) return;
       const chordBars = (chord.bars > 0) ? chord.bars : 1;
       const chordEndSec = (chordStartBar + chordBars) * secsPerBar;
       const T = Tone();
@@ -489,6 +521,43 @@
       }
     }
 
+    // Scheduling compartido por reproducción, WAV y MIDI: patrones
+    // efectivos por pista, progresión de playback (aplanado de la
+    // canción si está activa) y filtrado de eventos por los mutes de
+    // sección (la dinámica "la batería entra en B").
+    //
+    // opts.forceEnabled — la reproducción en vivo agenda TODAS las
+    // pistas (el mute de pista se hace por ganancia, instantáneo);
+    // los exports respetan enabled para omitir pistas apagadas.
+    function computeSchedule(opts) {
+      opts = opts || {};
+      const patterns = {};
+      const schedTracks = tracks.map(t => {
+        const base = opts.forceEnabled
+          ? Object.assign({}, t, { enabled: true })
+          : Object.assign({}, t);
+        const pat = effectivePattern(t);
+        if (!pat) return base;
+        const pid = '__p_' + t.id;
+        patterns[pid] = pat;
+        base.patternId = pid;
+        return base;
+      });
+      const result = BT().scheduler.schedule({
+        progression: playbackProgression(),
+        tempo: tempo,
+        tracks: schedTracks,
+        patterns: patterns,
+      });
+      const f = flatData();
+      const S = songApi();
+      if (f && S && f.muteByTrack) {
+        result.events = result.events.filter(ev =>
+          !S.isMutedAt(f.muteByTrack, ev.trackId, ev.step));
+      }
+      return result;
+    }
+
     // Construye los Tone.Part a partir del scheduler. Devuelve el
     // largo del loop en compases.
     function rebuildSchedule() {
@@ -496,25 +565,7 @@
       silenceAll();          // corta notas colgadas antes de reprogramar
       const T = Tone();
 
-      // Cada pista usa su patrón efectivo (variante editada o de
-      // fábrica), registrado bajo una clave sintética propia.
-      const patterns = {};
-      const schedTracks = tracks.map(t => {
-        const pat = effectivePattern(t);
-        // enabled:true siempre — el mute se hace por ganancia (instantáneo),
-        // no quitando la pista del scheduling.
-        if (!pat) return Object.assign({}, t, { enabled: true });
-        const pid = '__p_' + t.id;
-        patterns[pid] = pat;
-        return Object.assign({}, t, { patternId: pid, enabled: true });
-      });
-
-      const result = BT().scheduler.schedule({
-        progression: progression,
-        tempo: tempo,
-        tracks: schedTracks,
-        patterns: patterns,
-      });
+      const result = computeSchedule({ forceEnabled: true });
 
       // Swing y humanización: offsets de timing (y velocity) sobre los
       // eventos. Con cualquiera de los dos activos se agenda en segundos
@@ -610,6 +661,8 @@
       const newProg = Array.isArray(chords)
         ? chords.map(c => ({ root: c.root, quality: c.quality, bars: c.bars }))
         : [];
+      // Modo canción: la edición del modelo escribe en la sección activa.
+      if (song.enabled) { setSectionChords(song.activeSection, newProg); return; }
       // Idempotente: si los acordes no cambiaron, no reprogramar. Esto evita
       // un rebuild espurio cuando el modelo dispara onChange solo porque
       // cambió activeIdx (p. ej. al clickear un chip). Sin este check, un
@@ -792,6 +845,12 @@
     // y al próximo bar boundary el rebuild se comía el primer evento (silenciaba
     // el bajo y otros instrumentos en el beat 1 del nuevo acorde).
     function setLoopRange(a, b) {
+      // Modo canción: el A–B por acordes es del modo simple (los índices
+      // del modelo no mapean al aplanado). Se ignora y se limpia.
+      if (song.enabled) {
+        if (loopRangeIdx !== null) { loopRangeIdx = null; refreshIfPlaying(); }
+        return;
+      }
       const next = (a == null) ? null : [a, (b == null ? a : b)];
       const same = (loopRangeIdx === null && next === null) ||
                    (loopRangeIdx !== null && next !== null &&
@@ -823,17 +882,25 @@
 
     // setFocusChord — índice del acorde con foco. Lo usa play() como
     // punto de arranque si está parado. No mueve el transporte por sí
-    // solo: para saltar en vivo, usar jumpToChord.
+    // solo: para saltar en vivo, usar jumpToChord. En modo canción el
+    // índice llega en coordenadas de la sección activa y se traduce a
+    // la primera pasada de esa sección en el aplanado.
     function setFocusChord(idx) {
       idx = Math.round(Number(idx));
+      if (song.enabled && Number.isFinite(idx) && idx >= 0) {
+        const f = flatData();
+        const S = songApi();
+        idx = (f && S) ? S.flattenedIndexOf(f.chordMap, song.activeSection, idx) : -1;
+      }
       focusChordIndex = Number.isFinite(idx) && idx >= 0 ? idx : -1;
     }
 
-    // Step de inicio de un acorde dentro de la progresión.
+    // Step de inicio de un acorde dentro de la progresión de playback.
     function chordStartStep(idx) {
+      const prog = playbackProgression();
       let step = 0;
       for (let i = 0; i < idx; i++) {
-        step += (progression[i] && progression[i].bars > 0 ? progression[i].bars : 1)
+        step += (prog[i] && prog[i].bars > 0 ? prog[i].bars : 1)
               * STEPS_PER_BAR;
       }
       return step;
@@ -846,8 +913,9 @@
     // Why: la "selección" de acorde no servía para nada en reproducción
     // — solo abría el editor. Ahora un clic en el chip salta de verdad.
     function jumpToChord(idx) {
-      if (!progression.length) return;
-      if (!Number.isFinite(idx) || idx < 0 || idx >= progression.length) return;
+      const prog = playbackProgression();
+      if (!prog.length) return;
+      if (!Number.isFinite(idx) || idx < 0 || idx >= prog.length) return;
       focusChordIndex = idx;
       if (!playing) return;
       silenceAll();                             // corta pad/bajo sostenido
@@ -862,7 +930,7 @@
     // foco cae FUERA del rango, arranca en el inicio del loop — si no, la
     // primera pasada tocaría acordes de afuera antes de envolver al rango.
     function startBBSForPlay() {
-      if (focusChordIndex >= 0 && focusChordIndex < progression.length) {
+      if (focusChordIndex >= 0 && focusChordIndex < playbackProgression().length) {
         if (loopEnabled && loopRangeIdx) {
           const lo = Math.min(loopRangeIdx[0], loopRangeIdx[1]);
           const hi = Math.max(loopRangeIdx[0], loopRangeIdx[1]);
@@ -960,7 +1028,7 @@
         Math.round(Number(opts.repetitions)) || 1));
       const tail = Number.isFinite(opts.tailSeconds)
         ? Math.max(0, opts.tailSeconds) : 2;
-      if (!progression.length) throw new Error('progresión vacía');
+      if (!playbackProgression().length) throw new Error('progresión vacía');
       if (!tracks.some(t => t.enabled !== false)) {
         throw new Error('sin pistas activas');
       }
@@ -970,20 +1038,9 @@
         throw new Error('export de audio no disponible');
       }
 
-      // Mismo pipeline de datos que rebuildSchedule: patrones efectivos,
-      // scheduler puro, swing y humanización.
-      const patterns = {};
-      const schedTracks = tracks.map(t => {
-        const pat = effectivePattern(t);
-        if (!pat) return Object.assign({}, t);
-        const pid = '__p_' + t.id;
-        patterns[pid] = pat;
-        return Object.assign({}, t, { patternId: pid });
-      });
-      const result = BT().scheduler.schedule({
-        progression: progression, tempo: tempo,
-        tracks: schedTracks, patterns: patterns,
-      });
+      // Mismo pipeline de datos que la reproducción (secciones y mutes
+      // incluidos), más swing y humanización.
+      const result = computeSchedule();
       let events = result.events;
       if (swingAmount > 0 && BT().humanize && BT().humanize.applySwing) {
         events = BT().humanize.applySwing(events,
@@ -1044,27 +1101,150 @@
       }, duration);
     }
 
+    // ─── API: canción (secciones) ───
+    function setSectionChords(idx, chords) {
+      const sec = song.sections[idx];
+      if (!sec) return;
+      const next = Array.isArray(chords)
+        ? chords.map(c => ({ root: c.root, quality: c.quality, bars: c.bars }))
+        : [];
+      if (JSON.stringify(sec.chords) === JSON.stringify(next)) return;
+      sec.chords = next;
+      invalidateFlat();
+      activeChordIndex = -1;
+      refreshIfPlaying();
+      emit('state');
+    }
+
+    function setSongEnabled(on) {
+      on = !!on;
+      if (song.enabled === on) return;
+      // Primera activación sin secciones: la progresión actual pasa a
+      // ser la sección A — nada se pierde al entrar al modo canción.
+      if (on && !song.sections.length) {
+        song.sections = [{
+          id: 'sec-' + Date.now() + '-' + (++songCounter),
+          name: 'A', repeats: 1, chords: getProgression(), mutes: {},
+        }];
+        song.activeSection = 0;
+      }
+      song.enabled = on;
+      invalidateFlat();
+      activeChordIndex = -1;
+      refreshIfPlaying();
+      emit('state');
+    }
+    function isSongEnabled() { return song.enabled; }
+
+    function getSong() {
+      return {
+        enabled: song.enabled,
+        activeSection: song.activeSection,
+        sections: JSON.parse(JSON.stringify(song.sections)),
+      };
+    }
+
+    function addSection(name) {
+      const sec = {
+        id: 'sec-' + Date.now() + '-' + (++songCounter),
+        name: (name && String(name).trim())
+          || String.fromCharCode(65 + (song.sections.length % 26)),  // A, B, C…
+        repeats: 1, chords: [], mutes: {},
+      };
+      song.sections.push(sec);
+      song.activeSection = song.sections.length - 1;
+      invalidateFlat();
+      refreshIfPlaying();
+      emit('state');
+      return song.activeSection;
+    }
+
+    function removeSection(idx) {
+      if (song.sections.length <= 1 || !song.sections[idx]) return;
+      song.sections.splice(idx, 1);
+      if (song.activeSection >= song.sections.length) {
+        song.activeSection = song.sections.length - 1;
+      }
+      invalidateFlat();
+      refreshIfPlaying();
+      emit('state');
+    }
+
+    function moveSection(idx, dir) {
+      const j = idx + (dir < 0 ? -1 : 1);
+      if (!song.sections[idx] || j < 0 || j >= song.sections.length) return;
+      const tmp = song.sections[idx];
+      song.sections[idx] = song.sections[j];
+      song.sections[j] = tmp;
+      if (song.activeSection === idx) song.activeSection = j;
+      else if (song.activeSection === j) song.activeSection = idx;
+      invalidateFlat();
+      refreshIfPlaying();
+      emit('state');
+    }
+
+    // updateSection — patch de name / repeats / mutes. Idempotente.
+    function updateSection(idx, patch) {
+      const sec = song.sections[idx];
+      if (!sec || !patch) return;
+      let changed = false;
+      if ('name' in patch) {
+        const n = String(patch.name || '').trim();
+        if (n && n !== sec.name) { sec.name = n; changed = true; }
+      }
+      if ('repeats' in patch) {
+        const S = songApi();
+        const max = (S && S.MAX_REPEATS) || 8;
+        const r = Math.max(1, Math.min(max, Math.round(Number(patch.repeats)) || 1));
+        if (r !== sec.repeats) { sec.repeats = r; changed = true; }
+      }
+      if ('mutes' in patch && patch.mutes && typeof patch.mutes === 'object') {
+        const m = {};
+        Object.keys(patch.mutes).forEach(k => { if (patch.mutes[k] === true) m[k] = true; });
+        if (JSON.stringify(m) !== JSON.stringify(sec.mutes)) { sec.mutes = m; changed = true; }
+      }
+      if (!changed) return;
+      invalidateFlat();
+      refreshIfPlaying();
+      emit('state');
+    }
+
+    // setActiveSection — foco de EDICIÓN (qué sección muestra el editor).
+    // No cambia el audio; la app carga los acordes de la sección en el
+    // modelo después de llamarla.
+    function setActiveSection(idx) {
+      idx = Math.round(Number(idx));
+      if (!song.sections[idx] || idx === song.activeSection) return;
+      song.activeSection = idx;
+      emit('state');
+    }
+
+    // Helpers para la UI: ubicar un índice aplanado y viceversa.
+    function getChordLocation(idx) {
+      const f = flatData();
+      const m = f && f.chordMap[idx];
+      return m ? { sectionIdx: m.sectionIdx, chordIdx: m.chordIdx, repeat: m.repeat } : null;
+    }
+    function sectionChordIndex(sectionIdx, chordIdx) {
+      const f = flatData();
+      const S = songApi();
+      return (f && S) ? S.flattenedIndexOf(f.chordMap, sectionIdx, chordIdx) : -1;
+    }
+    function getPlaybackProgression() {
+      return playbackProgression().map(c =>
+        ({ root: c.root, quality: c.quality, bars: c.bars }));
+    }
+
     // ─── Export MIDI ───
     // exportMidiData — arma el payload para exportMidi.encodeMidi: una
     // pasada del loop con la grilla derecha (sin swing ni humanize; en
     // el DAW se quiere material editable sobre la grilla) + metadatos
     // por pista (laneMidi de los kits WAF → notas GM reales).
     function exportMidiData() {
-      if (!progression.length) throw new Error('progresión vacía');
+      if (!playbackProgression().length) throw new Error('progresión vacía');
       const active = tracks.filter(t => t.enabled !== false);
       if (!active.length) throw new Error('sin pistas activas');
-      const patterns = {};
-      const schedTracks = tracks.map(t => {
-        const pat = effectivePattern(t);
-        if (!pat) return Object.assign({}, t);
-        const pid = '__p_' + t.id;
-        patterns[pid] = pat;
-        return Object.assign({}, t, { patternId: pid });
-      });
-      const result = BT().scheduler.schedule({
-        progression: progression, tempo: tempo,
-        tracks: schedTracks, patterns: patterns,
-      });
+      const result = computeSchedule();
       const meta = active.map(t => {
         const preset = effectivePreset(t);
         const laneMidi = {};
@@ -1091,6 +1271,7 @@
         swing: swingAmount,
         swingMode: swingMode,
         trainer: getTrainer(),
+        song: getSong(),
         loopRange: getLoopRange(),
         subdivision: subdivision,
         tracks: getTracks(),
@@ -1112,6 +1293,19 @@
       swingMode = (state.swingMode === 'sixteenth') ? 'sixteenth' : 'eighth';
       trainer = sanitizeTrainer(state.trainer, TRAINER_DEFAULTS);
       trainerCount = 0;
+      const S = songApi();
+      const rawSong = state.song || {};
+      song = {
+        enabled: rawSong.enabled === true,
+        activeSection: 0,
+        sections: S ? S.sanitizeSections(rawSong.sections) : [],
+      };
+      if (Number.isFinite(rawSong.activeSection) && song.sections.length) {
+        song.activeSection = Math.max(0,
+          Math.min(song.sections.length - 1, Math.round(rawSong.activeSection)));
+      }
+      if (!song.sections.length) song.enabled = false;
+      invalidateFlat();
       loopRangeIdx = Array.isArray(state.loopRange) ? state.loopRange.slice() : null;
       subdivision = SUBDIVISIONS[state.subdivision] ? state.subdivision : 'negra';
       Object.keys(runtime).forEach(disposeRuntime);
@@ -1150,6 +1344,9 @@
       setLoopRange, getLoopRange,
       setSubdivision, getSubdivision,
       setFocusChord, jumpToChord,
+      setSongEnabled, isSongEnabled, getSong,
+      addSection, removeSection, moveSection, updateSection, setActiveSection,
+      getChordLocation, sectionChordIndex, getPlaybackProgression,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
       renderToWav, exportMidiData,
