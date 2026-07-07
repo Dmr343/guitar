@@ -68,17 +68,26 @@
     });
   }
 
-  // applySwing — desplaza las corcheas a contratiempo hacia el tercer
-  // tresillo del pulso. amount 0..1: 0 = recto, 1 = swing de tresillo
-  // completo (la contra cae en 2/3 del pulso en vez de 1/2).
+  // applySwing — desplaza los contratiempos hacia el tresillo. amount
+  // 0..1: 0 = recto, 1 = swing de tresillo completo (el contratiempo
+  // cae en 2/3 de su par en vez de 1/2).
   //
-  // Trabaja sobre e.time (segundos) usando la posición e.step: la contra
-  // de corchea es la 3ª semicorchea de cada pulso (step % 4 === 2).
-  // Desplazamiento máximo = 2/3 de semicorchea. Pura: no muta la entrada.
+  // Dos granularidades (opts.mode):
+  //   'eighth' (default) — swing de corchea: mueve la contra del pulso
+  //     (step % 4 === 2). Desplazamiento máx = 2/3 de semicorchea.
+  //     El feel de jazz/blues/shuffle.
+  //   'sixteenth' — swing de semicorchea (estilo MPC): mueve cada
+  //     semicorchea impar (step % 2 === 1) dentro de su corchea.
+  //     Desplazamiento máx = 1/3 de semicorchea. El feel de funk,
+  //     hip-hop y neo-soul.
+  //
+  // Trabaja sobre e.time (segundos) usando la posición e.step.
+  // Pura: no muta la entrada.
   //
   // opts:
   //   amount       intensidad 0..1 (default 0)
   //   stepSeconds  duración de una semicorchea en segundos (requerido)
+  //   mode         'eighth' (default) | 'sixteenth'
   function applySwing(events, opts) {
     opts = opts || {};
     const list = Array.isArray(events) ? events : [];
@@ -87,12 +96,15 @@
     if (amount <= 0 || !(stepSeconds > 0)) {
       return list.map(e => Object.assign({}, e));
     }
-    const shift = amount * (2 / 3) * stepSeconds;
+    const sixteenth = opts.mode === 'sixteenth';
+    // Par de corcheas = 4 steps con contra en 2 → corre 2/3 de step.
+    // Par de semicorcheas = 2 steps con contra en 1 → corre 1/3 de step.
+    const shift = amount * (sixteenth ? (1 / 3) : (2 / 3)) * stepSeconds;
     return list.map(e => {
       const out = Object.assign({}, e);
-      const isOffbeat8th = Number.isFinite(out.step) &&
-        ((out.step % 4) + 4) % 4 === 2;
-      if (isOffbeat8th && Number.isFinite(out.time)) {
+      const pos = Number.isFinite(out.step) ? ((out.step % 4) + 4) % 4 : -1;
+      const isOffbeat = sixteenth ? (pos === 1 || pos === 3) : (pos === 2);
+      if (isOffbeat && Number.isFinite(out.time)) {
         out.time = out.time + shift;
       }
       return out;

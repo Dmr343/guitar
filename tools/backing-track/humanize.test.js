@@ -140,6 +140,30 @@
       const out = humanize.applySwing(barEvents(), { amount: 1 });
       T.assertEq(out[2].time, 2 * STEP);
     });
+    T.it('modo sixteenth: mueve las semicorcheas impares 1/3 de step', () => {
+      const out = humanize.applySwing(barEvents(),
+        { amount: 1, stepSeconds: STEP, mode: 'sixteenth' });
+      // steps impares (1, 3, 5, 7) corren +STEP/3.
+      [1, 3, 5, 7].forEach(s => T.assert(
+        Math.abs(out[s].time - (s * STEP + STEP / 3)) < 1e-9,
+        'step ' + s + ' en ' + out[s].time));
+    });
+    T.it('modo sixteenth: pares (incluida la contra de corchea) quietos', () => {
+      const out = humanize.applySwing(barEvents(),
+        { amount: 1, stepSeconds: STEP, mode: 'sixteenth' });
+      [0, 2, 4, 6].forEach(s => T.assertEq(out[s].time, s * STEP));
+    });
+    T.it('modo sixteenth a mitad de intensidad', () => {
+      const out = humanize.applySwing(barEvents(),
+        { amount: 0.5, stepSeconds: STEP, mode: 'sixteenth' });
+      T.assert(Math.abs(out[1].time - (STEP + STEP / 6)) < 1e-9);
+    });
+    T.it('modo desconocido cae al de corchea', () => {
+      const out = humanize.applySwing(barEvents(),
+        { amount: 1, stepSeconds: STEP, mode: 'lo-que-sea' });
+      T.assertEq(out[1].time, 1 * STEP);          // impar quieto
+      T.assert(out[2].time > 2 * STEP);           // contra de corchea corre
+    });
   });
 
 })(

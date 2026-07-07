@@ -1296,9 +1296,22 @@
       engine.setSwing(Number(swSlider.value) / 100);
       swVal.textContent = swSlider.value + '%';
     });
+    // Granularidad del swing: corchea (jazz/shuffle) o semicorchea (funk).
+    const swMode = fld('select');
+    [['eighth', t('swing_eighth')], ['sixteenth', t('swing_sixteenth')]]
+      .forEach(pair => {
+        const opt = document.createElement('option');
+        opt.value = pair[0];
+        opt.textContent = pair[1];
+        if (engine.getSwingMode() === pair[0]) opt.selected = true;
+        swMode.appendChild(opt);
+      });
+    swMode.addEventListener('change',
+      () => engine.setSwingMode(swMode.value));
     swRow.appendChild(swCap);
     swRow.appendChild(swSlider);
     swRow.appendChild(swVal);
+    swRow.appendChild(swMode);
     arrangePanel.appendChild(swRow);
 
     // Ocultar indicador de acorde (entrenamiento de oído).

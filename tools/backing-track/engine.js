@@ -106,7 +106,8 @@
     let loopEnabled = true;
     let mode = 'practica';
     let humanizeAmount = 0;        // 0..1 — intensidad de humanización
-    let swingAmount = 0;           // 0..1 — swing de corchea (1 = tresillo)
+    let swingAmount = 0;           // 0..1 — swing (1 = tresillo completo)
+    let swingMode = 'eighth';      // 'eighth' (jazz/shuffle) | 'sixteenth' (funk)
     let loopRangeIdx = null;       // [a,b] índices de acorde, o null (loop completo)
     let focusChordIndex = -1;      // acorde con foco (-1 = sin foco → arranca en el inicio del loop); punto de reinicio al editar en vivo
     let subdivision = 'negra';     // subdivisión del indicador de compás
@@ -516,7 +517,7 @@
         BT().humanize.applySwing;
       if (swung) {
         events = BT().humanize.applySwing(events,
-          { amount: swingAmount, stepSeconds: result.stepSeconds });
+          { amount: swingAmount, stepSeconds: result.stepSeconds, mode: swingMode });
       }
       const humanized = humanizeAmount > 0 && BT().humanize;
       if (humanized) {
@@ -651,6 +652,15 @@
       emit('state');
     }
     function getSwing() { return swingAmount; }
+
+    function setSwingMode(mode) {
+      const next = (mode === 'sixteenth') ? 'sixteenth' : 'eighth';
+      if (next === swingMode) return;     // idempotente
+      swingMode = next;
+      if (swingAmount > 0) refreshIfPlaying();  // sin swing no cambia nada
+      emit('state');
+    }
+    function getSwingMode() { return swingMode; }
 
     // ─── API: pistas ───
     function patternTipoFor(tipo) { return PATTERN_TIPO[tipo] || null; }
@@ -966,7 +976,7 @@
       let events = result.events;
       if (swingAmount > 0 && BT().humanize && BT().humanize.applySwing) {
         events = BT().humanize.applySwing(events,
-          { amount: swingAmount, stepSeconds: result.stepSeconds });
+          { amount: swingAmount, stepSeconds: result.stepSeconds, mode: swingMode });
       }
       if (humanizeAmount > 0 && BT().humanize) {
         events = BT().humanize.apply(events,
@@ -1068,6 +1078,7 @@
         mode: mode,
         humanize: humanizeAmount,
         swing: swingAmount,
+        swingMode: swingMode,
         trainer: getTrainer(),
         loopRange: getLoopRange(),
         subdivision: subdivision,
@@ -1087,6 +1098,7 @@
       humanizeAmount = Number.isFinite(state.humanize) ? state.humanize : 0;
       swingAmount = Number.isFinite(state.swing)
         ? Math.max(0, Math.min(1, state.swing)) : 0;
+      swingMode = (state.swingMode === 'sixteenth') ? 'sixteenth' : 'eighth';
       trainer = sanitizeTrainer(state.trainer, TRAINER_DEFAULTS);
       trainerCount = 0;
       loopRangeIdx = Array.isArray(state.loopRange) ? state.loopRange.slice() : null;
@@ -1120,6 +1132,7 @@
       getTrackPattern, setTrackPattern, setTrackVariant,
       setHumanize, getHumanize,
       setSwing, getSwing,
+      setSwingMode, getSwingMode,
       setTrainer, getTrainer,
       setMasterVolume, getMasterVolume,
       setLoop, getLoop,
