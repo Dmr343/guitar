@@ -883,6 +883,105 @@
       return n;
     }
 
+    // ─── Export a WAV (render offline) ───
+    // renderToWav — renderiza la progresión completa, repetida N veces,
+    // en un contexto offline (Tone.Offline) y devuelve el AudioBuffer.
+    // No toca el transporte en vivo: reconstruye instrumentos frescos
+    // dentro del contexto offline con los mismos presets, niveles,
+    // swing y humanización que la reproducción normal. Los eventos se
+    // disparan directo en segundos absolutos — no hace falta transporte.
+    //
+    // opts: { repetitions (1..16, default 2), tailSeconds (default 2) }
+    async function renderToWav(opts) {
+      opts = opts || {};
+      const reps = Math.max(1, Math.min(16,
+        Math.round(Number(opts.repetitions)) || 1));
+      const tail = Number.isFinite(opts.tailSeconds)
+        ? Math.max(0, opts.tailSeconds) : 2;
+      if (!progression.length) throw new Error('progresión vacía');
+      if (!tracks.some(t => t.enabled !== false)) {
+        throw new Error('sin pistas activas');
+      }
+      const T = Tone();
+      const EX = BT().exportAudio;
+      if (!EX || typeof T.Offline !== 'function') {
+        throw new Error('export de audio no disponible');
+      }
+
+      // Mismo pipeline de datos que rebuildSchedule: patrones efectivos,
+      // scheduler puro, swing y humanización.
+      const patterns = {};
+      const schedTracks = tracks.map(t => {
+        const pat = effectivePattern(t);
+        if (!pat) return Object.assign({}, t);
+        const pid = '__p_' + t.id;
+        patterns[pid] = pat;
+        return Object.assign({}, t, { patternId: pid });
+      });
+      const result = BT().scheduler.schedule({
+        progression: progression, tempo: tempo,
+        tracks: schedTracks, patterns: patterns,
+      });
+      let events = result.events;
+      if (swingAmount > 0 && BT().humanize && BT().humanize.applySwing) {
+        events = BT().humanize.applySwing(events,
+          { amount: swingAmount, stepSeconds: result.stepSeconds });
+      }
+      if (humanizeAmount > 0 && BT().humanize) {
+        events = BT().humanize.apply(events,
+          { amount: humanizeAmount, seed: 1 });
+      }
+      const all = EX.expandLoop(events, result.loopSeconds, reps);
+      if (!all.length) throw new Error('sin eventos que renderizar');
+      const duration = result.loopSeconds * reps + tail;
+
+      return T.Offline(async function () {
+        // Réplica del grafo maestro en vivo (ver ensureAudioGraph).
+        const limiter = new T.Limiter(-1);
+        const glue = new T.Compressor({
+          threshold: -16, ratio: 2.5, attack: 0.01, release: 0.2, knee: 12,
+        });
+        const master = new T.Gain(masterVol);
+        master.chain(glue, limiter, T.getDestination());
+        const reverb = new T.Reverb({ decay: 5, preDelay: 0.03, wet: 1 });
+        reverb.connect(master);
+        const waits = [];
+        try {
+          if (typeof reverb.generate === 'function') waits.push(reverb.generate());
+        } catch (e) {}
+
+        const offline = {};   // trackId → instrumento del contexto offline
+        tracks.forEach(function (track) {
+          if (track.enabled === false) return;
+          const preset = effectivePreset(track);
+          if (!preset) return;
+          const instrument = BT().instruments.createInstrument(preset);
+          const gain = new T.Gain(trackGainValue(track));
+          instrument.output.connect(gain);
+          gain.connect(master);
+          const send = new T.Gain(reverbAmountOf(preset));
+          gain.connect(send);
+          send.connect(reverb);
+          if (instrument.whenReady) waits.push(instrument.whenReady());
+          offline[track.id] = instrument;
+        });
+        // Samples/soundfonts con timeout: mejor un render al que le
+        // falte un instrumento que uno que no termina nunca.
+        await Promise.race([
+          Promise.all(waits),
+          new Promise(function (res) { setTimeout(res, 15000); }),
+        ]);
+        all.forEach(function (ev) {
+          const inst = offline[ev.trackId];
+          if (!inst) return;
+          try {
+            if (ev.type === 'hit') inst.triggerHit(ev.lane, ev.time, ev.velocity);
+            else inst.triggerNote(ev.notes, ev.duration, ev.time, ev.velocity);
+          } catch (e) {}
+        });
+      }, duration);
+    }
+
     // ─── Persistencia (usada por storage.js, #60) ───
     function snapshot() {
       return {
@@ -948,6 +1047,7 @@
       setFocusChord, jumpToChord,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
+      renderToWav,
       snapshot, restore, dispose,
       onChordChange: function (fn) { on('chord', fn); },
       onStateChange: function (fn) { on('state', fn); },

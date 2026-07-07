@@ -182,6 +182,14 @@
     return {
       kind: 'melodic',
       output: outputGain,
+      // whenReady — promesa que resuelve cuando el instrumento puede
+      // sonar. La síntesis es inmediata; el sampler espera sus buffers
+      // (Tone.loaded() cubre todos los Samplers del contexto). La usa
+      // el render offline para no disparar sobre un instrumento mudo.
+      whenReady: function () {
+        return (isSampler && typeof T.loaded === 'function')
+          ? T.loaded() : Promise.resolve();
+      },
       triggerNote: function (notes, duration, time, velocity) {
         if (!notes || !notes.length) return;
         // El bajo es monofónico: toca solo la nota más grave.
@@ -295,23 +303,31 @@
     const out = new T.Gain();
     const midiNote = Math.round(Number(spec.note));
     let presetData = null;
+    let readyResolve;
+    const readyPromise = new Promise(function (r) { readyResolve = r; });
 
     // Cache check: si el soundfont ya está como global, usar al toque.
     if (spec.variable && W[spec.variable]) {
       presetData = W[spec.variable];
+      readyResolve();
     } else if (spec.url && spec.variable) {
       try {
         player.loader.startLoad(rawCtx, spec.url, spec.variable);
         player.loader.waitLoad(function () {
           presetData = W[spec.variable] || null;
+          readyResolve();
         });
       } catch (err) {
         console.warn('[backing-track] WAF drum: no cargó "' +
           spec.variable + '": ' + (err && err.message ? err.message : err));
+        readyResolve();
       }
+    } else {
+      readyResolve();
     }
 
     return {
+      ready: readyPromise,
       connect: function (target) { out.connect(target); },
       // Firma compatible con membrane/sample (note, dur, time, velocity).
       // Si `note` es un número, se interpreta como midi destino (permite
@@ -376,6 +392,17 @@
       kind: 'drumkit',
       output: outputGain,
       triggerNote: function () { /* no aplica a un kit de batería */ },
+      // whenReady — espera las piezas WAF (promesa propia) y los
+      // samples (Tone.loaded() cubre los Sampler del contexto).
+      whenReady: function () {
+        const waits = [];
+        Object.keys(voices).forEach(function (lane) {
+          const v = voices[lane];
+          if (v.voice && v.voice.ready) waits.push(v.voice.ready);
+        });
+        if (typeof T.loaded === 'function') waits.push(T.loaded());
+        return Promise.all(waits);
+      },
       // setConfig — actualiza vol y tune por pieza en vivo. Los campos
       // estructurales (engine/note/url/file/variable) se ignoran acá —
       // si cambian, el engine reconstruye el kit.
@@ -479,6 +506,8 @@
 
     let presetData = null;   // objeto del soundfont, una vez decodificado
     let voices = [];         // envolventes activas (devueltas por queueWaveTable)
+    let readyResolve;
+    const readyPromise = new Promise(function (r) { readyResolve = r; });
 
     if (cfg.url && cfg.variable) {
       // Cache hit: el soundfont ya está como global desde una carga
@@ -486,17 +515,22 @@
       // instrumento (p. ej. tras un toggle de efecto).
       if (W[cfg.variable]) {
         presetData = W[cfg.variable];
+        readyResolve();
       } else {
         try {
           player.loader.startLoad(rawCtx, cfg.url, cfg.variable);
           player.loader.waitLoad(function () {
             presetData = W[cfg.variable] || null;
+            readyResolve();
           });
         } catch (err) {
           console.warn('[backing-track] WebAudioFont: no se pudo cargar "' +
             (preset.id || '?') + '": ' + (err && err.message ? err.message : err));
+          readyResolve();
         }
       }
+    } else {
+      readyResolve();
     }
 
     // Descarta del registro las voces que ya terminaron.
@@ -532,6 +566,7 @@
     return {
       kind: 'melodic',
       output: outputGain,
+      whenReady: function () { return readyPromise; },
       triggerNote: function (notes, duration, time, velocity) {
         if (!presetData || !notes || !notes.length) return;
         let durSec = Number(duration);          // ya viene en segundos

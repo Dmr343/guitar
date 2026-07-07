@@ -156,6 +156,16 @@
                     data-i18n-attr="title:btn_import_title"
                     title="Importar respaldo JSON">⭱ JSON</button>
             <input type="file" id="import-file" accept="application/json" hidden>
+            <select id="wav-reps" style="flex:0 0 auto" data-i18n-attr="title:wav_reps_title"
+                    title="Cuántas vueltas del loop lleva el archivo">
+              <option value="1">×1</option>
+              <option value="2" selected>×2</option>
+              <option value="4">×4</option>
+              <option value="8">×8</option>
+            </select>
+            <button id="btn-export-wav" class="btn btn-secondary icon-btn"
+                    data-i18n-attr="title:btn_export_wav_title"
+                    title="Renderizar la pista a un archivo WAV">⭳ WAV</button>
           </div>
         </div>
 
@@ -187,6 +197,7 @@
   <script src="./step-grid.js"></script>
   <script src="./scheduler.js"></script>
   <script src="./humanize.js"></script>
+  <script src="./export-audio.js"></script>
   <script src="./instruments.js"></script>
   <script src="./presets.js"></script>
   <script src="./patterns.js"></script>
@@ -300,6 +311,12 @@
         btn_load: 'Cargar',
         btn_del_proj_title: 'Borrar proyecto seleccionado',
         btn_export_title: 'Exportar respaldo JSON',
+        btn_export_wav_title: 'Renderizar la pista a un archivo WAV',
+        wav_reps_title: 'Cuántas vueltas del loop lleva el archivo',
+        status_rendering: 'Renderizando WAV…',
+        status_render_done: 'WAV descargado',
+        status_render_error: 'No se pudo renderizar:',
+        status_render_empty: 'Agregue acordes y pistas antes de exportar.',
         btn_import_title: 'Importar respaldo JSON',
         proj_none: '(sin proyectos guardados)',
         proj_default_name: 'Proyecto',
@@ -480,6 +497,12 @@
         btn_load: 'Load',
         btn_del_proj_title: 'Delete selected project',
         btn_export_title: 'Export JSON backup',
+        btn_export_wav_title: 'Render the track to a WAV file',
+        wav_reps_title: 'How many loop passes the file contains',
+        status_rendering: 'Rendering WAV…',
+        status_render_done: 'WAV downloaded',
+        status_render_error: 'Could not render:',
+        status_render_empty: 'Add chords and tracks before exporting.',
         btn_import_title: 'Import JSON backup',
         proj_none: '(no saved projects)',
         proj_default_name: 'Project',

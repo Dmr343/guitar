@@ -44,6 +44,8 @@
   const btnLoadProj = el('btn-load-proj');
   const btnDelProj = el('btn-del-proj');
   const btnShare = el('btn-share');
+  const btnExportWav = el('btn-export-wav');
+  const wavReps = el('wav-reps');
   const btnExport = el('btn-export');
   const btnImport = el('btn-import');
   const importFile = el('import-file');
@@ -1464,8 +1466,7 @@
     });
   }
 
-  function downloadJSON(filename, text) {
-    const blob = new Blob([text], { type: 'application/json' });
+  function downloadBlob(filename, blob) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1474,6 +1475,39 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function downloadJSON(filename, text) {
+    downloadBlob(filename, new Blob([text], { type: 'application/json' }));
+  }
+
+  // ─── Export a WAV ───
+  // Renderiza el loop N veces con Tone.Offline (engine.renderToWav) y
+  // descarga el WAV. Se detiene la reproducción antes: el render offline
+  // comparte los presets con el motor en vivo y así evitamos ediciones
+  // a mitad de render.
+  async function exportWav() {
+    if (!model.progression.length || !engine.getTracks().length) {
+      setStatus(t('status_render_empty'), 'error');
+      return;
+    }
+    if (engine.isPlaying()) engine.stop();
+    btnExportWav.disabled = true;
+    setStatus(t('status_rendering'));
+    try {
+      const reps = Number(wavReps && wavReps.value) || 2;
+      const buffer = await engine.renderToWav({ repetitions: reps });
+      const wav = BT.exportAudio.encodeWav(buffer, { normalize: true });
+      const name = BT.exportAudio.wavFilename(
+        (projName.value || '').trim() || factoryProgState.id || '');
+      downloadBlob(name, new Blob([wav], { type: 'audio/wav' }));
+      setStatus(t('status_render_done'));
+    } catch (err) {
+      setStatus(t('status_render_error') + ' ' +
+        (err && err.message ? err.message : err), 'error');
+    } finally {
+      btnExportWav.disabled = false;
+    }
   }
 
   // ─── Sincronizar controles de transporte ───
@@ -1642,6 +1676,7 @@
   });
 
   if (btnShare) btnShare.addEventListener('click', shareCurrent);
+  if (btnExportWav) btnExportWav.addEventListener('click', exportWav);
 
   // Exportar / importar
   btnExport.addEventListener('click', function () {
@@ -1761,4 +1796,8 @@
     refreshProjects();
     setPlayUI(engine.isPlaying());
   });
+
+  // Handle para tests integrales y debug en consola (igual que
+  // IntervalAtlas._getModel en el Atlas). No es API pública.
+  BT.app = { engine: engine };
 })(typeof window !== 'undefined' ? window : globalThis);
