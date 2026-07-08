@@ -88,6 +88,69 @@
   --ease:     cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* ── Tema claro (opt-in: <html data-theme="light">, ver theme.js) ──
+   Solo redefine tokens: las herramientas no saben del tema. El dorado
+   y los acentos por herramienta bajan de luminancia para mantener
+   contraste AA sobre superficies claras. El dark sigue siendo la
+   identidad y el default. */
+[data-theme="light"] {
+  --bg:        #f2efe7;
+  --bg-2:      #eae6db;
+  --surface:   #faf8f2;
+  --surface2:  #f3f0e8;
+  --surface3:  #e9e4d7;
+  --border:    #d6cfbf;
+  --border2:   #c3bba8;
+
+  --text:      #2b271f;
+  --text-mid:  #5c5648;
+  --text-dim:  #7c7567;
+
+  --gold:      #9c6f12;
+
+  --c-diapason: #9c6f12;
+  --c-escalas:  #0d7d57;
+  --c-acordes:  #1d69b4;
+  --c-atlas:    #96700f;
+  --c-improv:   #0e7d74;
+  --c-backing:  #b5511f;
+
+  --shadow-1: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px rgba(70,58,32,0.10);
+  --shadow-2: 0 1px 0 rgba(255,255,255,0.7) inset, 0 18px 50px rgba(70,58,32,0.14);
+  --glow:     color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Los h1 de las herramientas usan un gradiente que arranca en blanco
+   (invisible sobre claro): en claro arranca en el texto oscuro. El
+   selector html[data-theme] gana a los estilos por página aunque
+   estos carguen después (mayor especificidad, no orden). */
+html[data-theme="light"] h1 {
+  background: linear-gradient(165deg, var(--text) 10%, var(--accent) 75%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Cada herramienta define su --accent-dim como "acento oscurecido"
+   (fondos de resaltado). En claro pasa a ser un lavado del acento. */
+html[data-theme="light"] {
+  --accent-dim: color-mix(in srgb, var(--accent) 16%, var(--surface3));
+  --gold-dim:   var(--accent-dim);
+}
+
+/* Restos hardcodeados de dark en componentes compartidos entre
+   herramientas: chip activo de progresión y tab de modo activo. */
+html[data-theme="light"] .prog-chord.active,
+html[data-theme="light"] .chord-chip.selected,
+html[data-theme="light"] .mode-btn.active,
+html[data-theme="light"] .mode-tab.active {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface2));
+  color: var(--accent);
+}
+[data-theme="light"] ::selection {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: #1a1610;
+}
+
 /* ── Base ── */
 * { box-sizing: border-box; }
 
