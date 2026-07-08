@@ -1032,6 +1032,27 @@
     }).catch(() => { if (W.prompt) W.prompt(t('share_prompt'), url); });
   }
 
+  // ─── Exportar el diapasón a imagen ───
+  // Baja un PNG del SVG vivo con fondo sólido y marca de agua. El
+  // nombre reusa la codificación compacta de la URL compartible.
+  function exportBoardPng() {
+    const EI = G.exportImage;
+    if (!EI || !svg) return;
+    const US = G.urlState;
+    const progSlug = (US && state.progression.length)
+      ? US.encodeProgression(state.progression) : '';
+    EI.downloadPng(svg, 'interval-atlas' + (progSlug ? '-' + progSlug : ''), {
+      watermark: 'harmonic.dadiabatic.com',
+      background: '#161210',
+      scale: 2,
+    }).then(function () {
+      const span = document.querySelector('#atlas-export span');
+      if (!span) return;
+      span.textContent = '✓';
+      setTimeout(function () { span.textContent = t('export_png'); }, 1600);
+    }).catch(function () { alert(t('export_fail')); });
+  }
+
   // Feedback: el botón muestra "✓ Copiado" un instante y vuelve a su texto.
   function flashShareBtn() {
     const span = document.querySelector('#atlas-share span');
@@ -1321,6 +1342,8 @@
     if (favSave) favSave.addEventListener('click', promptSaveFavorite);
     const shareBtn = $('atlas-share');
     if (shareBtn) shareBtn.addEventListener('click', shareProgression);
+    const exportBtn = $('atlas-export');
+    if (exportBtn) exportBtn.addEventListener('click', exportBoardPng);
 
     drawLegend();
     renderPalette();

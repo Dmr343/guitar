@@ -341,6 +341,7 @@
         <button class="btn" id="atlas-presets-btn"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10v16H5.5A1.5 1.5 0 0 1 4 18.5V5.5Z"/><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14V4Z"/></svg> <span data-i18n="presets_btn">Presets</span></button>
         <button class="btn" id="atlas-fav-save" data-i18n="fav_save">★ Guardar</button>
         <button class="btn" id="atlas-share" data-i18n-attr="title:share_t" title="Copiar link con esta progresión"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-3.9M8.6 13.3l6.8 3.9"/></svg> <span data-i18n="share">Compartir</span></button>
+        <button class="btn" id="atlas-export" data-i18n-attr="title:export_t" title="Exportar el diapasón como imagen PNG (con marca de agua)"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10m0 0 4-4m-4 4-4-4"/><path d="M5 19h14"/></svg> <span data-i18n="export_png">PNG</span></button>
       </div>
       <div id="atlas-favorites"></div>
 
@@ -369,6 +370,7 @@
   <script src="./shared/fretboard.js"></script>
   <script src="./shared/storage.js"></script>
   <script src="./shared/url-state.js"></script>
+  <script src="./shared/export-image.js"></script>
   <script src="./shared/positions.js"></script>
   <script src="./shared/metronome.js"></script>
   <script src="./intervallic/audio.js"></script>
@@ -441,6 +443,9 @@
         share_copied: '✓ Copiado',
         share_need_chords: 'Agregue acordes antes de compartir.',
         share_prompt: 'Copie este link:',
+        export_png: 'PNG',
+        export_t: 'Exportar el diapasón como imagen PNG (con marca de agua)',
+        export_fail: 'No se pudo exportar la imagen.',
         active_chord: 'Acorde activo',
         presets_title: 'Presets por género',
         close: 'Cerrar',
@@ -567,6 +572,9 @@
         share_copied: '✓ Copied',
         share_need_chords: 'Add chords before sharing.',
         share_prompt: 'Copy this link:',
+        export_png: 'PNG',
+        export_t: 'Export the fretboard as a PNG image (with watermark)',
+        export_fail: 'Could not export the image.',
         active_chord: 'Active chord',
         presets_title: 'Presets by genre',
         close: 'Close',
