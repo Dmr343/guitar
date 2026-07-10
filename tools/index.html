@@ -153,6 +153,16 @@
     }
     .footer-links { margin-bottom: 16px; }
     .footer-links a { margin: 0 9px; letter-spacing: 0.06em; }
+
+    /* Badge de racha de práctica (shared/progress.js) — discreto */
+    .streak-badge {
+      display: none; margin: 14px auto 0; width: max-content;
+      padding: 6px 14px; border: 1px solid var(--border);
+      border-radius: 999px; background: var(--surface2);
+      font-family: var(--font-mono); font-size: var(--fs-micro);
+      letter-spacing: 0.08em; color: var(--text-mid);
+    }
+    .streak-badge strong { color: var(--gold); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -161,6 +171,7 @@
     <div class="header-label" data-i18n="header_label">Herramientas interactivas</div>
     <h1 data-i18n="header_title">Herramientas de Guitarra</h1>
     <p data-i18n="header_desc">Una colección de apps para practicar el mástil, las escalas, la armonía y el oído. Úselas en el orden que quiera.</p>
+    <div class="streak-badge" id="streak-badge"></div>
   </div>
 
   <div class="grid">
@@ -235,6 +246,7 @@
   </footer>
 
   <script src="i18n.js"></script>
+  <script src="shared/progress.js"></script>
   <script>
     I18N.register({
       es: {
@@ -260,6 +272,10 @@
         card_backing_desc: 'Genere un acompañamiento en loop (bajo, acordes, batería, pads) sobre una progresión e improvise encima. Elija, edite y guarde sus propios sonidos.',
         coffee_btn: 'Invitame un café',
         feedback_btn: 'Sugerencias',
+        streak_label: 'Racha:',
+        streak_day: 'día',
+        streak_days: 'días seguidos',
+        streak_min_today: 'min hoy',
         footer_credits: 'Créditos',
         footer_privacy: 'Privacidad',
         footer_legal: 'Aviso legal',
@@ -288,6 +304,10 @@
         card_backing_desc: 'Generate a looping accompaniment (bass, chords, drums, pads) over a progression and solo on top. Choose, edit and save your own sounds.',
         coffee_btn: 'Buy me a coffee',
         feedback_btn: 'Feedback',
+        streak_label: 'Streak:',
+        streak_day: 'day',
+        streak_days: 'days in a row',
+        streak_min_today: 'min today',
         footer_credits: 'Credits',
         footer_privacy: 'Privacy',
         footer_legal: 'Legal notice',
@@ -295,6 +315,28 @@
       }
     });
     I18N.init();
+
+    // Badge de racha de práctica (shared/progress.js): solo aparece si
+    // hay algo que mostrar — sin práctica registrada no ocupa lugar.
+    function renderStreakBadge() {
+      var el = document.getElementById('streak-badge');
+      var P = window.GuitarShared && window.GuitarShared.progress;
+      if (!el || !P) return;
+      var g = P.get();
+      if (!g.streak && !g.minutesToday) { el.style.display = 'none'; return; }
+      var parts = [];
+      if (g.streak) {
+        parts.push('<strong>' + g.streak + '</strong> ' +
+          I18N.t(g.streak === 1 ? 'streak_day' : 'streak_days'));
+      }
+      if (g.minutesToday) {
+        parts.push('<strong>' + g.minutesToday + '</strong> ' + I18N.t('streak_min_today'));
+      }
+      el.innerHTML = I18N.t('streak_label') + ' ' + parts.join(' · ');
+      el.style.display = 'block';
+    }
+    renderStreakBadge();
+    window.addEventListener('i18n:changed', renderStreakBadge);
   </script>
 
 </body>

@@ -1510,6 +1510,9 @@
   }
 
   function setPlayingUI(t, prerollRemaining) {
+    // Hilo de progreso: el tiempo con el transporte corriendo cuenta
+    // como práctica (racha + minutos, ver shared/progress.js).
+    if (G.progress) G.progress.trackTransport(t === 'playing' || t === 'preroll');
     const tr = (key) => ((W.I18N && W.I18N.t) ? W.I18N.t(key) : key);
     const btn = $('atlas-play');
     if (!btn) return;

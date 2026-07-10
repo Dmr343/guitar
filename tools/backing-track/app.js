@@ -2065,6 +2065,10 @@
     }, 400);
   });
   engine.onTransport(function (ev) {
+    // Hilo de progreso: el tiempo con la pista sonando cuenta como
+    // práctica (racha + minutos, ver shared/progress.js).
+    const P = W.GuitarShared && W.GuitarShared.progress;
+    if (P) P.trackTransport(ev === 'play');
     if (ev === 'play') setPlayUI(true);
     else if (ev === 'stop') {
       setPlayUI(false);
