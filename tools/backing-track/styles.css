@@ -210,6 +210,10 @@ body.playing .play-zone {
 .song-chip:hover { border-color: var(--accent); color: var(--text, #eee); }
 .song-chip.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface3, #1c1c1c)); }
 .song-chip.playing { box-shadow: 0 0 10px var(--glow, rgba(230,150,80,0.35)); }
+.song-chip { cursor: grab; }
+.song-chip:active { cursor: grabbing; }
+.song-chip.dragging { opacity: 0.4; }
+.song-chip.drag-over { border-color: var(--accent); border-style: dashed; }
 .song-edit, .song-mutes { font-size: 11px; color: var(--text-mid, #aaa); }
 .song-edit input[type="text"] { width: 90px; }
 .song-edit input[type="number"] { width: 52px; }

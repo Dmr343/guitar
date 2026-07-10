@@ -1236,6 +1236,30 @@
       emit('state');
     }
 
+    // reorderSection — mover una sección a una posición arbitraria
+    // (drag & drop sobre los chips), no solo un lugar. Semántica
+    // drop-on-target, igual que ProgressionModel.moveChord: la sección
+    // aterriza EN destIdx y las demás se corren.
+    function reorderSection(srcIdx, destIdx) {
+      const n = song.sections.length;
+      if (srcIdx === destIdx) return;
+      if (!song.sections[srcIdx] || destIdx < 0 || destIdx >= n) return;
+      const moved = song.sections.splice(srcIdx, 1)[0];
+      const insertAt = Math.min(destIdx, song.sections.length);
+      song.sections.splice(insertAt, 0, moved);
+      // activeSection sigue a la sección lógica, igual que activeIdx en moveChord.
+      if (song.activeSection === srcIdx) {
+        song.activeSection = insertAt;
+      } else if (srcIdx < song.activeSection && song.activeSection <= insertAt) {
+        song.activeSection--;
+      } else if (insertAt <= song.activeSection && song.activeSection < srcIdx) {
+        song.activeSection++;
+      }
+      invalidateFlat();
+      refreshIfPlaying();
+      emit('state');
+    }
+
     // updateSection — patch de name / repeats / mutes. Idempotente.
     function updateSection(idx, patch) {
       const sec = song.sections[idx];
@@ -1398,7 +1422,7 @@
       setSubdivision, getSubdivision,
       setFocusChord, jumpToChord,
       setSongEnabled, isSongEnabled, getSong,
-      addSection, removeSection, moveSection, updateSection, setActiveSection,
+      addSection, removeSection, moveSection, reorderSection, updateSection, setActiveSection,
       getChordLocation, sectionChordIndex, getPlaybackProgression,
       setMode, getMode,
       play, stop, isPlaying, getActiveChordIndex, getActiveChordProgress, getActiveVoices,

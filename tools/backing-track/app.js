@@ -384,6 +384,15 @@
 
   let dragChordSrc = null;   // índice del acorde que se está arrastrando
 
+  // Índice (en la tira visible) del acorde que está SONANDO ahora mismo,
+  // o -1. Separado de model.activeIdx (foco del editor) y guardado acá
+  // porque renderChords() reconstruye toda la tira desde cero (innerHTML)
+  // cada vez que cambia el acorde activo del modelo — sin este estado
+  // aparte, la marca de "sonando" se perdía en esa reconstrucción y no
+  // volvía nunca más durante la reproducción.
+  let playingStripIdx = -1;
+  let dragSectionSrc = null;   // índice de la sección que se está arrastrando
+
   function renderChords() {
     const prog = model.progression;
     const lr = model.loopRange;
@@ -394,6 +403,7 @@
       const chip = document.createElement('div');
       chip.className = 'chord-chip' +
         (i === model.activeIdx ? ' selected' : '') +
+        (i === playingStripIdx ? ' active' : '') +
         (lr && i >= lo && i <= hi ? ' in-loop' : '');
       chip.dataset.idx = String(i);
       chip.draggable = true;
@@ -484,8 +494,12 @@
       const loc = engine.getChordLocation(idx);
       if (loc) {
         const sg = engine.getSong();
-        if (loc.sectionIdx !== sg.activeSection) activateSection(loc.sectionIdx);
         stripIdx = loc.chordIdx;
+        // playingStripIdx primero: activateSection/setActiveChord de abajo
+        // pueden disparar un renderChords() (reconstruye la tira entera);
+        // fijándolo antes, ese rebuild ya sale con el chip correcto marcado.
+        playingStripIdx = engine.isPlaying() ? stripIdx : -1;
+        if (loc.sectionIdx !== sg.activeSection) activateSection(loc.sectionIdx);
         if (nowSectionName) {
           const sec = engine.getSong().sections[loc.sectionIdx];
           const reps = sec ? sec.repeats : 1;
@@ -493,15 +507,22 @@
             (reps > 1 ? ' ' + (loc.repeat + 1) + '/' + reps : '');
         }
       }
+    } else {
+      playingStripIdx = engine.isPlaying() ? stripIdx : -1;
     }
-    Array.prototype.forEach.call(chordStrip.children, chip => {
-      chip.classList.toggle('active', Number(chip.dataset.idx) === stripIdx);
-    });
-    updateChordBarProgress();   // el chip activo cambió: refrescar de una
-    renderHeroChords(idx);
+    // model.setActiveChord también puede disparar un rebuild — mismo
+    // motivo, va después de fijar playingStripIdx.
     if (stripIdx >= 0 && engine.isPlaying() && stripIdx !== model.activeIdx) {
       model.setActiveChord(stripIdx);
     }
+    // Si NO hubo rebuild (los chips ya existían), marcar el activo a
+    // mano sobre los elementos actuales — renderChords ya lo hace solo
+    // cuando reconstruye, esto cubre el resto de los casos.
+    Array.prototype.forEach.call(chordStrip.children, chip => {
+      chip.classList.toggle('active', Number(chip.dataset.idx) === playingStripIdx);
+    });
+    updateChordBarProgress();   // el chip activo cambió: refrescar de una
+    renderHeroChords(idx);
   }
   // Acorde grande "actual" + "siguiente" del panel de toque. En modo
   // canción trabaja sobre el aplanado (así "sigue" cruza secciones).
@@ -1615,9 +1636,40 @@
     chips.className = 'song-chips';
     sg.sections.forEach((sec, i) => {
       const chip = document.createElement('button');
+      chip.type = 'button';
       chip.className = 'song-chip' + (i === sg.activeSection ? ' active' : '');
       chip.textContent = sec.name + (sec.repeats > 1 ? ' ×' + sec.repeats : '');
+      chip.title = t('song_chip_title');
+      chip.draggable = true;
       chip.addEventListener('click', () => activateSection(i));
+      // Arrastrar para reordenar — mismo gesto que los acordes de la
+      // progresión (chordStrip), más natural que los botones ◀/▶.
+      chip.addEventListener('dragstart', (e) => {
+        dragSectionSrc = i;
+        chip.classList.add('dragging');
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+      });
+      chip.addEventListener('dragend', () => {
+        chip.classList.remove('dragging');
+        Array.prototype.forEach.call(chips.children,
+          ch => ch.classList.remove('drag-over'));
+        dragSectionSrc = null;
+      });
+      chip.addEventListener('dragover', (e) => {
+        if (dragSectionSrc === null) return;
+        e.preventDefault();
+        chip.classList.add('drag-over');
+      });
+      chip.addEventListener('dragleave', () => chip.classList.remove('drag-over'));
+      chip.addEventListener('drop', (e) => {
+        e.preventDefault();
+        chip.classList.remove('drag-over');
+        if (dragSectionSrc !== null && dragSectionSrc !== i) {
+          engine.reorderSection(dragSectionSrc, i);
+          renderSong();
+        }
+        dragSectionSrc = null;
+      });
       chips.appendChild(chip);
     });
     chips.appendChild(mkBtn('btn btn-secondary', t('song_add'), function () {
