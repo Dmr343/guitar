@@ -45,6 +45,14 @@
     return bar + ':' + Math.floor(rest / 4) + ':' + (rest % 4);
   }
 
+  // Inversa de stepToBBS — la posición actual del transporte (string
+  // "compás:pulso:semicorchea") de vuelta a un step absoluto.
+  function bbsToStep(bbs) {
+    const parts = String(bbs).split(':').map(Number);
+    const bar = parts[0] || 0, pulse = parts[1] || 0, semi = parts[2] || 0;
+    return bar * STEPS_PER_BAR + pulse * 4 + semi;
+  }
+
   // Rol de pista → tipo de patrón que le corresponde.
   const PATTERN_TIPO = {
     bajo: 'bass', acordes: 'chord', lead: 'chord',
@@ -155,6 +163,7 @@
     let activeChordIndex = -1;
     let loopStartBBS = '0:0:0';    // posición de inicio del loop (tiempo musical)
     let pendingRebuild = false;    // hay una edición esperando el próximo límite de compás
+    let lastChordsMeta = [];       // [{index,startStep,lengthSteps}] del último rebuild
 
     // ─── Listeners ───
     const listeners = { chord: [], state: [], transport: [], tick: [] };
@@ -596,6 +605,10 @@
       }, noteEvents);
       notePart.start(0);
 
+      // Metadatos de compases por acorde (para getActiveChordProgress:
+      // "vamos en el compás 2 de 3 de este acorde").
+      lastChordsMeta = result.chords;
+
       // Part del indicador de acorde, sincronizado con el audio.
       const chordEvents = result.chords.map(c => ({
         time: stepToBBS(c.startStep), idx: c.index,
@@ -1003,6 +1016,26 @@
     function isPlaying() { return playing; }
     function getActiveChordIndex() { return activeChordIndex; }
 
+    // getActiveChordProgress — en qué compás del acorde activo estamos
+    // ahora mismo (0-based) y cuántos compases dura en total. Sirve
+    // para iluminar, dentro del chip "Am7 •••", cuál de esos puntos
+    // corresponde al compás que está sonando — igual que el indicador
+    // de pulso, pero un nivel más arriba (compás dentro del acorde en
+    // vez de pulso dentro del compás).
+    // Devuelve null si no hay acorde activo o no hay datos todavía.
+    function getActiveChordProgress() {
+      if (!playing || activeChordIndex < 0) return null;
+      const meta = lastChordsMeta[activeChordIndex];
+      if (!meta || meta.index !== activeChordIndex) return null;
+      const totalBars = Math.max(1, Math.round(meta.lengthSteps / STEPS_PER_BAR));
+      if (totalBars <= 1) return { bar: 0, totalBars: 1 };
+      const curStep = bbsToStep(transport.position);
+      let rel = curStep - meta.startStep;
+      rel = ((rel % meta.lengthSteps) + meta.lengthSteps) % meta.lengthSteps;
+      const bar = Math.min(totalBars - 1, Math.floor(rel / STEPS_PER_BAR));
+      return { bar: bar, totalBars: totalBars };
+    }
+
     // getActiveVoices — diagnóstico: total de voces sonando ahora mismo
     // en todos los instrumentos. Si crece sin parar, hay acumulación.
     function getActiveVoices() {
@@ -1368,7 +1401,7 @@
       addSection, removeSection, moveSection, updateSection, setActiveSection,
       getChordLocation, sectionChordIndex, getPlaybackProgression,
       setMode, getMode,
-      play, stop, isPlaying, getActiveChordIndex, getActiveVoices,
+      play, stop, isPlaying, getActiveChordIndex, getActiveChordProgress, getActiveVoices,
       renderToWav, exportMidiData, getRecordTap,
       snapshot, restore, dispose,
       onChordChange: function (fn) { on('chord', fn); },

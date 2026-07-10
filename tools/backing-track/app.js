@@ -113,6 +113,7 @@
 
   function setStatus(text, cls) {
     statusEl.textContent = text;
+    statusEl.title = text;   // el mensaje se trunca visualmente; el hover lo completa
     statusEl.className = 'status' + (cls ? ' ' + cls : '');
   }
 
@@ -398,9 +399,18 @@
       chip.draggable = true;
       const name = document.createElement('span');
       name.textContent = chordLabel(c);
+      // Un punto por compás como elemento propio (no un solo texto):
+      // así se puede iluminar el compás que está sonando dentro de
+      // este acorde (ver updateChordBarProgress), igual que el
+      // indicador de pulso pero un nivel más arriba.
       const bars = document.createElement('span');
       bars.className = 'chip-bars';
-      bars.textContent = '●'.repeat(c.bars);
+      for (let b = 0; b < c.bars; b++) {
+        const dot = document.createElement('span');
+        dot.className = 'chip-bar-dot';
+        dot.textContent = '●';
+        bars.appendChild(dot);
+      }
       chip.appendChild(name);
       chip.appendChild(bars);
       // Botón de borrar visible al hover sobre el chip.
@@ -487,6 +497,7 @@
     Array.prototype.forEach.call(chordStrip.children, chip => {
       chip.classList.toggle('active', Number(chip.dataset.idx) === stripIdx);
     });
+    updateChordBarProgress();   // el chip activo cambió: refrescar de una
     renderHeroChords(idx);
     if (stripIdx >= 0 && engine.isPlaying() && stripIdx !== model.activeIdx) {
       model.setActiveChord(stripIdx);
@@ -549,6 +560,20 @@
       dots = beatMeter.querySelectorAll('.beat-dot');
     }
     dots.forEach((d, i) => d.classList.toggle('on', i === tick.index));
+  }
+
+  // Ilumina, dentro del chip del acorde activo ("Am7 •••"), el punto
+  // que corresponde al compás que está sonando ahora mismo — el mismo
+  // gesto que el indicador de pulso, pero un nivel más arriba (compás
+  // dentro del acorde en vez de pulso dentro del compás).
+  function updateChordBarProgress() {
+    const activeChip = chordStrip.querySelector('.chord-chip.active');
+    if (!activeChip) return;
+    const dots = activeChip.querySelectorAll('.chip-bar-dot');
+    if (!dots.length) return;
+    const progress = engine.getActiveChordProgress && engine.getActiveChordProgress();
+    dots.forEach((d, i) => d.classList.toggle('current',
+      !!progress && progress.totalBars > 1 && i === progress.bar));
   }
 
   // ─── Editor del acorde activo ───
@@ -2074,6 +2099,7 @@
 
   engine.onChordChange(highlightChord);
   engine.onTick(updateBarIndicator);
+  engine.onTick(updateChordBarProgress);
   // Diagnóstico: muestra cuántas voces suenan y el máximo de la
   // sesión. Si el máximo trepa sin parar loop tras loop, hay
   // acumulación; si se estabiliza, está sano.
@@ -2182,5 +2208,5 @@
 
   // Handle para tests integrales y debug en consola (igual que
   // IntervalAtlas._getModel en el Atlas). No es API pública.
-  BT.app = { engine: engine };
+  BT.app = { engine: engine, model: model };
 })(typeof window !== 'undefined' ? window : globalThis);

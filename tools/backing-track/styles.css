@@ -140,7 +140,17 @@ body.playing .play-zone {
               0 0 26px var(--glow);
 }
 .transport .status {
-  flex-shrink: 0;
+  /* Ancho acotado y truncado: un mensaje largo ("Link copiado al
+     portapapeles", "Grabando… Rec detiene y descarga"…) no debe
+     empujar ni cambiar dónde caen Tempo/Volumen/Opciones. Antes,
+     mensajes de distinto largo cruzaban el punto de wrap del layout
+     y todo el bloque saltaba de ancho. */
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   color: var(--text-dim);
@@ -376,6 +386,17 @@ body.playing .play-zone {
 }
 .chord-chip.active .chip-bars { color: var(--accent); }
 .chord-chip { position: relative; }
+/* Punto del compás que está sonando ahora, dentro del acorde activo
+   (ej: acorde de 3 compases, vamos en el 2º). Mismo lenguaje visual
+   que el indicador de pulso (beat-dot.on): se agranda y se enciende. */
+.chip-bar-dot {
+  display: inline-block;
+  transition: color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.chord-chip.active .chip-bar-dot.current {
+  color: var(--text);
+  transform: scale(1.5);
+}
 .chip-del {
   position: absolute;
   top: -6px; right: -6px;
