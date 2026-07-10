@@ -1450,7 +1450,14 @@
     const url = US.buildShareUrl(W.location.href, { p, b: engine.getTempo() });
     US.shareOrCopy(url, 'Backing Track — harmonic')
       .then(function (res) {
-        if (res === 'copied') setStatus(t('status_link_copied'));
+        if (res !== 'copied') return;
+        setStatus(t('status_link_copied'));
+        // Feedback también EN el botón: el status queda lejos del click.
+        const span = btnShare && btnShare.querySelector('span');
+        if (span) {
+          span.textContent = t('share_copied_btn');
+          setTimeout(function () { span.textContent = t('btn_share'); }, 1600);
+        }
       })
       .catch(function () { if (W.prompt) W.prompt(t('share_prompt'), url); });
   }
@@ -1875,6 +1882,32 @@
     engine.setMasterVolume(v / 100);
     valVolume.textContent = v + '%';
   });
+
+  // ─── Tap tempo ───
+  // Promedia los intervalos de los últimos taps (ventana de 5). Un
+  // silencio de 2 s resetea la ventana y arranca una medición nueva.
+  const btnTap = el('btn-tap');
+  let tapTimes = [];
+  function handleTap() {
+    const now = performance.now();
+    if (tapTimes.length && now - tapTimes[tapTimes.length - 1] > 2000) {
+      tapTimes = [];
+    }
+    tapTimes.push(now);
+    if (tapTimes.length > 5) tapTimes.shift();
+    if (tapTimes.length >= 2) {
+      let sum = 0;
+      for (let i = 1; i < tapTimes.length; i++) sum += tapTimes[i] - tapTimes[i - 1];
+      const bpm = Math.round(60000 / (sum / (tapTimes.length - 1)));
+      engine.setTempo(bpm);
+      syncControls();
+    }
+    if (btnTap) {
+      btnTap.classList.add('tap-pulse');
+      setTimeout(() => btnTap.classList.remove('tap-pulse'), 120);
+    }
+  }
+  if (btnTap) btnTap.addEventListener('click', handleTap);
 
   ctlLoop.addEventListener('change', () => engine.setLoop(ctlLoop.checked));
 

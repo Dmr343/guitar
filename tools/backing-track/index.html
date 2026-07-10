@@ -32,35 +32,45 @@
             <label for="ctl-tempo" data-i18n="tempo">Tempo</label>
             <input type="range" id="ctl-tempo" min="40" max="240" step="1">
             <span class="value" id="val-tempo">100 BPM</span>
+            <button id="btn-tap" class="btn btn-secondary icon-btn btn-tap"
+                    data-i18n-attr="title:tap_title"
+                    title="Tap tempo: haga click al ritmo y el tempo se calcula solo">TAP</button>
           </div>
           <div class="ctl">
             <label for="ctl-volume" data-i18n="volume">Volumen</label>
             <input type="range" id="ctl-volume" min="0" max="100" step="1">
             <span class="value" id="val-volume">85%</span>
           </div>
-          <label class="ctl-loop">
-            <input type="checkbox" id="ctl-loop" checked>
-            <span data-i18n="loop">Loop</span>
-          </label>
-          <label class="ctl-loop" data-i18n-attr="title:rec_mic_title"
-                 title="Incluir el micrófono en la grabación (desmarcado: solo la pista)">
-            <input type="checkbox" id="rec-mic" checked>
-            <span data-i18n="rec_mic">Mic</span>
-          </label>
-          <div class="ctl trainer-ctl" data-i18n-attr="title:trainer_title"
-               title="Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope">
-            <label class="ctl-loop">
-              <input type="checkbox" id="trainer-on">
-              <span data-i18n="trainer">Trainer</span>
-            </label>
-            <span>+</span><input type="number" id="trainer-inc" min="1" max="20" value="2">
-            <span>BPM</span>
-            <span data-i18n="trainer_every">cada</span>
-            <input type="number" id="trainer-every" min="1" max="16" value="4">
-            <span data-i18n="trainer_loops">vueltas</span>
-            <span data-i18n="trainer_upto">hasta</span>
-            <input type="number" id="trainer-max" min="40" max="240" value="180">
-          </div>
+          <!-- Configuraciones que se tocan poco: colapsadas para que no
+               compitan con el tempo/volumen. -->
+          <details class="transport-more" id="transport-more">
+            <summary data-i18n="transport_more">Opciones ▾</summary>
+            <div class="transport-more-body">
+              <label class="ctl-loop">
+                <input type="checkbox" id="ctl-loop" checked>
+                <span data-i18n="loop">Loop</span>
+              </label>
+              <label class="ctl-loop" data-i18n-attr="title:rec_mic_title"
+                     title="Incluir el micrófono en la grabación (desmarcado: solo la pista)">
+                <input type="checkbox" id="rec-mic" checked>
+                <span data-i18n="rec_mic">Mic</span>
+              </label>
+              <div class="ctl trainer-ctl" data-i18n-attr="title:trainer_title"
+                   title="Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope">
+                <label class="ctl-loop">
+                  <input type="checkbox" id="trainer-on">
+                  <span data-i18n="trainer">Trainer</span>
+                </label>
+                <span>+</span><input type="number" id="trainer-inc" min="1" max="20" value="2">
+                <span>BPM</span>
+                <span data-i18n="trainer_every">cada</span>
+                <input type="number" id="trainer-every" min="1" max="16" value="4">
+                <span data-i18n="trainer_loops">vueltas</span>
+                <span data-i18n="trainer_upto">hasta</span>
+                <input type="number" id="trainer-max" min="40" max="240" value="180">
+              </div>
+            </div>
+          </details>
           <button id="btn-share" class="btn btn-secondary icon-btn"
                   data-i18n-attr="title:btn_share_title"
                   title="Copiar link con esta progresión"><svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7l6.8-3.9M8.6 13.3l6.8 3.9"/></svg> <span data-i18n="btn_share">Compartir</span></button>
@@ -366,6 +376,9 @@
         status_rendering: 'Renderizando WAV…',
         trainer: 'Trainer',
         trainer_title: 'Sube el tempo solo: +N BPM cada M vueltas del loop, hasta el tope',
+        tap_title: 'Tap tempo: haga click al ritmo y el tempo se calcula solo',
+        transport_more: 'Opciones ▾',
+        share_copied_btn: '✓ Copiado',
         rec: '● Rec',
         rec_title: 'Grabar su solo sobre la pista (use auriculares para que el micrófono no capture los parlantes)',
         rec_mic: 'Mic',
@@ -582,6 +595,9 @@
         status_rendering: 'Rendering WAV…',
         trainer: 'Trainer',
         trainer_title: 'Raises the tempo by itself: +N BPM every M loop passes, up to the cap',
+        tap_title: 'Tap tempo: click to the beat and the tempo sets itself',
+        transport_more: 'Options ▾',
+        share_copied_btn: '✓ Copied',
         rec: '● Rec',
         rec_title: 'Record your solo over the track (use headphones so the mic does not pick up the speakers)',
         rec_mic: 'Mic',
