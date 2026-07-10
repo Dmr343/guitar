@@ -32,12 +32,18 @@
     dim7: 'locrian', m7b5: 'locrian', dim: 'locrian',
     aug:  'lydian',
   };
+  // Prioridad de superposición del spec (Fase B):
+  //   chord > guide > tensions > scale > approach.
+  // Guide tones no es un kind propio (decora chord tones), así que el
+  // orden efectivo por pc es: chordTones > tensions > extra > scale >
+  // approach > allNotes. El approach es la capa más sutil: si una nota
+  // ya es tensión o parte de la escala, esa lectura gana.
   const LAYER_PRIORITY = {
     allNotes:   1,
-    scale:      2,
-    extra:      3,   // intervalos sueltos encendidos a mano desde la leyenda
-    tensions:   4,
-    approach:   5,
+    approach:   2,
+    scale:      3,
+    extra:      4,   // intervalos sueltos encendidos a mano desde la leyenda
+    tensions:   5,
     chordTones: 6,
   };
   const GUIDE_TONE_INTERVALS = new Set(['b3','3','b7','7']);
@@ -247,6 +253,15 @@
     if (interval === '1' && isChordTone) {
       cell.halo = { x, y, radius: radius + 4, colorKey, width: 2, alpha: 0.8 * alpha };
     }
+    // Guide tones (3 y 7): el corazón del voice leading. Con la capa
+    // activa reciben borde grueso + glow exterior suave — se ven "de
+    // lejos" sin cambiar el mapa de colores.
+    if (p.layers && p.layers.guideTones && isChordTone &&
+        GUIDE_TONE_INTERVALS.has(interval)) {
+      cell.guide = true;
+      cell.halo = { x, y, radius: radius + 3.5, colorKey, width: 2.6, alpha: 0.95 };
+      cell.glow = { x, y, radius: radius + 7.5, colorKey, width: 5, alpha: 0.25 };
+    }
     if (isApproach) {
       cell.ring = { x, y, radius, colorKey, width: 1.3, dasharray: '2.2,1.8', alpha };
     }
@@ -293,6 +308,7 @@
       cell.hasFill = false;
       cell.label = null;
       cell.halo = null;
+      cell.glow = null;
       cell.crossRef = null;
       cell.nameLabel = null;
       cell.ring = { x, y, radius, colorKey, width: 1.4, alpha: 0.25 };
@@ -335,7 +351,16 @@
     plan.cells.forEach(cell => {
       const fill = resolve(cell.colorKey);
 
-      // Halo (root)
+      // Glow exterior (guide tones) — debajo del halo
+      if (cell.glow) {
+        appendCircle({
+          cx: cell.glow.x, cy: cell.glow.y, r: cell.glow.radius,
+          fill: 'none', stroke: resolve(cell.glow.colorKey),
+          'stroke-width': cell.glow.width, 'stroke-opacity': cell.glow.alpha,
+        });
+      }
+
+      // Halo (root / guide tone)
       if (cell.halo) {
         appendCircle({
           cx: cell.halo.x, cy: cell.halo.y, r: cell.halo.radius,

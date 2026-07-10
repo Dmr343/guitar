@@ -248,5 +248,69 @@
     });
   });
 
+  T.describe('FretboardRenderer — guide tones (capa)', () => {
+    T.it('con guideTones activo, 3 y 7 llevan glow + halo grueso', () => {
+      const plan = FR.computeDrawPlan(defaultParams({
+        layers: { chordTones: true, guideTones: true },
+      }));
+      const guides = plan.cells.filter(c => c.interval === '3' || c.interval === '7');
+      T.assert(guides.length > 0, 'hay cells de 3 y 7');
+      guides.forEach(c => {
+        T.assert(c.glow, 'falta glow');
+        T.assert(c.halo && c.halo.width > 2, 'falta halo grueso');
+        T.assertEq(c.guide, true);
+      });
+    });
+    T.it('la raíz y la 5ª no llevan glow (la raíz conserva su halo fino)', () => {
+      const plan = FR.computeDrawPlan(defaultParams({
+        layers: { chordTones: true, guideTones: true },
+      }));
+      plan.cells.filter(c => c.interval === '1' || c.interval === '5')
+        .forEach(c => {
+          T.assert(!c.glow, 'glow indebido en ' + c.interval);
+          if (c.interval === '1') T.assertEq(c.halo.width, 2);
+        });
+    });
+    T.it('sin la capa, ninguna cell lleva glow', () => {
+      const plan = FR.computeDrawPlan(defaultParams());
+      plan.cells.forEach(c => T.assert(!c.glow));
+    });
+    T.it('en m7 los guide tones son b3 y b7', () => {
+      const plan = FR.computeDrawPlan(defaultParams({
+        chord: TH.buildChord('A', 'min7'),
+        layers: { chordTones: true, guideTones: true },
+      }));
+      const glowing = new Set(plan.cells.filter(c => c.glow).map(c => c.interval));
+      T.assertArrayEq(Array.from(glowing).sort(), ['b3', 'b7']);
+    });
+  });
+
+  T.describe('FretboardRenderer — prioridad de capas (spec Fase B)', () => {
+    T.it('tensions gana sobre scale para la misma pc', () => {
+      // Cmaj7 → lydian incluye D; D también es la tensión 9.
+      const m = FR.computeRenderMap(TH.buildChord('C', 'maj7'),
+        { scale: true, tensions: true }, null, TH);
+      T.assertEq(m.get('D').kind, 'tensions');
+      T.assertEq(m.get('D').interval, '9');
+    });
+    T.it('scale gana sobre approach', () => {
+      // D está en la escala lydian de Cmaj7 y es raíz del próximo D7.
+      const m = FR.computeRenderMap(TH.buildChord('C', 'maj7'),
+        { scale: true, approach: true }, TH.buildChord('D', 'dom7'), TH);
+      T.assertEq(m.get('D').kind, 'scale');
+    });
+    T.it('approach sigue ganando sobre allNotes', () => {
+      const m = FR.computeRenderMap(TH.buildChord('C', 'maj7'),
+        { allNotes: true, approach: true }, TH.buildChord('A', 'min7'), TH);
+      T.assertEq(m.get('A').kind, 'approach');
+    });
+    T.it('chordTones sigue ganando sobre tensions', () => {
+      const m = FR.computeRenderMap(TH.buildChord('C', 'maj7'),
+        { chordTones: true, tensions: true, scale: true }, null, TH);
+      T.assertEq(m.get('E').kind, 'chordTones');
+      T.assertEq(m.get('B').kind, 'chordTones');
+    });
+  });
+
 })((typeof window !== 'undefined' ? window : globalThis).GuitarShared,
    typeof window !== 'undefined' ? window : globalThis);

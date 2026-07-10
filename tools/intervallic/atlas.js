@@ -61,7 +61,7 @@
     progression: [],
     activeIdx: 0,
     layers: {
-      chordTones: true, scale: false, tensions: false,
+      chordTones: true, guideTones: false, scale: false, tensions: false,
       approach: false, allNotes: false,
     },
     filter: { direction: 'all', stringRange: [1, 6], fretRange: [0, 15], focusString: 3, focusFret: 5 },
@@ -1132,6 +1132,9 @@
 
     // Capas
     bindLayer('atlas-l-chord', 'chordTones');
+    bindLayer('atlas-l-guide', 'guideTones');
+    bindLayer('atlas-l-tensions', 'tensions');
+    bindLayer('atlas-l-scale', 'scale');
     bindLayer('atlas-l-approach', 'approach');
     bindLayer('atlas-l-all', 'allNotes');
     const cb = $('atlas-show-names');
@@ -1142,6 +1145,9 @@
     // reflejar estado actual de layers en checkboxes
     Object.entries({
       'atlas-l-chord': 'chordTones',
+      'atlas-l-guide': 'guideTones',
+      'atlas-l-tensions': 'tensions',
+      'atlas-l-scale': 'scale',
       'atlas-l-approach': 'approach',
       'atlas-l-all': 'allNotes',
     }).forEach(([id, key]) => {
