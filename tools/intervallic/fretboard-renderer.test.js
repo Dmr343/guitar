@@ -312,5 +312,69 @@
     });
   });
 
+  T.describe('FretboardRenderer.guideTonesOf', () => {
+    T.it('maj7: guide tones son 3 y 7', () => {
+      const g = FR.guideTonesOf(TH.buildChord('C', 'maj7'));
+      T.assertArrayEq(g.map(x => x.interval).sort(), ['3', '7']);
+    });
+    T.it('min7: guide tones son b3 y b7', () => {
+      const g = FR.guideTonesOf(TH.buildChord('A', 'min7'));
+      T.assertArrayEq(g.map(x => x.interval).sort(), ['b3', 'b7']);
+    });
+    T.it('acorde nulo → lista vacía', () => {
+      T.assertArrayEq(FR.guideTonesOf(null), []);
+    });
+  });
+
+  T.describe('FretboardRenderer — voice leading (capa)', () => {
+    // ii–V clásico: Dm7 (guide tones b3=F, b7=C) → G7 (guide tones 3=B, b7=F).
+    // F es común (Dm7.b3 == G7.b7): sin línea. C resuelve un semitono
+    // abajo hacia B (Dm7.b7 → G7.3): la línea clásica del ii–V.
+    function iiVParams(layers) {
+      return defaultParams({
+        chord: TH.buildChord('D', 'min7'),
+        nextChord: TH.buildChord('G', 'dom7'),
+        layers: layers,
+      });
+    }
+    T.it('el b7 (C) resuelve por semitono hacia la 3ª (B) de G7', () => {
+      const plan = FR.computeDrawPlan(
+        iiVParams({ chordTones: true, guideTones: true, voiceLeading: true }));
+      T.assert(plan.lines.length >= 1, 'debe haber al menos una línea');
+      const l = plan.lines.find(x => x.fromInterval === 'b7');
+      T.assert(l, 'falta línea desde b7 (C)');
+      T.assertEq(l.toInterval, '3');
+    });
+    T.it('la nota común (b3=F ≡ b7=F) no genera línea', () => {
+      const plan = FR.computeDrawPlan(
+        iiVParams({ chordTones: true, guideTones: true, voiceLeading: true }));
+      T.assertEq(plan.lines.find(x => x.fromInterval === 'b3'), undefined);
+    });
+    T.it('sin la capa voiceLeading, no hay líneas', () => {
+      const plan = FR.computeDrawPlan(
+        iiVParams({ chordTones: true, guideTones: true, voiceLeading: false }));
+      T.assertArrayEq(plan.lines, []);
+    });
+    T.it('sin guideTones, no hay líneas aunque voiceLeading esté activo', () => {
+      const plan = FR.computeDrawPlan(
+        iiVParams({ chordTones: true, guideTones: false, voiceLeading: true }));
+      T.assertArrayEq(plan.lines, []);
+    });
+    T.it('sin próximo acorde, no hay líneas', () => {
+      const plan = FR.computeDrawPlan(defaultParams({
+        chord: TH.buildChord('D', 'min7'), nextChord: null,
+        layers: { chordTones: true, guideTones: true, voiceLeading: true },
+      }));
+      T.assertArrayEq(plan.lines, []);
+    });
+    T.it('las líneas conectan las coordenadas x/y de origen y destino', () => {
+      const plan = FR.computeDrawPlan(
+        iiVParams({ chordTones: true, guideTones: true, voiceLeading: true }));
+      const l = plan.lines[0];
+      T.assert(Number.isFinite(l.x1) && Number.isFinite(l.y1));
+      T.assert(Number.isFinite(l.x2) && Number.isFinite(l.y2));
+    });
+  });
+
 })((typeof window !== 'undefined' ? window : globalThis).GuitarShared,
    typeof window !== 'undefined' ? window : globalThis);

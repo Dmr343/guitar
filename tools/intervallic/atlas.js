@@ -61,8 +61,8 @@
     progression: [],
     activeIdx: 0,
     layers: {
-      chordTones: true, guideTones: false, scale: false, tensions: false,
-      approach: false, allNotes: false,
+      chordTones: true, guideTones: false, voiceLeading: false, scale: false,
+      tensions: false, approach: false, allNotes: false,
     },
     filter: { direction: 'all', stringRange: [1, 6], fretRange: [0, 15], focusString: 3, focusFret: 5 },
     showNoteNames: false,
@@ -1133,6 +1133,7 @@
     // Capas
     bindLayer('atlas-l-chord', 'chordTones');
     bindLayer('atlas-l-guide', 'guideTones');
+    bindLayer('atlas-l-voice', 'voiceLeading');
     bindLayer('atlas-l-tensions', 'tensions');
     bindLayer('atlas-l-scale', 'scale');
     bindLayer('atlas-l-approach', 'approach');
@@ -1146,6 +1147,7 @@
     Object.entries({
       'atlas-l-chord': 'chordTones',
       'atlas-l-guide': 'guideTones',
+      'atlas-l-voice': 'voiceLeading',
       'atlas-l-tensions': 'tensions',
       'atlas-l-scale': 'scale',
       'atlas-l-approach': 'approach',

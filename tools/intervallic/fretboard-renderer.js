@@ -183,7 +183,7 @@
   // ─── computeDrawPlan (puro) ─────────────────────────────────────────────
   function computeDrawPlan(p, theoryAdapter) {
     const cells = [];
-    if (!p.chord) return { cells };
+    if (!p.chord) return { cells, lines: [] };
 
     const renderMap = applyHiddenIntervals(
       computeRenderMap(p.chord, p.layers, p.nextChord, theoryAdapter, p.extraIntervals),
@@ -214,7 +214,94 @@
       if (cellPlan) cells.push(cellPlan);
     });
 
-    return { cells };
+    // Voice leading: una línea por cada guide tone visible que resuelve
+    // por semitono hacia el próximo acorde (ver computeVoiceLeadingLines).
+    let lines = [];
+    if (p.layers && p.layers.voiceLeading && p.layers.guideTones && p.nextChord) {
+      const guideCells = cells.filter(c => c.guide && !c.ghost);
+      lines = computeVoiceLeadingLines(p.chord, p.nextChord, guideCells, p.filter, geom);
+    }
+
+    return { cells, lines };
+  }
+
+  // ─── Voice leading (puro) ────────────────────────────────────────────────
+  function circularDist(a, b) {
+    const d = Math.abs(a - b) % 12;
+    return Math.min(d, 12 - d);
+  }
+
+  // Guide tones (3ª/7ª) de un acorde ya construido por theory.buildChord:
+  // [{ interval, note }].
+  function guideTonesOf(chord) {
+    if (!chord) return [];
+    return chord.intervals
+      .map((iv, idx) => ({ interval: iv, note: chord.notes[idx] }))
+      .filter(x => GUIDE_TONE_INTERVALS.has(x.interval));
+  }
+
+  // computeVoiceLeadingLines — para cada guide tone VISIBLE del acorde
+  // activo (guideCells: cells ya filtradas/dibujadas con cell.guide),
+  // busca el guide tone del próximo acorde más cercano en semitonos.
+  // Nota común (distancia 0) → sin línea, el cross-ref ya la señala.
+  // Resolución por semitono (distancia 1) → línea hacia la posición más
+  // cercana de esa nota en el mástil (mismo fretRange/stringSet, SIN el
+  // filtro de dirección: el destino puede caer fuera del "foco" y seguir
+  // siendo la resolución real más próxima).
+  function computeVoiceLeadingLines(chord, nextChord, guideCells, filter, geom) {
+    if (!chord || !nextChord || !guideCells || !guideCells.length) return [];
+    const nextGuides = guideTonesOf(nextChord);
+    if (!nextGuides.length) return [];
+
+    const stringSet = (filter && filter.stringSet) || [1,2,3,4,5,6];
+    const [fMin, fMax] = (filter && filter.fretRange) || [0, 22];
+
+    function positionsFor(note) {
+      const out = [];
+      for (let s = 1; s <= 6; s++) {
+        if (!stringSet.includes(s)) continue;
+        const open = geom.openNotes[6 - s];
+        for (let f = fMin; f <= fMax; f++) {
+          if (geom.noteAt(open, f) === note) {
+            out.push({
+              string: s, fret: f,
+              x: geom.fretX(f - (geom.fretStart || 0), geom.fretW),
+              y: geom.stringY(6 - s),
+            });
+          }
+        }
+      }
+      return out;
+    }
+
+    const lines = [];
+    guideCells.forEach(origin => {
+      const curPc = CHROMATIC.indexOf(origin.note);
+      let best = null;
+      nextGuides.forEach(ng => {
+        const dist = circularDist(curPc, CHROMATIC.indexOf(ng.note));
+        if (dist === 0) return;   // nota sostenida: la marca el cross-ref
+        if (!best || dist < best.dist) best = { note: ng.note, interval: ng.interval, dist };
+      });
+      if (!best || best.dist > 1) return;   // solo resolución por semitono
+
+      const targets = positionsFor(best.note);
+      if (!targets.length) return;
+      let nearest = null, nearestD = Infinity;
+      targets.forEach(t => {
+        const d = Math.hypot(t.x - origin.x, t.y - origin.y);
+        if (d < nearestD) { nearestD = d; nearest = t; }
+      });
+      if (!nearest) return;
+
+      lines.push({
+        fromString: origin.string, fromFret: origin.fret, x1: origin.x, y1: origin.y,
+        toString: nearest.string, toFret: nearest.fret, x2: nearest.x, y2: nearest.y,
+        fromInterval: origin.interval, toInterval: best.interval,
+        colorKey: origin.interval,
+      });
+    });
+    return lines;
   }
 
   // ─── buildCell (puro) ───────────────────────────────────────────────────
@@ -348,6 +435,28 @@
       dots.appendChild(r);
     }
 
+    // Voice-leading: líneas debajo de los dots (para que las notas queden
+    // "encima" de la línea que las conecta) + una marca de aterrizaje en
+    // la posición destino, visible aunque esa posición no forme parte del
+    // dibujo normal del acorde activo (p. ej. filtro de dirección activo).
+    (plan.lines || []).forEach(function (ln) {
+      const line = document.createElementNS(SVG_NS, 'line');
+      line.setAttribute('x1', ln.x1); line.setAttribute('y1', ln.y1);
+      line.setAttribute('x2', ln.x2); line.setAttribute('y2', ln.y2);
+      line.setAttribute('stroke', resolve(ln.colorKey));
+      line.setAttribute('stroke-width', 1.6);
+      line.setAttribute('stroke-opacity', 0.55);
+      line.setAttribute('stroke-dasharray', '4,3');
+      line.setAttribute('stroke-linecap', 'round');
+      dots.appendChild(line);
+
+      appendCircle({
+        cx: ln.x2, cy: ln.y2, r: 6,
+        fill: 'none', stroke: resolve(ln.toInterval),
+        'stroke-width': 1.6, 'stroke-dasharray': '2,2', 'stroke-opacity': 0.85,
+      });
+    });
+
     plan.cells.forEach(cell => {
       const fill = resolve(cell.colorKey);
 
@@ -468,6 +577,7 @@
     // Expuestos puros para tests / consumidores
     computeRenderMap, applyHiddenIntervals, applyDirection,
     intervalToSemi, cellKey, resolveBoardClick,
+    computeVoiceLeadingLines, guideTonesOf,
     LAYER_PRIORITY, TENSIONS_BY_QUALITY, SCALE_BY_QUALITY,
     INTERVAL_NAMES, GUIDE_TONE_INTERVALS,
   };
