@@ -68,6 +68,24 @@
 
     .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;font-size:var(--fs-small);color:var(--text-mid)}
     .row label{display:inline-flex;gap:5px;align-items:center}
+    /* Opciones de reproducción que se tocan poco (pre-roll, mute click):
+       plegadas para no competir con Tempo/Compás en la fila de transporte. */
+    .transport-more{flex:0 0 auto}
+    .transport-more summary{
+      cursor:pointer;list-style:none;outline:none;user-select:none;
+      font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:.08em;
+      color:var(--text-dim);background:var(--surface3);border:1px solid var(--border);
+      border-radius:var(--radius-sm);padding:7px 12px;
+      transition:color var(--dur) var(--ease),border-color var(--dur) var(--ease)
+    }
+    .transport-more summary::-webkit-details-marker{display:none}
+    .transport-more summary:hover{color:var(--text-mid)}
+    .transport-more[open] summary{color:var(--accent);border-color:var(--accent)}
+    .transport-more-body{
+      display:flex;gap:14px;align-items:center;flex-wrap:wrap;flex-basis:100%;
+      margin-top:8px;padding:9px 13px;background:var(--surface3);border:1px solid var(--border);
+      border-radius:var(--radius-sm);font-size:var(--fs-small);color:var(--text-mid)
+    }
 
     select, input[type=number], input[type=text]{
       background:var(--surface3);border:1px solid var(--border);color:var(--text);
@@ -238,6 +256,13 @@
           <option value="vertical" data-i18n="dir_vertical">Vertical</option>
           <option value="diagonal" data-i18n="dir_diagonal">Diagonal</option>
         </select>
+        <details class="transport-more" id="atlas-transport-more">
+          <summary data-i18n="transport_more">Opciones ▾</summary>
+          <div class="transport-more-body">
+            <label class="layer-toggle" data-i18n-attr="title:preroll_t" title="Conteo previo de 4 clicks antes de empezar"><input type="checkbox" id="atlas-preroll"> <span data-i18n="preroll">Pre-roll</span></label>
+            <label class="layer-toggle" data-i18n-attr="title:muteclick_t" title="Silenciar click del metrónomo"><input type="checkbox" id="atlas-mute-click"> <svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9l5 6M21 9l-5 6"/></svg> <span data-i18n="muteclick">Mute click</span></label>
+          </div>
+        </details>
         <button class="btn" id="atlas-panel-show" type="button" data-i18n-attr="title:panelshow_t;aria-label:panelshow_aria" title="Mostrar editor de progresión" aria-label="Mostrar editor" data-i18n="panel_show">‹ Editor</button>
       </div>
 
@@ -246,15 +271,10 @@
         <div class="layer-toggles" style="margin-top:8px">
           <label class="layer-toggle"><input type="checkbox" id="atlas-l-chord" checked> <span data-i18n="layer_chord">Chord tones</span></label>
           <label class="layer-toggle" data-i18n-attr="title:layer_guide_t" title="Resalta la 3ª y la 7ª — las voces que conducen"><input type="checkbox" id="atlas-l-guide"> <span data-i18n="layer_guide">Guide tones</span></label>
-          <label class="layer-toggle" data-i18n-attr="title:layer_voice_t" title="Línea entre guide tones que resuelven por semitono hacia el próximo acorde (requiere Guide tones)"><input type="checkbox" id="atlas-l-voice"> <span data-i18n="layer_voice">Voice leading</span></label>
-          <label class="layer-toggle" data-i18n-attr="title:layer_tensions_t" title="Tensiones disponibles del acorde (9, #11, 13…)"><input type="checkbox" id="atlas-l-tensions"> <span data-i18n="layer_tensions">Tensiones</span></label>
-          <label class="layer-toggle" data-i18n-attr="title:layer_scale_t" title="La escala asociada a la calidad del acorde"><input type="checkbox" id="atlas-l-scale"> <span data-i18n="layer_scale">Escala</span></label>
+          <label class="layer-toggle" data-i18n-attr="title:layer_voice_t" title="Línea entre guide tones que resuelven por semitono hacia el próximo acorde (activa Guide tones)"><input type="checkbox" id="atlas-l-voice"> <span data-i18n="layer_voice">Voice leading</span></label>
           <label class="layer-toggle"><input type="checkbox" id="atlas-l-approach"> <span data-i18n="layer_approach">Próximo acorde</span></label>
           <label class="layer-toggle"><input type="checkbox" id="atlas-l-all"> <span data-i18n="layer_all">Todas las 12</span></label>
           <label class="layer-toggle"><input type="checkbox" id="atlas-show-names"> <span data-i18n="layer_names">Nombres de nota</span></label>
-          <span style="border-left:1px solid var(--border);height:18px;margin:0 6px"></span>
-          <label class="layer-toggle" data-i18n-attr="title:preroll_t" title="Conteo previo de 4 clicks antes de empezar"><input type="checkbox" id="atlas-preroll"> <span data-i18n="preroll">Pre-roll</span></label>
-          <label class="layer-toggle" data-i18n-attr="title:muteclick_t" title="Silenciar click del metrónomo"><input type="checkbox" id="atlas-mute-click"> <svg class="ico" viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M16 9l5 6M21 9l-5 6"/></svg> <span data-i18n="muteclick">Mute click</span></label>
         </div>
       </details>
 
@@ -410,14 +430,11 @@
         layer_guide: 'Guide tones',
         layer_guide_t: 'Resalta la 3ª y la 7ª — las voces que conducen',
         layer_voice: 'Voice leading',
-        layer_voice_t: 'Línea entre guide tones que resuelven por semitono hacia el próximo acorde (requiere Guide tones)',
-        layer_scale: 'Escala asociada',
-        layer_scale_t: 'La escala asociada a la calidad del acorde',
-        layer_tensions: 'Tensiones',
-        layer_tensions_t: 'Tensiones disponibles del acorde (9, #11, 13…)',
+        layer_voice_t: 'Línea entre guide tones que resuelven por semitono hacia el próximo acorde (activa Guide tones)',
         layer_approach: 'Próximo acorde',
         layer_all: 'Todas las 12',
         layer_names: 'Nombres de nota',
+        transport_more: 'Opciones ▾',
         preroll: 'Pre-roll',
         preroll_t: 'Conteo previo de 4 clicks antes de empezar',
         muteclick: 'Mute click',
@@ -545,14 +562,11 @@
         layer_guide: 'Guide tones',
         layer_guide_t: 'Highlights the 3rd and 7th — the voices that lead',
         layer_voice: 'Voice leading',
-        layer_voice_t: 'Line between guide tones that resolve by a half step into the next chord (requires Guide tones)',
-        layer_scale: 'Associated scale',
-        layer_scale_t: 'The scale associated with the chord quality',
-        layer_tensions: 'Tensions',
-        layer_tensions_t: 'Available tensions of the chord (9, #11, 13…)',
+        layer_voice_t: 'Line between guide tones that resolve by a half step into the next chord (turns on Guide tones)',
         layer_approach: 'Next chord',
         layer_all: 'All 12',
         layer_names: 'Note names',
+        transport_more: 'Options ▾',
         preroll: 'Pre-roll',
         preroll_t: 'Count-in of 4 clicks before starting',
         muteclick: 'Mute click',

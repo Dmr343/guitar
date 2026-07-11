@@ -113,6 +113,15 @@
       o.layers = Object.assign({}, o.layers, { scale: false, tensions: false });
       return o;
     },
+    // v3 → v4: se re-agregaron y se vuelven a retirar "Escala asociada"
+    // (duplicaba la sección "Escalas", que ofrece las 12 en vez de solo
+    // la ligada a la calidad) y "Tensiones" (nicho). Mismo apagado que v3,
+    // por si alguien las prendió en la ventana en que estuvieron activas.
+    (s) => {
+      const o = Object.assign({}, s);
+      o.layers = Object.assign({}, o.layers, { scale: false, tensions: false });
+      return o;
+    },
   ];
 
   // Stores Persistence — abstraen localStorage. En tests pueden inyectarse
@@ -1078,9 +1087,34 @@
     if (meter) meter.querySelectorAll('.beat-dot.on').forEach(d => d.classList.remove('on'));
   }
 
+  // Voice leading dibuja líneas ENTRE guide tones — sin la capa Guide
+  // tones activa no hay nada que conectar. Se acoplan para que activar
+  // una alcance (antes había que prender las dos y no era obvio):
+  // activar Voice leading enciende Guide tones; apagar Guide tones
+  // apaga Voice leading.
   function setLayer(name, enabled) {
-    state.layers[name] = !!enabled;
+    enabled = !!enabled;
+    state.layers[name] = enabled;
+    if (name === 'voiceLeading' && enabled) state.layers.guideTones = true;
+    if (name === 'guideTones' && !enabled) state.layers.voiceLeading = false;
     saveState(); render();
+    syncLayerCheckboxes();
+  }
+
+  // Refleja state.layers en los checkboxes visibles. Se llama en init()
+  // y después de cualquier setLayer, para que un acople (ver arriba)
+  // se vea reflejado aunque el cambio no vino de ESE checkbox.
+  function syncLayerCheckboxes() {
+    Object.entries({
+      'atlas-l-chord': 'chordTones',
+      'atlas-l-guide': 'guideTones',
+      'atlas-l-voice': 'voiceLeading',
+      'atlas-l-approach': 'approach',
+      'atlas-l-all': 'allNotes',
+    }).forEach(([id, key]) => {
+      const el = $(id);
+      if (el) el.checked = !!state.layers[key];
+    });
   }
 
   function setProgression(chords) {
@@ -1134,8 +1168,6 @@
     bindLayer('atlas-l-chord', 'chordTones');
     bindLayer('atlas-l-guide', 'guideTones');
     bindLayer('atlas-l-voice', 'voiceLeading');
-    bindLayer('atlas-l-tensions', 'tensions');
-    bindLayer('atlas-l-scale', 'scale');
     bindLayer('atlas-l-approach', 'approach');
     bindLayer('atlas-l-all', 'allNotes');
     const cb = $('atlas-show-names');
@@ -1143,19 +1175,7 @@
       cb.checked = state.showNoteNames;
       cb.addEventListener('change', e => { state.showNoteNames = e.target.checked; saveState(); render(); });
     }
-    // reflejar estado actual de layers en checkboxes
-    Object.entries({
-      'atlas-l-chord': 'chordTones',
-      'atlas-l-guide': 'guideTones',
-      'atlas-l-voice': 'voiceLeading',
-      'atlas-l-tensions': 'tensions',
-      'atlas-l-scale': 'scale',
-      'atlas-l-approach': 'approach',
-      'atlas-l-all': 'allNotes',
-    }).forEach(([id, key]) => {
-      const el = $(id);
-      if (el) el.checked = !!state.layers[key];
-    });
+    syncLayerCheckboxes();
 
     // Editor — modo Libre
     const add = $('atlas-add');
